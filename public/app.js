@@ -45,12 +45,12 @@ const formLoginAuthKey = document.getElementById('formLoginAuthKey');
 const toastContainer = document.getElementById('toastContainer');
 
 // Init
-document.addEventListener('DOMContentLoaded', async () => {
-  setupAddonLinks();
-  await checkAuthStatus();
-  await loadWatchlist();
+document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   setupAuthEventListeners();
+  setupAddonLinks();
+  checkAuthStatus();
+  loadWatchlist();
 });
 
 // -------------------------------------------------------------
@@ -366,6 +366,10 @@ function setupEventListeners() {
 
   // Settings modal
   btnSettings.addEventListener('click', openSettings);
+  const btnHeroSettings = document.getElementById('btnHeroSettings');
+  if (btnHeroSettings) {
+    btnHeroSettings.addEventListener('click', openSettings);
+  }
   btnCloseModal.addEventListener('click', closeSettings);
   settingsModal.querySelector('.modal-backdrop').addEventListener('click', closeSettings);
   document.getElementById('btnSaveSettings').addEventListener('click', saveSettings);
@@ -637,16 +641,19 @@ async function handleDeleteItem(id) {
 }
 
 // Settings Modal
-async function openSettings() {
-  try {
-    const res = await fetch('/api/settings');
-    const settings = await res.json();
-    document.getElementById('settingInterval').value = settings.autoCheckIntervalMinutes || 30;
-    document.getElementById('settingTorrentioUrl').value = settings.torrentioUrl || 'https://torrentio.strem.fun';
-  } catch (err) {
-    console.error('Erro ao carregar configurações:', err);
-  }
+function openSettings() {
   settingsModal.classList.remove('hidden');
+  fetch('/api/settings')
+    .then(r => r.json())
+    .then(settings => {
+      if (settings) {
+        document.getElementById('settingInterval').value = settings.autoCheckIntervalMinutes || 30;
+        document.getElementById('settingTorrentioUrl').value = settings.torrentioUrl || 'https://torrentio.strem.fun';
+      }
+    })
+    .catch(err => {
+      console.error('Erro ao carregar configurações:', err);
+    });
 }
 
 function closeSettings() {
