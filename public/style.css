@@ -580,6 +580,7 @@ body {
   flex-direction: column;
   transition: all 0.25s ease;
   position: relative;
+  cursor: pointer;
 }
 
 .movie-card:hover {

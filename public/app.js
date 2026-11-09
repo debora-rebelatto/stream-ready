@@ -301,15 +301,22 @@ async function setupAddonLinks() {
     
     // Links based on Cloud (Render) vs Local
     const manifestUrl = info.manifestUrl;
-    const installUrl = info.stremioInstallUrl;
-    const webInstallUrl = info.webStremioInstallUrl;
+    const installUrl = info.stremioInstallUrl || `stremio://${window.location.host}/manifest.json`;
 
-    // Top buttons
+    // Top buttons: redirect directly to Stremio app
     btnInstallStremio.href = installUrl;
+    btnInstallStremio.onclick = (e) => {
+      e.preventDefault();
+      window.location.href = installUrl;
+    };
 
     const btnInstallWeb = document.getElementById('btnInstallWeb');
     if (btnInstallWeb) {
-      btnInstallWeb.href = webInstallUrl;
+      btnInstallWeb.href = installUrl;
+      btnInstallWeb.onclick = (e) => {
+        e.preventDefault();
+        window.location.href = installUrl;
+      };
     }
 
     btnCopyLink.addEventListener('click', () => {
@@ -321,7 +328,10 @@ async function setupAddonLinks() {
     });
   } catch (err) {
     console.error('Erro ao obter info do servidor:', err);
-    btnInstallStremio.href = `stremio://${window.location.host}/manifest.json`;
+    const fallbackUrl = `stremio://${window.location.host}/manifest.json`;
+    btnInstallStremio.href = fallbackUrl;
+    const btnInstallWeb = document.getElementById('btnInstallWeb');
+    if (btnInstallWeb) btnInstallWeb.href = fallbackUrl;
   }
 }
 
@@ -412,6 +422,17 @@ function setupEventListeners() {
 
   const importInput = document.getElementById('importFileInput');
   importInput.addEventListener('change', handleImportBackup);
+
+  // Ao clicar em qualquer filme no navegador, redirecionar para o app do Stremio
+  watchlistContainer.addEventListener('click', (e) => {
+    if (e.target.closest('.btn-card-remove') || e.target.closest('.btn-recheck')) {
+      return;
+    }
+    const card = e.target.closest('.movie-card');
+    if (card && card.dataset.id) {
+      window.location.href = `stremio://detail/movie/${card.dataset.id}`;
+    }
+  });
 }
 
 // Load Watchlist Data
