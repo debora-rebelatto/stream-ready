@@ -5,7 +5,7 @@ const db = require('./lib/db');
 const { checkMovieQuality } = require('./lib/qualityChecker');
 const { searchMovies, getMeta } = require('./lib/cinemeta');
 const { getManifest, handleCatalog, handleMeta } = require('./lib/stremioAddon');
-const { loginStremio, getUserInfo, getStremioLibrary, installAddonToAccount, addToStremioLibrary, removeFromStremioLibrary } = require('./lib/stremioAuth');
+const { loginStremio, getUserInfo, installAddonToAccount } = require('./lib/stremioAuth');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
@@ -181,70 +181,6 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ success: true });
 });
 
-// Sync items from official Stremio Library into Watchlist (instantaneous & non-blocking)
-app.post('/api/auth/sync-library', async (req, res) => {
-  try {
-    const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
-    if (!authKey) {
-      return res.status(401).json({ error: 'Você precisa estar autenticado com sua conta do Stremio' });
-    }
-
-    const libraryResult = await getStremioLibrary(authKey);
-    if (!libraryResult.success) {
-      return res.status(400).json({ error: libraryResult.error });
-    }
-
-    const libraryItems = libraryResult.items;
-    let addedCount = 0;
-    let existingCount = 0;
-
-    for (const libItem of libraryItems) {
-      const existing = db.getItem(libItem.id);
-      if (existing) {
-        existingCount++;
-        continue;
-      }
-
-      db.addItem({
-        id: libItem.id,
-        type: libItem.type || 'movie',
-        name: libItem.name,
-        year: libItem.year || '',
-        poster: libItem.poster || '',
-        banner: '',
-        genres: [],
-        description: '',
-        imdbRating: '',
-        has1080pPlus: false,
-        bestQuality: 'Verificando...',
-        streamCount: 0,
-        count1080pPlus: 0,
-        lastChecked: null,
-        checkError: null
-      });
-
-      addedCount++;
-    }
-
-    // Retorna resposta instantaneamente para não dar timeout no navegador
-    res.json({
-      success: true,
-      totalInLibrary: libraryItems.length,
-      addedCount,
-      existingCount,
-      stats: db.getStats()
-    });
-
-    // Inicia checagem de qualidade em segundo plano
-    setTimeout(() => {
-      runBackgroundCheck();
-    }, 200);
-  } catch (err) {
-    console.error('[Library Sync Error]', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // 1-Click Install Addon into user's Stremio account via API
 app.post('/api/auth/install-account', async (req, res) => {
   try {
@@ -273,7 +209,7 @@ app.post('/api/auth/install-account', async (req, res) => {
 // -------------------------------------------------------------
 
 // List items and stats
-app.get('/api/items', async (req, res) => {
+app.get('/api/items', (req, res) => {
   const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
   
   // Se não estiver conectado em uma conta, não renderiza nenhuma lista
@@ -285,51 +221,17 @@ app.get('/api/items', async (req, res) => {
     });
   }
 
+  const { filter } = req.query;
   let items = db.getItems();
 
-  // Se a lista estiver vazia (ex: reinício/deploy do Render), auto-restaura da biblioteca oficial do Stremio!
-  if (items.length === 0 && authKey) {
-    try {
-      const lib = await getStremioLibrary(authKey);
-      if (lib.success && lib.items.length > 0) {
-        for (const it of lib.items) {
-          db.addItem({
-            id: it.id,
-            type: it.type || 'movie',
-            name: it.name,
-            year: it.year || '',
-            poster: it.poster || '',
-            banner: '',
-            genres: [],
-            description: '',
-            imdbRating: '',
-            has1080pPlus: false,
-            bestQuality: 'Verificando...',
-            streamCount: 0,
-            count1080pPlus: 0,
-            lastChecked: null,
-            checkError: null
-          });
-        }
-        items = db.getItems();
-        setTimeout(() => runBackgroundCheck(), 500);
-      }
-    } catch (e) {
-      console.warn('[AutoRestore Error]', e.message);
-    }
-  }
-
-  const { filter } = req.query;
-  let filtered = items;
-
   if (filter === 'ready') {
-    filtered = filtered.filter(i => i.has1080pPlus);
+    items = items.filter(i => i.has1080pPlus);
   } else if (filter === 'pending') {
-    filtered = filtered.filter(i => !i.has1080pPlus);
+    items = items.filter(i => !i.has1080pPlus);
   }
 
   res.json({
-    items: filtered,
+    items,
     stats: db.getStats(),
     requireAuth: false
   });
@@ -393,12 +295,6 @@ app.post('/api/items', async (req, res) => {
     });
 
     console.log(`[Watchlist] Adicionado: ${saved.name} (${saved.id}) -> Qualidade: ${saved.bestQuality} (Pronto/Não CAM: ${saved.has1080pPlus})`);
-
-    // Sincroniza também na biblioteca oficial do Stremio
-    const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
-    if (authKey) {
-      addToStremioLibrary(authKey, saved).catch(() => {});
-    }
 
     res.json({ success: true, item: saved });
   } catch (err) {
@@ -484,10 +380,6 @@ app.post('/api/check-all', async (req, res) => {
 // Delete item
 app.delete('/api/items/:id', (req, res) => {
   const { id } = req.params;
-  const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
-  if (authKey) {
-    removeFromStremioLibrary(authKey, id).catch(() => {});
-  }
   const removed = db.removeItem(id);
   res.json({ success: removed, stats: db.getStats() });
 });

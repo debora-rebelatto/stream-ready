@@ -33,7 +33,6 @@ const userEmailDisplay = document.getElementById('userEmailDisplay');
 const btnLogout = document.getElementById('btnLogout');
 const accountSyncCard = document.getElementById('accountSyncCard');
 const syncUserEmail = document.getElementById('syncUserEmail');
-const btnSyncLibrary = document.getElementById('btnSyncLibrary');
 const btnInstallAccountDirect = document.getElementById('btnInstallAccountDirect');
 
 const loginModal = document.getElementById('loginModal');
@@ -227,37 +226,6 @@ function setupAuthEventListeners() {
     setAuthUI(false, null);
     setupAddonLinks();
     showToast('Desconectado com sucesso.', 'info');
-  });
-
-  // Sync Stremio Library
-  btnSyncLibrary.addEventListener('click', async () => {
-    const icon = btnSyncLibrary.querySelector('.spin-icon');
-    try {
-      icon.classList.add('spinning');
-      btnSyncLibrary.disabled = true;
-      showToast('Puxando filmes da sua biblioteca do Stremio e verificando fontes...', 'info');
-
-      const res = await fetch('/api/auth/sync-library', {
-        method: 'POST',
-        headers: getAuthHeaders()
-      });
-      const data = await res.json();
-
-      icon.classList.remove('spinning');
-      btnSyncLibrary.disabled = false;
-
-      if (!res.ok || data.error) {
-        showToast(data.error || 'Erro ao sincronizar biblioteca.', 'error');
-        return;
-      }
-
-      showToast(`🎉 Sincronizado! ${data.addedCount} novo(s) filme(s) adicionados à sua Watchlist!`, 'success');
-      await loadWatchlist();
-    } catch (err) {
-      icon.classList.remove('spinning');
-      btnSyncLibrary.disabled = false;
-      showToast('Erro de comunicação ao sincronizar.', 'error');
-    }
   });
 
   // Direct 1-Click Install to Account
