@@ -57,14 +57,28 @@ document.addEventListener('DOMContentLoaded', () => {
 // STREMIO AUTHENTICATION & LIBRARY SYNC
 // -------------------------------------------------------------
 
+function getAuthHeaders() {
+  const key = localStorage.getItem('stremioAuthKey');
+  return key ? { 'x-stremio-auth': key, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+}
+
 async function checkAuthStatus() {
+  const key = localStorage.getItem('stremioAuthKey');
+  if (!key) {
+    setAuthUI(false, null);
+    return;
+  }
+
   try {
-    const res = await fetch('/api/auth/me');
+    const res = await fetch('/api/auth/me', {
+      headers: { 'x-stremio-auth': key }
+    });
     const data = await res.json();
     if (data.loggedIn && data.user) {
       setAuthUI(true, data.user);
       await loadWatchlist();
     } else {
+      localStorage.removeItem('stremioAuthKey');
       setAuthUI(false, null);
     }
   } catch (err) {
@@ -155,8 +169,11 @@ function setupAuthEventListeners() {
       }
 
       showToast(`🎉 Bem-vindo(a), ${data.user.email}!`, 'success');
+      localStorage.setItem('stremioAuthKey', data.authKey);
       loginModal.classList.add('hidden');
       setAuthUI(true, data.user);
+      setupAddonLinks();
+      await loadWatchlist();
     } catch (err) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Entrar com Stremio';
@@ -190,8 +207,11 @@ function setupAuthEventListeners() {
       }
 
       showToast(`🎉 Conectado com sucesso como ${data.user.email}!`, 'success');
+      localStorage.setItem('stremioAuthKey', data.authKey);
       loginModal.classList.add('hidden');
       setAuthUI(true, data.user);
+      setupAddonLinks();
+      await loadWatchlist();
     } catch (err) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Validar AuthKey';
@@ -202,12 +222,12 @@ function setupAuthEventListeners() {
   // Logout
   btnLogout.addEventListener('click', async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      setAuthUI(false, null);
-      showToast('Desconectado com sucesso.', 'info');
-    } catch (err) {
-      console.error(err);
-    }
+      await fetch('/api/auth/logout', { method: 'POST', headers: getAuthHeaders() });
+    } catch (err) {}
+    localStorage.removeItem('stremioAuthKey');
+    setAuthUI(false, null);
+    setupAddonLinks();
+    showToast('Desconectado com sucesso.', 'info');
   });
 
   // Sync Stremio Library
@@ -218,7 +238,10 @@ function setupAuthEventListeners() {
       btnSyncLibrary.disabled = true;
       showToast('Puxando filmes da sua biblioteca do Stremio e verificando 1080p+...', 'info');
 
-      const res = await fetch('/api/auth/sync-library', { method: 'POST' });
+      const res = await fetch('/api/auth/sync-library', {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
 
       icon.classList.remove('spinning');
@@ -245,7 +268,10 @@ function setupAuthEventListeners() {
       btnInstallAccountDirect.textContent = 'Ativando na conta...';
       showToast('Instalando addon diretamente na sua conta do Stremio...', 'info');
 
-      const res = await fetch('/api/auth/install-account', { method: 'POST' });
+      const res = await fetch('/api/auth/install-account', {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
 
       btnInstallAccountDirect.disabled = false;
@@ -268,7 +294,9 @@ function setupAuthEventListeners() {
 // Setup Stremio Install & Copy Links
 async function setupAddonLinks() {
   try {
-    const res = await fetch('/api/info');
+    const res = await fetch('/api/info', {
+      headers: getAuthHeaders()
+    });
     const info = await res.json();
     
     // Links based on Cloud (Render) vs Local
@@ -375,7 +403,9 @@ async function loadWatchlist() {
     return;
   }
   try {
-    const res = await fetch('/api/items');
+    const res = await fetch('/api/items', {
+      headers: getAuthHeaders()
+    });
     const data = await res.json();
     if (data.requireAuth) {
       setAuthUI(false, null);

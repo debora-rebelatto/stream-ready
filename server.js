@@ -37,28 +37,50 @@ function getBaseUrl(req) {
 }
 
 // -------------------------------------------------------------
+// STREMIO AUTHENTICATION & HELPER
+// -------------------------------------------------------------
+
+// Helper to get authKey strictly from header, path, body or query (NOT global DB fallback)
+function getRequestAuthKey(req) {
+  const headerKey = req.headers['x-stremio-auth'];
+  if (headerKey) return headerKey;
+  if (req.params && req.params.authKey) return req.params.authKey;
+  if (req.body && req.body.authKey) return req.body.authKey;
+  if (req.query && req.query.authKey) return req.query.authKey;
+  return null;
+}
+
+// -------------------------------------------------------------
 // STREMIO ADDON ENDPOINTS
 // -------------------------------------------------------------
 
-// Manifest
-app.get('/manifest.json', (req, res) => {
-  const manifest = getManifest(getBaseUrl(req));
+// Manifest (root or user-specific)
+app.get(['/manifest.json', '/:authKey/manifest.json'], (req, res) => {
+  const baseUrl = getBaseUrl(req);
+  const authKey = req.params.authKey || getRequestAuthKey(req);
+  const manifest = getManifest(baseUrl, authKey);
   res.json(manifest);
 });
 
 // Configure redirect (Stremio configure button)
-app.get('/configure', (req, res) => {
+app.get(['/configure', '/:authKey/configure'], (req, res) => {
   res.redirect('/');
 });
 
 // Catalog routes
-// Supports: /catalog/:type/:id.json and /catalog/:type/:id/:extra.json
+// Supports: /catalog/:type/:id.json, /:authKey/catalog/:type/:id.json and extras
 const catalogHandler = async (req, res) => {
   try {
-    const { type, id } = req.params;
-    let extra = {};
+    const { type, id, authKey } = req.params;
+    const effectiveAuthKey = authKey || getRequestAuthKey(req);
 
-    // Extra parameters can be in req.params.extra (e.g. "skip=100")
+    // Se NÃO estiver em uma conta (sem authKey), NÃO renderiza nenhuma lista!
+    if (!effectiveAuthKey) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return res.json({ metas: [] });
+    }
+
+    let extra = {};
     if (req.params.extra) {
       const parts = req.params.extra.replace(/\.json$/, '').split('&');
       for (const part of parts) {
@@ -68,7 +90,7 @@ const catalogHandler = async (req, res) => {
     }
 
     const cleanId = id.replace(/\.json$/, '');
-    const data = await handleCatalog(type, cleanId, extra);
+    const data = await handleCatalog(type, cleanId, extra, effectiveAuthKey);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.json(data);
   } catch (err) {
@@ -79,9 +101,11 @@ const catalogHandler = async (req, res) => {
 
 app.get('/catalog/:type/:id.json', catalogHandler);
 app.get('/catalog/:type/:id/:extra.json', catalogHandler);
+app.get('/:authKey/catalog/:type/:id.json', catalogHandler);
+app.get('/:authKey/catalog/:type/:id/:extra.json', catalogHandler);
 
 // Meta route
-app.get('/meta/:type/:id.json', async (req, res) => {
+const metaHandler = async (req, res) => {
   try {
     const { type, id } = req.params;
     const cleanId = id.replace(/\.json$/, '');
@@ -92,21 +116,10 @@ app.get('/meta/:type/:id.json', async (req, res) => {
     console.error('[Meta Error]', err);
     res.status(500).json({ meta: null });
   }
-});
+};
 
-// -------------------------------------------------------------
-// STREMIO AUTHENTICATION & LIBRARY SYNC ENDPOINTS
-// -------------------------------------------------------------
-
-// Helper to get authKey from header, query or settings
-function getRequestAuthKey(req) {
-  const headerKey = req.headers['x-stremio-auth'];
-  if (headerKey) return headerKey;
-  if (req.body && req.body.authKey) return req.body.authKey;
-  if (req.query && req.query.authKey) return req.query.authKey;
-  const settings = db.getSettings();
-  return settings.stremioAuthKey || null;
-}
+app.get('/meta/:type/:id.json', metaHandler);
+app.get('/:authKey/meta/:type/:id.json', metaHandler);
 
 // Login with Stremio account (or validate AuthKey)
 app.post('/api/auth/login', async (req, res) => {
@@ -257,10 +270,10 @@ app.post('/api/auth/install-account', async (req, res) => {
 
 // List items and stats
 app.get('/api/items', (req, res) => {
-  const settings = db.getSettings();
+  const authKey = getRequestAuthKey(req);
   
   // Se não estiver conectado em uma conta, não renderiza nenhuma lista
-  if (!settings.stremioAuthKey) {
+  if (!authKey) {
     return res.json({
       items: [],
       stats: { total: 0, ready: 0, pending: 0 },
