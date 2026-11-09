@@ -45,12 +45,11 @@ const formLoginAuthKey = document.getElementById('formLoginAuthKey');
 const toastContainer = document.getElementById('toastContainer');
 
 // Init
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
   setupAuthEventListeners();
   setupAddonLinks();
-  checkAuthStatus();
-  loadWatchlist();
+  await checkAuthStatus();
 });
 
 // -------------------------------------------------------------
