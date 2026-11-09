@@ -72,9 +72,9 @@ app.get(['/configure', '/:authKey/configure'], (req, res) => {
 const catalogHandler = async (req, res) => {
   try {
     const { type, id, authKey } = req.params;
-    const effectiveAuthKey = authKey || getRequestAuthKey(req);
+    const effectiveAuthKey = authKey || getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
 
-    // Se NÃO estiver em uma conta (sem authKey), NÃO renderiza nenhuma lista!
+    // Se NÃO estiver em uma conta (sem authKey nem login no servidor), NÃO renderiza nenhuma lista!
     if (!effectiveAuthKey) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       return res.json({ metas: [] });
@@ -155,7 +155,7 @@ app.post('/api/auth/login', async (req, res) => {
 // Check current logged in user
 app.get('/api/auth/me', async (req, res) => {
   try {
-    const authKey = getRequestAuthKey(req);
+    const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
     if (!authKey) {
       return res.json({ loggedIn: false });
     }
@@ -270,7 +270,7 @@ app.post('/api/auth/install-account', async (req, res) => {
 
 // List items and stats
 app.get('/api/items', (req, res) => {
-  const authKey = getRequestAuthKey(req);
+  const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
   
   // Se não estiver conectado em uma conta, não renderiza nenhuma lista
   if (!authKey) {
