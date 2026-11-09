@@ -101,8 +101,10 @@ const catalogHandler = async (req, res) => {
 
 app.get('/catalog/:type/:id.json', catalogHandler);
 app.get('/catalog/:type/:id/:extra.json', catalogHandler);
+app.get('/catalog/:type/:id', catalogHandler);
 app.get('/:authKey/catalog/:type/:id.json', catalogHandler);
 app.get('/:authKey/catalog/:type/:id/:extra.json', catalogHandler);
+app.get('/:authKey/catalog/:type/:id', catalogHandler);
 
 // Meta route
 const metaHandler = async (req, res) => {
@@ -119,7 +121,9 @@ const metaHandler = async (req, res) => {
 };
 
 app.get('/meta/:type/:id.json', metaHandler);
+app.get('/meta/:type/:id', metaHandler);
 app.get('/:authKey/meta/:type/:id.json', metaHandler);
+app.get('/:authKey/meta/:type/:id', metaHandler);
 
 // Login with Stremio account (or validate AuthKey)
 app.post('/api/auth/login', async (req, res) => {
@@ -244,7 +248,7 @@ app.post('/api/auth/sync-library', async (req, res) => {
 // 1-Click Install Addon into user's Stremio account via API
 app.post('/api/auth/install-account', async (req, res) => {
   try {
-    const authKey = getRequestAuthKey(req);
+    const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
     if (!authKey) {
       return res.status(401).json({ error: 'Você precisa estar autenticado com sua conta do Stremio' });
     }
@@ -449,9 +453,28 @@ app.get('/api/settings', (req, res) => {
   res.json(db.getSettings());
 });
 
-app.post('/api/settings', (req, res) => {
-  const updated = db.updateSettings(req.body);
-  res.json({ success: true, settings: updated });
+app.post('/api/settings', async (req, res) => {
+  try {
+    const updated = db.updateSettings(req.body);
+
+    // Se o usuário estiver autenticado com conta do Stremio, sincronizar addon atualizado na conta
+    const authKey = getRequestAuthKey(req) || updated.stremioAuthKey;
+    if (authKey) {
+      try {
+        const baseUrl = getBaseUrl(req);
+        const manifestUrl = `${baseUrl}/manifest.json`;
+        await installAddonToAccount(authKey, manifestUrl);
+        console.log('[Settings] Addon sincronizado na conta do Stremio com sucesso após alteração');
+      } catch (syncErr) {
+        console.warn('[Settings] Aviso ao sincronizar com conta Stremio:', syncErr.message);
+      }
+    }
+
+    res.json({ success: true, settings: updated });
+  } catch (err) {
+    console.error('[Settings Save Error]', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // System info / Cloud URLs helper

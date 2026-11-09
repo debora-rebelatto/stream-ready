@@ -230,6 +230,36 @@
         <hr class="divider">
 
         <div class="form-group">
+          <label><strong>📺 Listas visíveis no Addon do Stremio:</strong></label>
+          <div class="catalog-selection-list">
+            <label class="catalog-check-item">
+              <input type="checkbox" id="catReady" value="watchlist_ready" checked>
+              <div class="catalog-check-info">
+                <span class="catalog-check-title">🟢 Watchlist: Prontos (1080p+)</span>
+                <span class="catalog-check-desc">Exibe apenas os filmes que já têm fontes 1080p ou 4K disponíveis.</span>
+              </div>
+            </label>
+            <label class="catalog-check-item">
+              <input type="checkbox" id="catAll" value="watchlist_all" checked>
+              <div class="catalog-check-info">
+                <span class="catalog-check-title">📋 Watchlist: Todos os Filmes</span>
+                <span class="catalog-check-desc">Exibe a lista completa de todos os filmes salvos na sua Watchlist.</span>
+              </div>
+            </label>
+            <label class="catalog-check-item">
+              <input type="checkbox" id="catPending" value="watchlist_pending" checked>
+              <div class="catalog-check-info">
+                <span class="catalog-check-title">⏳ Watchlist: Aguardando 1080p</span>
+                <span class="catalog-check-desc">Exibe apenas filmes que ainda não possuem qualidade 1080p (CAM/TS/SD).</span>
+              </div>
+            </label>
+          </div>
+          <small class="field-hint">Marque quais fileiras você deseja ver no Stremio. As alterações são sincronizadas automaticamente com seus aparelhos ao salvar.</small>
+        </div>
+
+        <hr class="divider">
+
+        <div class="form-group">
           <label for="settingInterval">Intervalo de Verificação Automática (minutos):</label>
           <input type="number" id="settingInterval" min="5" max="1440" value="30">
           <small>Verifica periodicamente em segundo plano se filmes pendentes já atingiram qualidade 1080p+.</small>

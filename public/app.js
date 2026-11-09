@@ -709,6 +709,14 @@ function openSettings() {
       if (settings) {
         document.getElementById('settingInterval').value = settings.autoCheckIntervalMinutes || 30;
         document.getElementById('settingTorrentioUrl').value = settings.torrentioUrl || 'https://torrentio.strem.fun';
+
+        const enabled = settings.enabledCatalogs || ['watchlist_ready', 'watchlist_all', 'watchlist_pending'];
+        const catReady = document.getElementById('catReady');
+        const catAll = document.getElementById('catAll');
+        const catPending = document.getElementById('catPending');
+        if (catReady) catReady.checked = enabled.includes('watchlist_ready');
+        if (catAll) catAll.checked = enabled.includes('watchlist_all');
+        if (catPending) catPending.checked = enabled.includes('watchlist_pending');
       }
     })
     .catch(err => {
@@ -724,20 +732,45 @@ async function saveSettings() {
   const interval = parseInt(document.getElementById('settingInterval').value, 10) || 30;
   const torrentioUrl = document.getElementById('settingTorrentioUrl').value.trim();
 
+  const enabledCatalogs = [];
+  if (document.getElementById('catReady')?.checked) enabledCatalogs.push('watchlist_ready');
+  if (document.getElementById('catAll')?.checked) enabledCatalogs.push('watchlist_all');
+  if (document.getElementById('catPending')?.checked) enabledCatalogs.push('watchlist_pending');
+
+  if (enabledCatalogs.length === 0) {
+    showToast('Selecione pelo menos uma lista para exibir no Stremio.', 'error');
+    return;
+  }
+
+  const btnSave = document.getElementById('btnSaveSettings');
+  const oldText = btnSave.textContent;
+
   try {
+    btnSave.textContent = 'Salvando e sincronizando...';
+    btnSave.disabled = true;
+
     const res = await fetch('/api/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         autoCheckIntervalMinutes: interval,
-        torrentioUrl: torrentioUrl || 'https://torrentio.strem.fun'
+        torrentioUrl: torrentioUrl || 'https://torrentio.strem.fun',
+        enabledCatalogs
       })
     });
+
+    btnSave.textContent = oldText;
+    btnSave.disabled = false;
+
     if (res.ok) {
-      showToast('Configurações salvas com sucesso!', 'success');
+      showToast('Configurações salvas e Addon sincronizado no Stremio!', 'success');
       closeSettings();
+    } else {
+      showToast('Erro ao salvar configurações.', 'error');
     }
   } catch (err) {
+    btnSave.textContent = oldText;
+    btnSave.disabled = false;
     showToast('Erro ao salvar configurações.', 'error');
   }
 }
