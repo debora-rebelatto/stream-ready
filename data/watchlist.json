@@ -1,0 +1,13 @@
+{
+    "settings": {
+      "autoCheckIntervalMinutes": 30,
+      "torrentioUrl": "https://torrentio.strem.fun",
+      "enabledCatalogs": [
+        "watchlist_ready",
+        "watchlist_all",
+        "watchlist_pending"
+      ]
+    },
+    "items": []
+  }
+  
