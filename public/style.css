@@ -925,10 +925,181 @@ body {
   100% { transform: rotate(360deg); }
 }
 
-@media (max-width: 640px) {
-  .nav-container { flex-direction: column; gap: 0.75rem; align-items: flex-start; }
-  .nav-actions { width: 100%; justify-content: space-between; }
-  .list-controls { flex-direction: column; align-items: flex-start; }
-  .watchlist-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+/* HAMBURGER TOGGLE BUTTON */
+.btn-mobile-toggle {
+  display: none;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  width: 42px;
+  height: 42px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.hamburger-line {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background-color: var(--text-main);
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.btn-mobile-toggle.active .hamburger-line:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.btn-mobile-toggle.active .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.btn-mobile-toggle.active .hamburger-line:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* RESPONSIVE MEDIA QUERIES */
+@media (max-width: 868px) {
+  .btn-mobile-toggle {
+    display: flex;
+  }
+
+  .nav-container {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .nav-actions {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+    padding: 1rem 0 0.5rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+    animation: slide-nav 0.2s ease forwards;
+  }
+
+  .nav-actions.open {
+    display: flex;
+  }
+
+  .nav-actions .btn,
+  .nav-actions .user-account-wrap {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem 1rem;
+    font-size: 0.925rem;
+  }
+
+  .user-logged-box {
+    width: 100%;
+    justify-content: space-between;
+    padding: 0.6rem 1rem;
+  }
+
+  .user-email-badge {
+    max-width: 200px;
+  }
+
+  .account-sync-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1.25rem 1rem;
+  }
+
+  .sync-card-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .sync-card-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .list-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .tabs {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .tab-btn {
+    flex: 1;
+    min-width: 100px;
+    text-align: center;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .controls-right {
+    width: 100%;
+  }
+
+  .controls-right .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .watchlist-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+  }
+
+  .card-details {
+    padding: 0.75rem 0.6rem;
+  }
+
+  .card-title {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand h1 {
+    font-size: 1.05rem;
+  }
+
+  .badge-tag {
+    font-size: 0.625rem;
+    padding: 0.1rem 0.35rem;
+    margin-left: 0.25rem;
+  }
+
+  .hero-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .hero-content h2 {
+    font-size: 1.2rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes slide-nav {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 

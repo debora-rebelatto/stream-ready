@@ -327,6 +327,24 @@ async function setupAddonLinks() {
 
 // Event Listeners
 function setupEventListeners() {
+  // Mobile Navigation Toggle
+  const btnMobileNavToggle = document.getElementById('btnMobileNavToggle');
+  const navActions = document.getElementById('navActions');
+  if (btnMobileNavToggle && navActions) {
+    btnMobileNavToggle.addEventListener('click', () => {
+      btnMobileNavToggle.classList.toggle('active');
+      navActions.classList.toggle('open');
+    });
+
+    // Close mobile menu when an action button is clicked
+    navActions.querySelectorAll('.btn, .btn-logout-link').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btnMobileNavToggle.classList.remove('active');
+        navActions.classList.remove('open');
+      });
+    });
+  }
+
   // Search input live debouncing
   searchInput.addEventListener('input', (e) => {
     const query = e.target.value.trim();
