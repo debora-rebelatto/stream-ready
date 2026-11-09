@@ -737,6 +737,15 @@ body {
   color: var(--text-muted);
 }
 
+.auth-locked-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(123, 66, 246, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 3.5rem 1.5rem;
+  max-width: 550px;
+  margin: 0 auto;
+}
+
 .empty-icon {
   font-size: 3rem;
   margin-bottom: 1rem;

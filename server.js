@@ -257,6 +257,17 @@ app.post('/api/auth/install-account', async (req, res) => {
 
 // List items and stats
 app.get('/api/items', (req, res) => {
+  const settings = db.getSettings();
+  
+  // Se não estiver conectado em uma conta, não renderiza nenhuma lista
+  if (!settings.stremioAuthKey) {
+    return res.json({
+      items: [],
+      stats: { total: 0, ready: 0, pending: 0 },
+      requireAuth: true
+    });
+  }
+
   const { filter } = req.query;
   let items = db.getItems();
 
@@ -268,7 +279,8 @@ app.get('/api/items', (req, res) => {
 
   res.json({
     items,
-    stats: db.getStats()
+    stats: db.getStats(),
+    requireAuth: false
   });
 });
 

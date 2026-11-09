@@ -63,6 +63,7 @@ async function checkAuthStatus() {
     const data = await res.json();
     if (data.loggedIn && data.user) {
       setAuthUI(true, data.user);
+      await loadWatchlist();
     } else {
       setAuthUI(false, null);
     }
@@ -72,18 +73,28 @@ async function checkAuthStatus() {
 }
 
 function setAuthUI(isLoggedIn, user) {
-  currentUser = user;
+  currentUser = isLoggedIn ? user : null;
+  const searchSection = document.querySelector('.search-section');
+  const listControls = document.querySelector('.list-controls');
+
   if (isLoggedIn && user) {
     btnOpenLogin.classList.add('hidden');
     userLoggedInMenu.classList.remove('hidden');
     userEmailDisplay.textContent = user.email || 'Conectado';
     accountSyncCard.classList.remove('hidden');
     syncUserEmail.textContent = user.email;
+    if (searchSection) searchSection.classList.remove('hidden');
+    if (listControls) listControls.classList.remove('hidden');
   } else {
     btnOpenLogin.classList.remove('hidden');
     userLoggedInMenu.classList.add('hidden');
     accountSyncCard.classList.add('hidden');
+    if (searchSection) searchSection.classList.add('hidden');
+    if (listControls) listControls.classList.add('hidden');
     currentUser = null;
+    allItems = [];
+    updateStats({ total: 0, ready: 0, pending: 0 });
+    renderItems();
   }
 }
 
@@ -359,9 +370,17 @@ function setupEventListeners() {
 
 // Load Watchlist Data
 async function loadWatchlist() {
+  if (!currentUser) {
+    renderItems();
+    return;
+  }
   try {
     const res = await fetch('/api/items');
     const data = await res.json();
+    if (data.requireAuth) {
+      setAuthUI(false, null);
+      return;
+    }
     allItems = data.items || [];
     updateStats(data.stats);
     renderItems();
@@ -385,6 +404,25 @@ function updateStats(stats) {
 
 // Render Items based on Active Tab
 function renderItems() {
+  // Se não estiver conectado em uma conta, não renderiza nenhuma lista
+  if (!currentUser) {
+    watchlistContainer.innerHTML = `
+      <div class="empty-state auth-locked-box">
+        <div class="empty-icon">🔒</div>
+        <h3>Nenhuma lista disponível sem login</h3>
+        <p>Conecte sua conta do Stremio para carregar, visualizar e gerenciar seus filmes em 1080p+.</p>
+        <button class="btn btn-primary" id="btnLockedLoginAction" style="margin-top: 1.25rem;">
+          🔐 Entrar com Stremio
+        </button>
+      </div>
+    `;
+    const btnLocked = document.getElementById('btnLockedLoginAction');
+    if (btnLocked) {
+      btnLocked.addEventListener('click', () => btnOpenLogin.click());
+    }
+    return;
+  }
+
   let filtered = allItems;
   if (currentTab === 'ready') {
     filtered = allItems.filter(i => i.has1080pPlus);
@@ -401,7 +439,7 @@ function renderItems() {
       <div class="empty-state">
         <div class="empty-icon">${currentTab === 'ready' ? '🎬' : '⏳'}</div>
         <h3>${emptyMsg}</h3>
-        <p>Use a barra de busca acima para pesquisar e monitorar novos lançamentos.</p>
+        <p>Use a barra de busca acima para pesquisar ou clique em "Sincronizar Biblioteca" para importar seus filmes.</p>
       </div>
     `;
     return;
