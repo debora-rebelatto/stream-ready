@@ -283,15 +283,9 @@ async function setupAddonLinks() {
     const statusBannerDesc = document.getElementById('statusBannerDesc');
     const statusBannerIcon = document.getElementById('statusBannerIcon');
 
-    if (info.isCloud) {
-      if (statusBannerIcon) statusBannerIcon.textContent = '🌐';
-      if (statusBannerTitle) statusBannerTitle.textContent = 'Addon Online na Nuvem (Render 24/7)';
-      if (statusBannerDesc) statusBannerDesc.textContent = 'Link oficial permanente (HTTPS) para Smart TV, Celular e PC:';
-    } else {
-      if (statusBannerIcon) statusBannerIcon.textContent = '🏠';
-      if (statusBannerTitle) statusBannerTitle.textContent = 'Addon Rodando Localmente';
-      if (statusBannerDesc) statusBannerDesc.textContent = 'Endereço na sua rede local:';
-    }
+    if (statusBannerIcon) statusBannerIcon.textContent = '🌐';
+    if (statusBannerTitle) statusBannerTitle.textContent = 'Addon Online (HTTPS)';
+    if (statusBannerDesc) statusBannerDesc.textContent = 'Link oficial permanente do manifesto para Smart TV, Celular e PC:';
 
     // Copy buttons
     const btnCopyManifestPill = document.getElementById('btnCopyManifestPill');

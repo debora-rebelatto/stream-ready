@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const os = require('os');
 const db = require('./lib/db');
 const { checkMovieQuality } = require('./lib/qualityChecker');
 const { searchMovies, getMeta } = require('./lib/cinemeta');
@@ -29,24 +28,6 @@ app.get('/manifest', (req, res) => {
   res.redirect('/manifest.json');
 });
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Helper to find the best local LAN IP address
-function getPrimaryLocalIp() {
-  const interfaces = os.networkInterfaces();
-  let bestIp = null;
-  for (const [name, addrs] of Object.entries(interfaces)) {
-    if (/virtual|vmware|vbox|loopback/i.test(name)) continue;
-    for (const net of addrs) {
-      if (net.family === 'IPv4' && !net.internal) {
-        if (/^192\.168\.(?!56\.)|^10\.|^172\.(1[6-9]|2\d|3[01])\./.test(net.address)) {
-          return net.address;
-        }
-        if (!bestIp) bestIp = net.address;
-      }
-    }
-  }
-  return bestIp || 'localhost';
-}
 
 // Helper to determine base URL
 function getBaseUrl(req) {
@@ -448,27 +429,19 @@ app.post('/api/settings', (req, res) => {
   res.json({ success: true, settings: updated });
 });
 
-// System info / Local & Cloud URLs helper
+// System info / Cloud URLs helper
 app.get('/api/info', (req, res) => {
   const host = req.get('host') || `localhost:${PORT}`;
-  const isCloud = !!(process.env.RENDER || req.get('x-forwarded-proto') === 'https' || !/^(localhost|127\.|192\.168\.)/.test(host));
   const baseUrl = getBaseUrl(req);
   const manifestUrl = `${baseUrl}/manifest.json`;
   const stremioInstallUrl = `stremio://${host}/manifest.json`;
   const webStremioInstallUrl = `https://web.stremio.com/#/addons?addon=${encodeURIComponent(manifestUrl)}`;
 
-  const lanIp = getPrimaryLocalIp();
-  const lanBaseUrl = `http://${lanIp}:${PORT}`;
-
   res.json({
-    isCloud,
     baseUrl,
     manifestUrl,
     stremioInstallUrl,
     webStremioInstallUrl,
-    lanIp: isCloud ? null : lanIp,
-    lanManifestUrl: isCloud ? manifestUrl : `${lanBaseUrl}/manifest.json`,
-    lanStremioInstallUrl: isCloud ? stremioInstallUrl : `stremio://${lanIp}:${PORT}/manifest.json`,
     port: PORT
   });
 });
@@ -544,13 +517,11 @@ setInterval(runBackgroundCheck, intervalMs);
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
-  const lanIp = getPrimaryLocalIp();
   console.log(`=======================================================`);
   console.log(`🚀 STREMIO WATCHLIST (1080p+ TRACKER) RODANDO`);
-  console.log(`💻 No PC (Painel Web):  http://localhost:${PORT}`);
-  console.log(`📺 Na TV (Rede Local):  http://${lanIp}:${PORT}/manifest.json`);
-  console.log(`📱 No Celular (Painel): http://${lanIp}:${PORT}`);
-  console.log(`🔗 Link Direto Stremio: stremio://${lanIp}:${PORT}/manifest.json`);
+  console.log(`👉 Porta: ${PORT}`);
+  console.log(`👉 Painel Web: http://localhost:${PORT}`);
+  console.log(`👉 Addon Manifest: http://localhost:${PORT}/manifest.json`);
   console.log(`=======================================================`);
 });
 
