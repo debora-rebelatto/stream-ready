@@ -24,9 +24,20 @@
       </div>
       
       <div class="nav-actions">
+        <!-- Stremio Account State -->
+        <div id="userAccountSection" class="user-account-wrap">
+          <button id="btnOpenLogin" class="btn btn-stremio-auth">
+            🔐 Entrar com Stremio
+          </button>
+          <div id="userLoggedInMenu" class="user-logged-box hidden">
+            <span class="user-email-badge">👤 <span id="userEmailDisplay">usuario</span></span>
+            <button id="btnLogout" class="btn-logout-link" title="Desconectar conta">Sair</button>
+          </div>
+        </div>
+
         <a id="btnInstallStremio" href="#" class="btn btn-primary pulse-btn" title="Instalar no aplicativo Stremio">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-          Instalar no Stremio App
+          Instalar no App
         </a>
         <a id="btnInstallWeb" href="#" target="_blank" class="btn btn-secondary" title="Instalar no Stremio Web (Navegador/iPhone)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
@@ -78,6 +89,26 @@
       </button>
     </div>
 
+    <!-- Stremio Account Sync Card (Visible when authenticated) -->
+    <div id="accountSyncCard" class="account-sync-card hidden">
+      <div class="sync-card-left">
+        <div class="sync-card-icon">⚡</div>
+        <div class="sync-card-text">
+          <h4>Conta do Stremio Conectada: <span id="syncUserEmail" class="text-ready"></span></h4>
+          <p>Sincronize os filmes da sua biblioteca oficial do Stremio com 1 clique ou instale o addon diretamente na sua conta.</p>
+        </div>
+      </div>
+      <div class="sync-card-actions">
+        <button id="btnSyncLibrary" class="btn btn-primary btn-sm">
+          <svg class="spin-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+          Sincronizar Biblioteca
+        </button>
+        <button id="btnInstallAccountDirect" class="btn btn-secondary btn-sm" title="Instala o addon diretamente na sua conta sem precisar colar link no app">
+          ✨ Ativar na Conta (1-Click)
+        </button>
+      </div>
+    </div>
+
     <!-- Search / Add Box -->
     <section class="search-section">
       <div class="search-box-wrapper">
@@ -126,6 +157,54 @@
       </div>
     </section>
   </main>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🔐 Autenticar com o Stremio</h3>
+        <button id="btnCloseLoginModal" class="btn-icon">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="login-tabs">
+          <button class="login-tab-btn active" data-login-type="credentials">E-mail e Senha</button>
+          <button class="login-tab-btn" data-login-type="authkey">Chave de Acesso (AuthKey)</button>
+        </div>
+
+        <!-- Credentials Form -->
+        <form id="formLoginCredentials" class="login-form-pane">
+          <div class="form-group">
+            <label for="loginEmail">E-mail do Stremio:</label>
+            <input type="email" id="loginEmail" placeholder="seu-email@exemplo.com" required>
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">Senha do Stremio:</label>
+            <input type="password" id="loginPassword" placeholder="Sua senha" required>
+          </div>
+          <button type="submit" id="btnSubmitLoginCreds" class="btn btn-primary" style="width: 100%;">
+            Entrar com Stremio
+          </button>
+        </form>
+
+        <!-- AuthKey Form (for Google / Facebook accounts) -->
+        <form id="formLoginAuthKey" class="login-form-pane hidden">
+          <div class="form-group">
+            <label for="loginAuthKey">AuthKey (Chave de Sessão):</label>
+            <input type="text" id="loginAuthKey" placeholder="Cole sua AuthKey aqui..." required>
+            <small>Ideal se você entra no Stremio usando Google ou Facebook. Você encontra sua AuthKey no console do navegador em <a href="https://web.stremio.com" target="_blank" style="color:var(--primary);">web.stremio.com</a> digitando <code>localStorage.getItem('authKey')</code>.</small>
+          </div>
+          <button type="submit" id="btnSubmitLoginKey" class="btn btn-primary" style="width: 100%;">
+            Validar AuthKey
+          </button>
+        </form>
+
+        <div class="login-security-notice">
+          🔒 <strong>Segurança:</strong> A autenticação é feita diretamente com a API oficial do Stremio (<code>api.strem.io</code>) de forma criptografada.
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Settings & Instructions Modal -->
   <div id="settingsModal" class="modal hidden">

@@ -6,6 +6,7 @@ const db = require('./lib/db');
 const { checkMovieQuality } = require('./lib/qualityChecker');
 const { searchMovies, getMeta } = require('./lib/cinemeta');
 const { getManifest, handleCatalog, handleMeta } = require('./lib/stremioAddon');
+const { loginStremio, getUserInfo, getStremioLibrary, installAddonToAccount } = require('./lib/stremioAuth');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
@@ -109,6 +110,163 @@ app.get('/meta/:type/:id.json', async (req, res) => {
   } catch (err) {
     console.error('[Meta Error]', err);
     res.status(500).json({ meta: null });
+  }
+});
+
+// -------------------------------------------------------------
+// STREMIO AUTHENTICATION & LIBRARY SYNC ENDPOINTS
+// -------------------------------------------------------------
+
+// Helper to get authKey from header, query or settings
+function getRequestAuthKey(req) {
+  const headerKey = req.headers['x-stremio-auth'];
+  if (headerKey) return headerKey;
+  if (req.body && req.body.authKey) return req.body.authKey;
+  if (req.query && req.query.authKey) return req.query.authKey;
+  const settings = db.getSettings();
+  return settings.stremioAuthKey || null;
+}
+
+// Login with Stremio account (or validate AuthKey)
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password, authKey } = req.body;
+
+    if (authKey) {
+      const user = await getUserInfo(authKey);
+      if (!user) {
+        return res.status(401).json({ success: false, error: 'Chave de autenticação (AuthKey) inválida ou expirada' });
+      }
+      db.updateSettings({ stremioAuthKey: authKey, stremioEmail: user.email });
+      return res.json({ success: true, authKey, user });
+    }
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'E-mail e senha são obrigatórios' });
+    }
+
+    const authResult = await loginStremio(email, password);
+    if (!authResult.success) {
+      return res.status(401).json({ success: false, error: authResult.error });
+    }
+
+    db.updateSettings({ stremioAuthKey: authResult.authKey, stremioEmail: authResult.user.email });
+    res.json(authResult);
+  } catch (err) {
+    console.error('[Auth Error]', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Check current logged in user
+app.get('/api/auth/me', async (req, res) => {
+  try {
+    const authKey = getRequestAuthKey(req);
+    if (!authKey) {
+      return res.json({ loggedIn: false });
+    }
+
+    const user = await getUserInfo(authKey);
+    if (!user) {
+      return res.json({ loggedIn: false });
+    }
+
+    res.json({ loggedIn: true, authKey, user });
+  } catch (err) {
+    res.json({ loggedIn: false });
+  }
+});
+
+// Logout
+app.post('/api/auth/logout', (req, res) => {
+  db.updateSettings({ stremioAuthKey: null, stremioEmail: null });
+  res.json({ success: true });
+});
+
+// Sync items from official Stremio Library into Watchlist
+app.post('/api/auth/sync-library', async (req, res) => {
+  try {
+    const authKey = getRequestAuthKey(req);
+    if (!authKey) {
+      return res.status(401).json({ error: 'Você precisa estar autenticado com sua conta do Stremio' });
+    }
+
+    const libraryResult = await getStremioLibrary(authKey);
+    if (!libraryResult.success) {
+      return res.status(400).json({ error: libraryResult.error });
+    }
+
+    const libraryItems = libraryResult.items;
+    let addedCount = 0;
+    let existingCount = 0;
+
+    for (const libItem of libraryItems) {
+      const existing = db.getItem(libItem.id);
+      if (existing) {
+        existingCount++;
+        continue;
+      }
+
+      // Fetch Cinemeta metadata
+      const meta = await getMeta(libItem.type || 'movie', libItem.id);
+      const quality = await checkMovieQuality(libItem.id, libItem.type || 'movie');
+
+      db.addItem({
+        id: libItem.id,
+        type: libItem.type || 'movie',
+        name: meta?.name || libItem.name,
+        year: meta?.year || libItem.year,
+        poster: meta?.poster || libItem.poster,
+        banner: meta?.banner || '',
+        genres: meta?.genres || [],
+        description: meta?.description || '',
+        imdbRating: meta?.imdbRating || '',
+        has1080pPlus: quality.has1080pPlus,
+        bestQuality: quality.bestQuality,
+        streamCount: quality.streamCount,
+        count1080pPlus: quality.count1080pPlus,
+        lastChecked: quality.checkedAt,
+        checkError: quality.error || null
+      });
+
+      addedCount++;
+      // Brief pause to be gentle with Torrentio API
+      await new Promise(r => setTimeout(r, 400));
+    }
+
+    res.json({
+      success: true,
+      totalInLibrary: libraryItems.length,
+      addedCount,
+      existingCount,
+      stats: db.getStats()
+    });
+  } catch (err) {
+    console.error('[Library Sync Error]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 1-Click Install Addon into user's Stremio account via API
+app.post('/api/auth/install-account', async (req, res) => {
+  try {
+    const authKey = getRequestAuthKey(req);
+    if (!authKey) {
+      return res.status(401).json({ error: 'Você precisa estar autenticado com sua conta do Stremio' });
+    }
+
+    const baseUrl = getBaseUrl(req);
+    const manifestUrl = `${baseUrl}/manifest.json`;
+
+    const result = await installAddonToAccount(authKey, manifestUrl);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+
+    res.json({ success: true, message: 'Addon instalado na sua conta do Stremio com sucesso! Ele já aparecerá na sua Smart TV e em todos os seus aparelhos.' });
+  } catch (err) {
+    console.error('[Install to Account Error]', err);
+    res.status(500).json({ error: err.message });
   }
 });
 

@@ -2,6 +2,7 @@
 let currentTab = 'all';
 let allItems = [];
 let searchTimeout = null;
+let currentUser = null;
 
 // DOM Elements
 const searchInput = document.getElementById('searchInput');
@@ -25,14 +26,233 @@ const btnCloseModal = document.getElementById('btnCloseModal');
 const settingsModal = document.getElementById('settingsModal');
 const btnCheckAllPending = document.getElementById('btnCheckAllPending');
 
+// Auth DOM Elements
+const btnOpenLogin = document.getElementById('btnOpenLogin');
+const userLoggedInMenu = document.getElementById('userLoggedInMenu');
+const userEmailDisplay = document.getElementById('userEmailDisplay');
+const btnLogout = document.getElementById('btnLogout');
+const accountSyncCard = document.getElementById('accountSyncCard');
+const syncUserEmail = document.getElementById('syncUserEmail');
+const btnSyncLibrary = document.getElementById('btnSyncLibrary');
+const btnInstallAccountDirect = document.getElementById('btnInstallAccountDirect');
+
+const loginModal = document.getElementById('loginModal');
+const btnCloseLoginModal = document.getElementById('btnCloseLoginModal');
+const loginTabButtons = document.querySelectorAll('.login-tab-btn');
+const formLoginCredentials = document.getElementById('formLoginCredentials');
+const formLoginAuthKey = document.getElementById('formLoginAuthKey');
+
 const toastContainer = document.getElementById('toastContainer');
 
 // Init
 document.addEventListener('DOMContentLoaded', async () => {
   setupAddonLinks();
+  await checkAuthStatus();
   await loadWatchlist();
   setupEventListeners();
+  setupAuthEventListeners();
 });
+
+// -------------------------------------------------------------
+// STREMIO AUTHENTICATION & LIBRARY SYNC
+// -------------------------------------------------------------
+
+async function checkAuthStatus() {
+  try {
+    const res = await fetch('/api/auth/me');
+    const data = await res.json();
+    if (data.loggedIn && data.user) {
+      setAuthUI(true, data.user);
+    } else {
+      setAuthUI(false, null);
+    }
+  } catch (err) {
+    setAuthUI(false, null);
+  }
+}
+
+function setAuthUI(isLoggedIn, user) {
+  currentUser = user;
+  if (isLoggedIn && user) {
+    btnOpenLogin.classList.add('hidden');
+    userLoggedInMenu.classList.remove('hidden');
+    userEmailDisplay.textContent = user.email || 'Conectado';
+    accountSyncCard.classList.remove('hidden');
+    syncUserEmail.textContent = user.email;
+  } else {
+    btnOpenLogin.classList.remove('hidden');
+    userLoggedInMenu.classList.add('hidden');
+    accountSyncCard.classList.add('hidden');
+    currentUser = null;
+  }
+}
+
+function setupAuthEventListeners() {
+  // Open / Close Login Modal
+  btnOpenLogin.addEventListener('click', () => {
+    loginModal.classList.remove('hidden');
+  });
+
+  btnCloseLoginModal.addEventListener('click', () => {
+    loginModal.classList.add('hidden');
+  });
+
+  loginModal.querySelector('.modal-backdrop').addEventListener('click', () => {
+    loginModal.classList.add('hidden');
+  });
+
+  // Switch Login Tabs (Creds vs AuthKey)
+  loginTabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      loginTabButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const type = btn.dataset.loginType;
+      if (type === 'credentials') {
+        formLoginCredentials.classList.remove('hidden');
+        formLoginAuthKey.classList.add('hidden');
+      } else {
+        formLoginCredentials.classList.add('hidden');
+        formLoginAuthKey.classList.remove('hidden');
+      }
+    });
+  });
+
+  // Submit Credentials Login
+  formLoginCredentials.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const submitBtn = document.getElementById('btnSubmitLoginCreds');
+
+    try {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Autenticando com Stremio...';
+
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Entrar com Stremio';
+
+      if (!res.ok || !data.success) {
+        showToast(data.error || 'Falha ao autenticar.', 'error');
+        return;
+      }
+
+      showToast(`🎉 Bem-vindo(a), ${data.user.email}!`, 'success');
+      loginModal.classList.add('hidden');
+      setAuthUI(true, data.user);
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Entrar com Stremio';
+      showToast('Erro ao conectar com os servidores do Stremio.', 'error');
+    }
+  });
+
+  // Submit AuthKey Login
+  formLoginAuthKey.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const authKey = document.getElementById('loginAuthKey').value.trim();
+    const submitBtn = document.getElementById('btnSubmitLoginKey');
+
+    try {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Validando AuthKey...';
+
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ authKey })
+      });
+
+      const data = await res.json();
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Validar AuthKey';
+
+      if (!res.ok || !data.success) {
+        showToast(data.error || 'AuthKey inválida.', 'error');
+        return;
+      }
+
+      showToast(`🎉 Conectado com sucesso como ${data.user.email}!`, 'success');
+      loginModal.classList.add('hidden');
+      setAuthUI(true, data.user);
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Validar AuthKey';
+      showToast('Erro ao validar chave.', 'error');
+    }
+  });
+
+  // Logout
+  btnLogout.addEventListener('click', async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setAuthUI(false, null);
+      showToast('Desconectado com sucesso.', 'info');
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  // Sync Stremio Library
+  btnSyncLibrary.addEventListener('click', async () => {
+    const icon = btnSyncLibrary.querySelector('.spin-icon');
+    try {
+      icon.classList.add('spinning');
+      btnSyncLibrary.disabled = true;
+      showToast('Puxando filmes da sua biblioteca do Stremio e verificando 1080p+...', 'info');
+
+      const res = await fetch('/api/auth/sync-library', { method: 'POST' });
+      const data = await res.json();
+
+      icon.classList.remove('spinning');
+      btnSyncLibrary.disabled = false;
+
+      if (!res.ok || data.error) {
+        showToast(data.error || 'Erro ao sincronizar biblioteca.', 'error');
+        return;
+      }
+
+      showToast(`🎉 Sincronizado! ${data.addedCount} novo(s) filme(s) adicionados à sua Watchlist!`, 'success');
+      await loadWatchlist();
+    } catch (err) {
+      icon.classList.remove('spinning');
+      btnSyncLibrary.disabled = false;
+      showToast('Erro de comunicação ao sincronizar.', 'error');
+    }
+  });
+
+  // Direct 1-Click Install to Account
+  btnInstallAccountDirect.addEventListener('click', async () => {
+    try {
+      btnInstallAccountDirect.disabled = true;
+      btnInstallAccountDirect.textContent = 'Ativando na conta...';
+      showToast('Instalando addon diretamente na sua conta do Stremio...', 'info');
+
+      const res = await fetch('/api/auth/install-account', { method: 'POST' });
+      const data = await res.json();
+
+      btnInstallAccountDirect.disabled = false;
+      btnInstallAccountDirect.textContent = '✨ Ativar na Conta (1-Click)';
+
+      if (!res.ok || data.error) {
+        showToast(data.error || 'Erro ao instalar na conta.', 'error');
+        return;
+      }
+
+      showToast('🎉 Sucesso! O addon foi instalado na sua conta e já está disponível na sua Smart TV e em todos os seus aparelhos!', 'success');
+    } catch (err) {
+      btnInstallAccountDirect.disabled = false;
+      btnInstallAccountDirect.textContent = '✨ Ativar na Conta (1-Click)';
+      showToast('Falha ao ativar na conta.', 'error');
+    }
+  });
+}
 
 // Setup Stremio Install & Copy Links
 async function setupAddonLinks() {
