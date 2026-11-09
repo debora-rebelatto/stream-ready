@@ -273,32 +273,6 @@ async function setupAddonLinks() {
       btnInstallWeb.href = webInstallUrl;
     }
 
-    // Banner display
-    const manifestUrlDisplay = document.getElementById('manifestUrlDisplay');
-    if (manifestUrlDisplay) {
-      manifestUrlDisplay.textContent = manifestUrl;
-    }
-
-    const statusBannerTitle = document.getElementById('statusBannerTitle');
-    const statusBannerDesc = document.getElementById('statusBannerDesc');
-    const statusBannerIcon = document.getElementById('statusBannerIcon');
-
-    if (statusBannerIcon) statusBannerIcon.textContent = '🌐';
-    if (statusBannerTitle) statusBannerTitle.textContent = 'Addon Online (HTTPS)';
-    if (statusBannerDesc) statusBannerDesc.textContent = 'Link oficial permanente do manifesto para Smart TV, Celular e PC:';
-
-    // Copy buttons
-    const btnCopyManifestPill = document.getElementById('btnCopyManifestPill');
-    if (btnCopyManifestPill) {
-      btnCopyManifestPill.addEventListener('click', () => {
-        navigator.clipboard.writeText(manifestUrl).then(() => {
-          showToast(`Link copiado: ${manifestUrl}`, 'success');
-        }).catch(() => {
-          prompt('Copie o link do Addon abaixo:', manifestUrl);
-        });
-      });
-    }
-
     btnCopyLink.addEventListener('click', () => {
       navigator.clipboard.writeText(manifestUrl).then(() => {
         showToast('Link do manifesto copiado! Cole na busca de Addons do Stremio.', 'success');

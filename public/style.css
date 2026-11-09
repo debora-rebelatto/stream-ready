@@ -323,54 +323,6 @@ body {
   border: 1px solid var(--border-color);
 }
 
-/* TV & LOCAL NETWORK BANNER */
-.tv-banner {
-  background: rgba(31, 36, 56, 0.7);
-  border: 1px solid var(--border-active);
-  border-radius: var(--radius-md);
-  padding: 1rem 1.25rem;
-  margin-bottom: 2rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  backdrop-filter: blur(8px);
-}
-
-.tv-banner-icon {
-  font-size: 1.8rem;
-  flex-shrink: 0;
-}
-
-.tv-banner-text {
-  flex: 1;
-}
-
-.tv-banner-title {
-  font-weight: 700;
-  font-size: 0.95rem;
-  margin-bottom: 0.2rem;
-  color: #fff;
-}
-
-.tv-banner-text p {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.code-pill {
-  background: rgba(0, 0, 0, 0.35);
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  font-family: monospace;
-  color: #a78bfa;
-}
-
-.btn-sm {
-  padding: 0.45rem 0.85rem;
-  font-size: 0.8rem;
-  flex-shrink: 0;
-}
-
 /* HERO */
 .hero-card {
   background: linear-gradient(135deg, rgba(26, 21, 48, 0.8), rgba(15, 23, 42, 0.8));
