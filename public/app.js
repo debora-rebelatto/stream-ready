@@ -223,6 +223,7 @@ function setupAuthEventListeners() {
       await fetch('/api/auth/logout', { method: 'POST', headers: getAuthHeaders() });
     } catch (err) {}
     localStorage.removeItem('stremioAuthKey');
+    localStorage.removeItem('watchlist_cached_items');
     setAuthUI(false, null);
     setupAddonLinks();
     showToast('Desconectado com sucesso.', 'info');
@@ -408,6 +409,23 @@ async function loadWatchlist() {
     renderItems();
     return;
   }
+
+  // 1. Carregamento instantâneo do cache local para nunca exibir tela vazia
+  const cached = localStorage.getItem('watchlist_cached_items');
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        allItems = parsed;
+        const total = allItems.length;
+        const ready = allItems.filter(i => i.has1080pPlus).length;
+        const pending = total - ready;
+        updateStats({ total, ready, pending });
+        renderItems();
+      }
+    } catch (e) {}
+  }
+
   try {
     const res = await fetch('/api/items', {
       headers: getAuthHeaders()
@@ -417,9 +435,36 @@ async function loadWatchlist() {
       setAuthUI(false, null);
       return;
     }
-    allItems = data.items || [];
+
+    const serverItems = data.items || [];
+
+    // Se o servidor voltou vazio (ex: reinício/hibernação do Render) mas temos itens salvos localmente, reidrata automaticamente!
+    if (serverItems.length === 0 && allItems.length > 0) {
+      try {
+        const syncRes = await fetch('/api/items/sync-batch', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ items: allItems })
+        });
+        const syncData = await syncRes.json();
+        if (syncData.items && syncData.items.length > 0) {
+          allItems = syncData.items;
+          localStorage.setItem('watchlist_cached_items', JSON.stringify(allItems));
+          updateStats(syncData.stats);
+          renderItems();
+          setupAddonLinks();
+          return;
+        }
+      } catch (syncErr) {
+        console.warn('Aviso ao reidratar itens:', syncErr);
+      }
+    }
+
+    allItems = serverItems;
+    localStorage.setItem('watchlist_cached_items', JSON.stringify(allItems));
     updateStats(data.stats);
     renderItems();
+    setupAddonLinks();
   } catch (err) {
     console.error('Erro ao carregar watchlist:', err);
     showToast('Erro ao carregar itens da watchlist.', 'error');
@@ -583,7 +628,7 @@ async function handleAddMovie(id) {
 
     const res = await fetch('/api/items', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ id, type: 'movie' })
     });
 
@@ -594,6 +639,10 @@ async function handleAddMovie(id) {
     }
 
     const item = data.item;
+    allItems = allItems.filter(i => i.id !== item.id);
+    allItems.unshift(item);
+    localStorage.setItem('watchlist_cached_items', JSON.stringify(allItems));
+
     if (item.has1080pPlus) {
       showToast(`🎉 "${item.name}" adicionado! Já está PRONTO em ${item.bestQuality} (Não é CAM)!`, 'success');
     } else {
@@ -614,7 +663,7 @@ async function handleCheckSingle(id, btnElement) {
     btnElement.innerHTML = '⏳ Checando...';
     btnElement.disabled = true;
 
-    const res = await fetch(`/api/check/${id}`, { method: 'POST' });
+    const res = await fetch(`/api/check/${id}`, { method: 'POST', headers: getAuthHeaders() });
     const data = await res.json();
 
     btnElement.innerHTML = originalText;
@@ -646,7 +695,7 @@ async function handleCheckAllPending() {
 
     const res = await fetch('/api/check-all', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ forceAll: false })
     });
 
@@ -676,9 +725,11 @@ async function handleDeleteItem(id) {
   if (!confirm(`Deseja remover "${name}" da sua Watchlist?`)) return;
 
   try {
-    const res = await fetch(`/api/items/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/items/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
     const data = await res.json();
     if (data.success) {
+      allItems = allItems.filter(i => i.id !== id);
+      localStorage.setItem('watchlist_cached_items', JSON.stringify(allItems));
       showToast(`Item removido da watchlist.`, 'info');
       await loadWatchlist();
     }
@@ -691,7 +742,7 @@ async function handleDeleteItem(id) {
 // Settings Modal
 function openSettings() {
   settingsModal.classList.remove('hidden');
-  fetch('/api/settings')
+  fetch('/api/settings', { headers: getAuthHeaders() })
     .then(r => r.json())
     .then(settings => {
       if (settings) {
@@ -739,7 +790,7 @@ async function saveSettings() {
 
     const res = await fetch('/api/settings', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         autoCheckIntervalMinutes: interval,
         torrentioUrl: torrentioUrl || 'https://torrentio.strem.fun',
@@ -774,7 +825,7 @@ async function handleImportBackup(e) {
       const items = JSON.parse(event.target.result);
       const res = await fetch('/api/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ items })
       });
       const data = await res.json();
