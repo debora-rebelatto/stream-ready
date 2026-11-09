@@ -290,20 +290,27 @@ app.post('/api/settings', (req, res) => {
   res.json({ success: true, settings: updated });
 });
 
-// System info / Local URLs helper
+// System info / Local & Cloud URLs helper
 app.get('/api/info', (req, res) => {
+  const host = req.get('host') || `localhost:${PORT}`;
+  const isCloud = !!(process.env.RENDER || req.get('x-forwarded-proto') === 'https' || !/^(localhost|127\.|192\.168\.)/.test(host));
   const baseUrl = getBaseUrl(req);
+  const manifestUrl = `${baseUrl}/manifest.json`;
+  const stremioInstallUrl = `stremio://${host}/manifest.json`;
+  const webStremioInstallUrl = `https://web.stremio.com/#/addons?addon=${encodeURIComponent(manifestUrl)}`;
+
   const lanIp = getPrimaryLocalIp();
   const lanBaseUrl = `http://${lanIp}:${PORT}`;
 
   res.json({
+    isCloud,
     baseUrl,
-    lanIp,
-    lanBaseUrl,
-    manifestUrl: `${baseUrl}/manifest.json`,
-    lanManifestUrl: `${lanBaseUrl}/manifest.json`,
-    stremioInstallUrl: `stremio://${req.get('host') || `localhost:${PORT}`}/manifest.json`,
-    lanStremioInstallUrl: `stremio://${lanIp}:${PORT}/manifest.json`,
+    manifestUrl,
+    stremioInstallUrl,
+    webStremioInstallUrl,
+    lanIp: isCloud ? null : lanIp,
+    lanManifestUrl: isCloud ? manifestUrl : `${lanBaseUrl}/manifest.json`,
+    lanStremioInstallUrl: isCloud ? stremioInstallUrl : `stremio://${lanIp}:${PORT}/manifest.json`,
     port: PORT
   });
 });

@@ -40,24 +40,47 @@ async function setupAddonLinks() {
     const res = await fetch('/api/info');
     const info = await res.json();
     
-    // Prefer LAN IP so installing from PC works seamlessly on the Smart TV
-    const installUrl = info.lanStremioInstallUrl || info.stremioInstallUrl;
-    const manifestUrl = info.lanManifestUrl || info.manifestUrl;
+    // Links based on Cloud (Render) vs Local
+    const manifestUrl = info.manifestUrl;
+    const installUrl = info.stremioInstallUrl;
+    const webInstallUrl = info.webStremioInstallUrl;
 
+    // Top buttons
     btnInstallStremio.href = installUrl;
 
-    const lanUrlDisplay = document.getElementById('lanUrlDisplay');
-    if (lanUrlDisplay) {
-      lanUrlDisplay.textContent = manifestUrl;
+    const btnInstallWeb = document.getElementById('btnInstallWeb');
+    if (btnInstallWeb) {
+      btnInstallWeb.href = webInstallUrl;
     }
 
-    const btnCopyLanUrl = document.getElementById('btnCopyLanUrl');
-    if (btnCopyLanUrl) {
-      btnCopyLanUrl.addEventListener('click', () => {
+    // Banner display
+    const manifestUrlDisplay = document.getElementById('manifestUrlDisplay');
+    if (manifestUrlDisplay) {
+      manifestUrlDisplay.textContent = manifestUrl;
+    }
+
+    const statusBannerTitle = document.getElementById('statusBannerTitle');
+    const statusBannerDesc = document.getElementById('statusBannerDesc');
+    const statusBannerIcon = document.getElementById('statusBannerIcon');
+
+    if (info.isCloud) {
+      if (statusBannerIcon) statusBannerIcon.textContent = '🌐';
+      if (statusBannerTitle) statusBannerTitle.textContent = 'Addon Online na Nuvem (Render 24/7)';
+      if (statusBannerDesc) statusBannerDesc.textContent = 'Link oficial permanente (HTTPS) para Smart TV, Celular e PC:';
+    } else {
+      if (statusBannerIcon) statusBannerIcon.textContent = '🏠';
+      if (statusBannerTitle) statusBannerTitle.textContent = 'Addon Rodando Localmente';
+      if (statusBannerDesc) statusBannerDesc.textContent = 'Endereço na sua rede local:';
+    }
+
+    // Copy buttons
+    const btnCopyManifestPill = document.getElementById('btnCopyManifestPill');
+    if (btnCopyManifestPill) {
+      btnCopyManifestPill.addEventListener('click', () => {
         navigator.clipboard.writeText(manifestUrl).then(() => {
-          showToast(`Link para a TV copiado: ${manifestUrl}`, 'success');
+          showToast(`Link copiado: ${manifestUrl}`, 'success');
         }).catch(() => {
-          prompt('Copie o link do Addon para a TV abaixo:', manifestUrl);
+          prompt('Copie o link do Addon abaixo:', manifestUrl);
         });
       });
     }

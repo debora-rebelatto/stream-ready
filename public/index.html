@@ -24,13 +24,17 @@
       </div>
       
       <div class="nav-actions">
-        <a id="btnInstallStremio" href="#" class="btn btn-primary pulse-btn" title="Instalar no Stremio com IP da rede (funciona no PC e na TV)">
+        <a id="btnInstallStremio" href="#" class="btn btn-primary pulse-btn" title="Instalar no aplicativo Stremio">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-          Instalar no Stremio (PC e TV)
+          Instalar no Stremio App
         </a>
-        <button id="btnCopyLink" class="btn btn-secondary" title="Copiar link com IP da rede para colar no Stremio da TV ou PC">
+        <a id="btnInstallWeb" href="#" target="_blank" class="btn btn-secondary" title="Instalar no Stremio Web (Navegador/iPhone)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Stremio Web
+        </a>
+        <button id="btnCopyLink" class="btn btn-secondary" title="Copiar link do manifesto para colar no Stremio da TV, Celular ou PC">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          Copiar Link da TV
+          Copiar Link
         </button>
         <button id="btnSettings" class="btn btn-icon" title="Configurações e Instruções">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -62,15 +66,15 @@
       </div>
     </div>
 
-    <!-- Local Network & TV Info Box -->
-    <div class="tv-banner">
-      <div class="tv-banner-icon">📺</div>
+    <!-- Network / Cloud Status Banner -->
+    <div id="statusBanner" class="tv-banner">
+      <div id="statusBannerIcon" class="tv-banner-icon">🌐</div>
       <div class="tv-banner-text">
-        <div class="tv-banner-title">Conectado na Rede Local para a TV</div>
-        <p>Endereço na sua rede Wi-Fi: <strong id="lanUrlDisplay" class="code-pill">http://192.168.1.25:7000</strong> — Se você usa a mesma conta do Stremio no PC e na TV, ao instalar aqui pelo PC, ele sincroniza automaticamente com sua TV!</p>
+        <div id="statusBannerTitle" class="tv-banner-title">Addon Conectado e Online</div>
+        <p><span id="statusBannerDesc">Link permanente com HTTPS do manifesto:</span> <strong id="manifestUrlDisplay" class="code-pill">Carregando...</strong></p>
       </div>
-      <button id="btnCopyLanUrl" class="btn btn-secondary btn-sm" title="Copiar link do manifesto da TV">
-        Copiar Link da TV
+      <button id="btnCopyManifestPill" class="btn btn-secondary btn-sm" title="Copiar link do manifesto">
+        Copiar Link
       </button>
     </div>
 
