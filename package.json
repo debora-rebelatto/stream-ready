@@ -1,7 +1,7 @@
 {
   "name": "stremio-watchlist-1080p",
   "version": "1.0.0",
-  "description": "Addon para o Stremio com watchlist pessoal e sinalização de filmes disponíveis em 1080p+ e 4K",
+  "description": "Addon para o Stremio com watchlist pessoal e sinalização de filmes prontos para assistir (sem gravação CAM)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -11,8 +11,7 @@
     "stremio",
     "stremio-addon",
     "watchlist",
-    "1080p",
-    "4k",
+    "anti-cam",
     "movies"
   ],
   "author": "",

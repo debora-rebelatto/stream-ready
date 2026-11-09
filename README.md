@@ -1,6 +1,6 @@
-# 🎬 Stremio Watchlist (1080p+ Tracker)
+# 🎬 Stremio Watchlist (Anti-CAM Tracker)
 
-Um addon para o aplicativo **Stremio** hospedado na nuvem que gerencia sua **Watchlist pessoal** e sinaliza automaticamente quando os filmes estiverem disponíveis em qualidade **1080p (Full HD)** ou **4K (UHD)**, funcionando 24h por dia na sua **Smart TV**, **Celular** e **Computador**.
+Um addon para o aplicativo **Stremio** hospedado na nuvem que gerencia sua **Watchlist pessoal** e sinaliza automaticamente quando os filmes estiverem prontos para assistir (liberados em versão limpa, sem ser gravação de cinema CAM/TS), funcionando 24h por dia na sua **Smart TV**, **Celular** e **Computador**.
 
 ---
 
@@ -18,18 +18,18 @@ Um addon para o aplicativo **Stremio** hospedado na nuvem que gerencia sua **Wat
    - **Sincronização da Biblioteca:** Puxe com 1 clique todos os filmes que você favoritou no Stremio pela TV ou celular.
    - **Instalação com 1-Click:** Ative o addon diretamente na sua conta do Stremio via API oficial, sem precisar copiar ou colar links em nenhum aparelho!
 
-2. 🟢 **Sinalização Automática de 1080p+**:
+2. 🟢 **Filtro Anti-CAM em Tempo Real**:
    - Analisa fontes e torrents em tempo real no Torrentio.
-   - Filmes disponíveis em Full HD ou 4K recebem o selo **🟢 [1080p+]**.
-   - Filmes que ainda estão em cinema (CAM/TS) ou 720p ficam como **⏳ [Aguardando]**.
+   - Filmes com qualquer versão limpa (4K, 1080p, 720p, WEB-DL, BluRay) recebem o selo **🟢 [Pronto]**.
+   - Filmes que ainda estão apenas em gravação de cinema (CAM, TS, Telesync, Screener) ou sem fontes ficam como **⏳ [CAM / Aguardando]**.
 
 3. 📺 **Catálogos Nativos no Stremio**:
-   - 🟢 **Watchlist: Prontos (1080p+)**
+   - 🟢 **Watchlist: Prontos (Não CAM)**
    - 📋 **Watchlist: Todos os Filmes**
-   - ⏳ **Watchlist: Aguardando 1080p**
+   - ⏳ **Watchlist: Aguardando (Apenas CAM)**
 
 4. 🤖 **Monitoramento Contínuo**:
-   - O servidor verifica periodicamente em segundo plano se filmes pendentes foram lançados em 1080p/4K e atualiza automaticamente suas listas.
+   - O servidor verifica periodicamente em segundo plano se filmes que estavam apenas em CAM ganharam versões limpas e atualiza automaticamente suas listas.
 
 ---
 

@@ -358,7 +358,7 @@ app.post('/api/items', async (req, res) => {
       checkError: quality.error || null
     });
 
-    console.log(`[Watchlist] Adicionado: ${saved.name} (${saved.id}) -> Qualidade: ${saved.bestQuality} (1080p+: ${saved.has1080pPlus})`);
+    console.log(`[Watchlist] Adicionado: ${saved.name} (${saved.id}) -> Qualidade: ${saved.bestQuality} (Pronto/Não CAM: ${saved.has1080pPlus})`);
 
     res.json({ success: true, item: saved });
   } catch (err) {
@@ -534,7 +534,7 @@ async function runBackgroundCheck() {
   try {
     const items = db.getItems().filter(i => !i.has1080pPlus);
     if (items.length > 0) {
-      console.log(`[AutoChecker] Verificando ${items.length} itens aguardando 1080p...`);
+      console.log(`[AutoChecker] Verificando ${items.length} itens aguardando versão limpa (não CAM)...`);
       for (const item of items) {
         const quality = await checkMovieQuality(item.id, item.type || 'movie');
         if (quality.has1080pPlus) {
@@ -566,7 +566,7 @@ setInterval(runBackgroundCheck, intervalMs);
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`=======================================================`);
-  console.log(`🚀 STREMIO WATCHLIST (1080p+ TRACKER) RODANDO`);
+  console.log(`🚀 STREMIO WATCHLIST (ANTI-CAM TRACKER) RODANDO`);
   console.log(`👉 Porta: ${PORT}`);
   console.log(`👉 Painel Web: http://localhost:${PORT}`);
   console.log(`👉 Addon Manifest: http://localhost:${PORT}/manifest.json`);

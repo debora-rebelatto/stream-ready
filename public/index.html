@@ -19,7 +19,7 @@
         <div class="logo-icon">🎬</div>
         <div class="brand-text">
           <h1>Stremio Watchlist</h1>
-          <span class="badge-tag">1080p+ Tracker</span>
+          <span class="badge-tag">Anti-CAM Tracker</span>
         </div>
       </div>
 
@@ -65,8 +65,8 @@
     <!-- Notice / Quick Info -->
     <div class="hero-card">
       <div class="hero-content">
-        <h2>Monitore lançamentos e assista apenas na melhor qualidade!</h2>
-        <p>Adicione qualquer filme à sua watchlist. O addon avisa automaticamente no Stremio com a marcação <strong class="text-ready">🟢 [1080p+]</strong> assim que estiver disponível em Full HD ou 4K! <button id="btnHeroSettings" class="btn-text-link">Ver Instruções & Configurações ↗</button></p>
+        <h2>Monitore lançamentos e assista sem gravações de cinema!</h2>
+        <p>Adicione qualquer filme à sua watchlist. O addon avisa automaticamente no Stremio com a marcação <strong class="text-ready">🟢 [Pronto]</strong> assim que houver versão disponível que <strong>NÃO seja CAM</strong>! <button id="btnHeroSettings" class="btn-text-link">Ver Instruções & Configurações ↗</button></p>
       </div>
       <div class="stats-grid">
         <div class="stat-card" data-filter="all">
@@ -75,11 +75,11 @@
         </div>
         <div class="stat-card ready" data-filter="ready">
           <span class="stat-value text-ready" id="statReady">0</span>
-          <span class="stat-label">🟢 Prontos (1080p+)</span>
+          <span class="stat-label">🟢 Prontos (Não CAM)</span>
         </div>
         <div class="stat-card pending" data-filter="pending">
           <span class="stat-value text-pending" id="statPending">0</span>
-          <span class="stat-label">⏳ Aguardando 1080p</span>
+          <span class="stat-label">⏳ Aguardando / CAM</span>
         </div>
       </div>
     </div>
@@ -128,10 +128,10 @@
           📋 Todos (<span id="tabCountAll">0</span>)
         </button>
         <button class="tab-btn" data-tab="ready">
-          🟢 Prontos para Assistir (<span id="tabCountReady">0</span>)
+          🟢 Prontos (Não CAM) (<span id="tabCountReady">0</span>)
         </button>
         <button class="tab-btn" data-tab="pending">
-          ⏳ Aguardando 1080p (<span id="tabCountPending">0</span>)
+          ⏳ Aguardando / CAM (<span id="tabCountPending">0</span>)
         </button>
       </div>
 
@@ -219,9 +219,9 @@
             <li>Clique em <strong>Install</strong>.</li>
             <li>Pronto! Na tela inicial do Stremio (ou em <strong>Descobrir</strong>), aparecerão as categorias:
               <ul>
-                <li><strong>🟢 Watchlist: Prontos (1080p+)</strong></li>
+                <li><strong>🟢 Watchlist: Prontos (Não CAM)</strong></li>
                 <li><strong>📋 Watchlist: Todos os Filmes</strong></li>
-                <li><strong>⏳ Watchlist: Aguardando 1080p</strong></li>
+                <li><strong>⏳ Watchlist: Aguardando (Apenas CAM)</strong></li>
               </ul>
             </li>
           </ol>
@@ -235,8 +235,8 @@
             <label class="catalog-check-item">
               <input type="checkbox" id="catReady" value="watchlist_ready" checked>
               <div class="catalog-check-info">
-                <span class="catalog-check-title">🟢 Watchlist: Prontos (1080p+)</span>
-                <span class="catalog-check-desc">Exibe apenas os filmes que já têm fontes 1080p ou 4K disponíveis.</span>
+                <span class="catalog-check-title">🟢 Watchlist: Prontos (Não CAM)</span>
+                <span class="catalog-check-desc">Exibe apenas os filmes que já têm versão limpa/digital disponível (não é gravação de cinema).</span>
               </div>
             </label>
             <label class="catalog-check-item">
@@ -249,8 +249,8 @@
             <label class="catalog-check-item">
               <input type="checkbox" id="catPending" value="watchlist_pending" checked>
               <div class="catalog-check-info">
-                <span class="catalog-check-title">⏳ Watchlist: Aguardando 1080p</span>
-                <span class="catalog-check-desc">Exibe apenas filmes que ainda não possuem qualidade 1080p (CAM/TS/SD).</span>
+                <span class="catalog-check-title">⏳ Watchlist: Aguardando (Apenas CAM)</span>
+                <span class="catalog-check-desc">Exibe apenas filmes que ainda não possuem versão limpa (indisponíveis ou apenas gravação de cinema CAM/TS).</span>
               </div>
             </label>
           </div>
@@ -262,7 +262,7 @@
         <div class="form-group">
           <label for="settingInterval">Intervalo de Verificação Automática (minutos):</label>
           <input type="number" id="settingInterval" min="5" max="1440" value="30">
-          <small>Verifica periodicamente em segundo plano se filmes pendentes já atingiram qualidade 1080p+.</small>
+          <small>Verifica periodicamente em segundo plano se filmes que estavam apenas em CAM já ganharam versão limpa.</small>
         </div>
 
         <div class="form-group">

@@ -236,7 +236,7 @@ function setupAuthEventListeners() {
     try {
       icon.classList.add('spinning');
       btnSyncLibrary.disabled = true;
-      showToast('Puxando filmes da sua biblioteca do Stremio e verificando 1080p+...', 'info');
+      showToast('Puxando filmes da sua biblioteca do Stremio e verificando fontes...', 'info');
 
       const res = await fetch('/api/auth/sync-library', {
         method: 'POST',
@@ -458,7 +458,7 @@ function renderItems() {
       <div class="empty-state auth-locked-box">
         <div class="empty-icon">🔒</div>
         <h3>Nenhuma lista disponível sem login</h3>
-        <p>Conecte sua conta do Stremio para carregar, visualizar e gerenciar seus filmes em 1080p+.</p>
+        <p>Conecte sua conta do Stremio para carregar, visualizar e gerenciar seus filmes sem gravações de cinema.</p>
         <button class="btn btn-primary" id="btnLockedLoginAction" style="margin-top: 1.25rem;">
           🔐 Entrar com Stremio
         </button>
@@ -480,8 +480,8 @@ function renderItems() {
 
   if (filtered.length === 0) {
     let emptyMsg = 'Sua watchlist está vazia.';
-    if (currentTab === 'ready') emptyMsg = 'Nenhum filme disponível em 1080p+ ainda.';
-    if (currentTab === 'pending') emptyMsg = 'Nenhum filme aguardando 1080p!';
+    if (currentTab === 'ready') emptyMsg = 'Nenhum filme com versão limpa disponível ainda.';
+    if (currentTab === 'pending') emptyMsg = 'Nenhum filme aguardando versão limpa!';
 
     watchlistContainer.innerHTML = `
       <div class="empty-state">
@@ -496,7 +496,7 @@ function renderItems() {
   watchlistContainer.innerHTML = filtered.map(item => {
     const ready = item.has1080pPlus;
     const badgeClass = ready ? 'ready' : 'pending';
-    const badgeText = ready ? '🟢 1080p+ PRONTO' : '⏳ AGUARDANDO';
+    const badgeText = ready ? '🟢 PRONTO (NÃO CAM)' : '⏳ APENAS CAM';
     const qualityText = item.bestQuality || 'Pendente';
     const streamsText = item.streamCount > 0 ? `${item.streamCount} fontes` : '0 fontes';
     const stremioUrl = `stremio://detail/movie/${item.id}`;
@@ -607,9 +607,9 @@ async function handleAddMovie(id) {
 
     const item = data.item;
     if (item.has1080pPlus) {
-      showToast(`🎉 "${item.name}" adicionado! Já está DISPONÍVEL em ${item.bestQuality}!`, 'success');
+      showToast(`🎉 "${item.name}" adicionado! Já está PRONTO em ${item.bestQuality} (Não é CAM)!`, 'success');
     } else {
-      showToast(`⏳ "${item.name}" adicionado! Aguardando versão 1080p+.`, 'info');
+      showToast(`⏳ "${item.name}" adicionado! Aguardando versão limpa (atualmente: ${item.bestQuality}).`, 'info');
     }
 
     await loadWatchlist();
@@ -634,7 +634,7 @@ async function handleCheckSingle(id, btnElement) {
 
     if (data.success && data.item) {
       if (data.becameReady) {
-        showToast(`🎉 Boa notícia! "${data.item.name}" agora está disponível em ${data.item.bestQuality}!`, 'success');
+        showToast(`🎉 Boa notícia! "${data.item.name}" já tem versão limpa disponível em ${data.item.bestQuality}!`, 'success');
       } else {
         showToast(`Verificado: ${data.item.name} (${data.item.bestQuality} - ${data.item.streamCount} fontes)`, 'info');
       }
@@ -668,9 +668,9 @@ async function handleCheckAllPending() {
 
     if (data.success) {
       if (data.newlyReady > 0) {
-        showToast(`🎉 ${data.newlyReady} novo(s) filme(s) atingiram qualidade 1080p+!`, 'success');
+        showToast(`🎉 ${data.newlyReady} novo(s) filme(s) saíram de CAM e já estão prontos para assistir!`, 'success');
       } else {
-        showToast(`Verificação concluída. Nenhum novo lançamento 1080p+ detectado no momento.`, 'info');
+        showToast(`Verificação concluída. Nenhum novo lançamento detectado no momento.`, 'info');
       }
       await loadWatchlist();
     }
