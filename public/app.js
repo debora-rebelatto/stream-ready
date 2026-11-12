@@ -67,20 +67,42 @@ async function checkAuthStatus() {
     return;
   }
 
+  // Carrega do cache local imediatamente para exibição instantânea
+  const cached = localStorage.getItem('watchlist_cached_items');
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        allItems = parsed;
+        const total = allItems.length;
+        const ready = allItems.filter(i => i.has1080pPlus).length;
+        const pending = total - ready;
+        updateStats({ total, ready, pending });
+        renderItems();
+      }
+    } catch (e) {}
+  }
+
   try {
     const res = await fetch('/api/auth/me', {
       headers: { 'x-stremio-auth': key }
     });
     const data = await res.json();
     if (data.loggedIn && data.user) {
+      if (data.user.email) localStorage.setItem('stremioEmail', data.user.email);
       setAuthUI(true, data.user);
       await loadWatchlist();
-    } else {
+    } else if (res.status === 401 || (data && data.loggedIn === false)) {
       localStorage.removeItem('stremioAuthKey');
       setAuthUI(false, null);
     }
   } catch (err) {
-    setAuthUI(false, null);
+    console.warn('Servidor pode estar acordando:', err);
+    // Não desconecta o usuário nem apaga os itens se for apenas lentidão/reinício do servidor
+    const cachedEmail = localStorage.getItem('stremioEmail') || 'Conectado';
+    setAuthUI(true, { email: cachedEmail });
+    // Tenta reconectar em 6 segundos
+    setTimeout(checkAuthStatus, 6000);
   }
 }
 
@@ -168,6 +190,7 @@ function setupAuthEventListeners() {
 
       showToast(`🎉 Bem-vindo(a), ${data.user.email}!`, 'success');
       localStorage.setItem('stremioAuthKey', data.authKey);
+      if (data.user?.email) localStorage.setItem('stremioEmail', data.user.email);
       loginModal.classList.add('hidden');
       setAuthUI(true, data.user);
       setupAddonLinks();
@@ -206,6 +229,7 @@ function setupAuthEventListeners() {
 
       showToast(`🎉 Conectado com sucesso como ${data.user.email}!`, 'success');
       localStorage.setItem('stremioAuthKey', data.authKey);
+      if (data.user?.email) localStorage.setItem('stremioEmail', data.user.email);
       loginModal.classList.add('hidden');
       setAuthUI(true, data.user);
       setupAddonLinks();
@@ -223,6 +247,7 @@ function setupAuthEventListeners() {
       await fetch('/api/auth/logout', { method: 'POST', headers: getAuthHeaders() });
     } catch (err) {}
     localStorage.removeItem('stremioAuthKey');
+    localStorage.removeItem('stremioEmail');
     localStorage.removeItem('watchlist_cached_items');
     setAuthUI(false, null);
     setupAddonLinks();
@@ -438,7 +463,7 @@ async function loadWatchlist() {
 
     const serverItems = data.items || [];
 
-    // Se o servidor voltou vazio (ex: reinício/hibernação do Render) mas temos itens salvos localmente, reidrata automaticamente!
+    // Se o servidor voltou vazio mas temos itens salvos localmente, reidrata automaticamente!
     if (serverItems.length === 0 && allItems.length > 0) {
       try {
         const syncRes = await fetch('/api/items/sync-batch', {
@@ -458,13 +483,17 @@ async function loadWatchlist() {
       } catch (syncErr) {
         console.warn('Aviso ao reidratar itens:', syncErr);
       }
+      // Se a reidratação ainda está em andamento ou falhou temporariamente, NÃO sobrescreve com array vazio!
+      return;
     }
 
-    allItems = serverItems;
-    localStorage.setItem('watchlist_cached_items', JSON.stringify(allItems));
-    updateStats(data.stats);
-    renderItems();
-    setupAddonLinks();
+    if (serverItems.length > 0 || allItems.length === 0) {
+      allItems = serverItems;
+      localStorage.setItem('watchlist_cached_items', JSON.stringify(allItems));
+      updateStats(data.stats);
+      renderItems();
+      setupAddonLinks();
+    }
   } catch (err) {
     console.error('Erro ao carregar watchlist:', err);
     showToast('Erro ao carregar itens da watchlist.', 'error');

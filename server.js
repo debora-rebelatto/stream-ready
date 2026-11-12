@@ -5,7 +5,8 @@ const db = require('./lib/db');
 const { checkMovieQuality } = require('./lib/qualityChecker');
 const { searchMovies, getMeta } = require('./lib/cinemeta');
 const { getManifest, handleCatalog, handleMeta } = require('./lib/stremioAddon');
-const { loginStremio, getUserInfo, installAddonToAccount } = require('./lib/stremioAuth');
+const { loginStremio, getUserInfo, installAddonToAccount, getAccountWatchlist, saveAccountWatchlist } = require('./lib/stremioAuth');
+const { encodeUserData, decodeUserData } = require('./lib/userData');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
@@ -51,41 +52,14 @@ function getRequestAuthKey(req) {
 }
 
 // -------------------------------------------------------------
-// USER DATA ENCODING & PERSISTENCE HELPER
+// USER DATA PERSISTENCE HELPER
 // -------------------------------------------------------------
-function encodeUserData(authKey, itemIds) {
-  const payload = {
-    authKey: authKey || '',
-    ids: Array.isArray(itemIds) ? itemIds : []
-  };
-  return Buffer.from(JSON.stringify(payload)).toString('base64url');
-}
-
-function decodeUserData(param) {
-  if (!param) return { authKey: '', ids: [] };
-  try {
-    const raw = Buffer.from(param, 'base64url').toString('utf-8');
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') {
-      return {
-        authKey: parsed.authKey || '',
-        ids: Array.isArray(parsed.ids) ? parsed.ids : []
-      };
-    }
-  } catch (e) {}
-  return { authKey: param, ids: [] };
-}
-
 async function syncAddonUrlWithAccount(authKey, baseUrl) {
   if (!authKey) return;
   try {
     const items = db.getItems();
-    const ids = items.map(i => i.id);
-    const encoded = encodeUserData(authKey, ids);
-    const manifestUrl = `${baseUrl}/${encoded}/manifest.json`;
     const manifest = getManifest(baseUrl, authKey);
-    await installAddonToAccount(authKey, manifestUrl, manifest);
-    console.log(`[AddonSync] URL permanente atualizada na conta Stremio com ${ids.length} filmes!`);
+    await saveAccountWatchlist(authKey, baseUrl, items, manifest);
   } catch (err) {
     console.warn('[AddonSync] Aviso ao sincronizar URL do addon:', err.message);
   }
@@ -118,14 +92,14 @@ const catalogHandler = async (req, res) => {
     const userData = decodeUserData(authKey || getRequestAuthKey(req));
     const effectiveAuthKey = userData.authKey || authKey || getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
 
-    // Se NÃO estiver em uma conta e não tiver filmes no URL, não renderiza lista
-    if (!effectiveAuthKey && userData.ids.length === 0) {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      return res.json({ metas: [] });
-    }
-
-    // Se o URL possui IDs codificados que não estão no db local (ex: após reinício do Render), reidrata o banco!
-    if (userData.ids.length > 0) {
+    // 1. Se vieram filmes decodificados da URL (Smart TV/app), reidrata com status pronto instantaneamente!
+    if (userData.items && userData.items.length > 0) {
+      for (const item of userData.items) {
+        if (!db.getItem(item.id)) {
+          db.addItem(item);
+        }
+      }
+    } else if (userData.ids && userData.ids.length > 0) {
       for (const movieId of userData.ids) {
         if (!db.getItem(movieId)) {
           db.addItem({
@@ -144,6 +118,22 @@ const catalogHandler = async (req, res) => {
           }).catch(() => {});
         }
       }
+    } else if (effectiveAuthKey && db.getItems().length === 0) {
+      // 2. Se a URL não continha filmes mas temos o authKey, busca da nuvem do Stremio
+      const cloudItems = await getAccountWatchlist(effectiveAuthKey);
+      if (Array.isArray(cloudItems) && cloudItems.length > 0) {
+        for (const it of cloudItems) {
+          if (!db.getItem(it.id)) {
+            db.addItem(it);
+          }
+        }
+      }
+    }
+
+    // Se NÃO estiver em uma conta e não tiver filmes, não renderiza lista
+    if (!effectiveAuthKey && db.getItems().length === 0) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return res.json({ metas: [] });
     }
 
     let extra = {};
@@ -202,6 +192,22 @@ app.post('/api/auth/login', async (req, res) => {
         return res.status(401).json({ success: false, error: 'Chave de autenticação (AuthKey) inválida ou expirada' });
       }
       db.updateSettings({ stremioAuthKey: authKey, stremioEmail: user.email });
+
+      // Se o banco local estiver vazio, restaura da nuvem do Stremio
+      if (db.getItems().length === 0) {
+        try {
+          const cloudItems = await getAccountWatchlist(authKey);
+          if (Array.isArray(cloudItems) && cloudItems.length > 0) {
+            for (const it of cloudItems) {
+              if (!db.getItem(it.id)) db.addItem(it);
+            }
+          }
+        } catch (e) {}
+      }
+
+      const baseUrl = getBaseUrl(req);
+      syncAddonUrlWithAccount(authKey, baseUrl).catch(() => {});
+
       return res.json({ success: true, authKey, user });
     }
 
@@ -215,6 +221,22 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     db.updateSettings({ stremioAuthKey: authResult.authKey, stremioEmail: authResult.user.email });
+
+    // Se o banco local estiver vazio, restaura da nuvem do Stremio
+    if (db.getItems().length === 0) {
+      try {
+        const cloudItems = await getAccountWatchlist(authResult.authKey);
+        if (Array.isArray(cloudItems) && cloudItems.length > 0) {
+          for (const it of cloudItems) {
+            if (!db.getItem(it.id)) db.addItem(it);
+          }
+        }
+      } catch (e) {}
+    }
+
+    const baseUrl = getBaseUrl(req);
+    syncAddonUrlWithAccount(authResult.authKey, baseUrl).catch(() => {});
+
     res.json(authResult);
   } catch (err) {
     console.error('[Auth Error]', err);
@@ -235,7 +257,24 @@ app.get('/api/auth/me', async (req, res) => {
       return res.json({ loggedIn: false });
     }
 
-    res.json({ loggedIn: true, authKey, user });
+    // Se o banco local estiver vazio (ex: reinício/hibernação do Render), restaura da nuvem do Stremio
+    if (db.getItems().length === 0) {
+      try {
+        const cloudItems = await getAccountWatchlist(authKey);
+        if (Array.isArray(cloudItems) && cloudItems.length > 0) {
+          console.log(`[Persistence:auth/me] Restaurando ${cloudItems.length} filmes da nuvem do Stremio...`);
+          for (const it of cloudItems) {
+            if (!db.getItem(it.id)) {
+              db.addItem(it);
+            }
+          }
+        }
+      } catch (cloudErr) {
+        console.warn('[Persistence:auth/me] Falha ao recuperar da nuvem:', cloudErr.message);
+      }
+    }
+
+    res.json({ loggedIn: true, authKey, user, itemsCount: db.getItems().length });
   } catch (err) {
     res.json({ loggedIn: false });
   }
@@ -257,14 +296,11 @@ app.post('/api/auth/install-account', async (req, res) => {
 
     const baseUrl = getBaseUrl(req);
     const items = db.getItems();
-    const ids = items.map(i => i.id);
-    const encoded = encodeUserData(authKey, ids);
-    const manifestUrl = `${baseUrl}/${encoded}/manifest.json`;
     const manifest = getManifest(baseUrl, authKey);
 
-    const result = await installAddonToAccount(authKey, manifestUrl, manifest);
-    if (!result.success) {
-      return res.status(400).json({ error: result.error });
+    const success = await saveAccountWatchlist(authKey, baseUrl, items, manifest);
+    if (!success) {
+      return res.status(400).json({ error: 'Falha ao salvar addon na conta oficial do Stremio.' });
     }
 
     res.json({ success: true, message: 'Addon ativado na sua conta oficial com sucesso! Ele já aparecerá na sua Smart TV e em todos os seus aparelhos.' });
@@ -279,7 +315,7 @@ app.post('/api/auth/install-account', async (req, res) => {
 // -------------------------------------------------------------
 
 // List items and stats
-app.get('/api/items', (req, res) => {
+app.get('/api/items', async (req, res) => {
   const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
   
   // Se não estiver conectado em uma conta, não renderiza nenhuma lista
@@ -289,6 +325,23 @@ app.get('/api/items', (req, res) => {
       stats: { total: 0, ready: 0, pending: 0 },
       requireAuth: true
     });
+  }
+
+  // Se o banco local estiver vazio (ex: reinício/hibernação do Render), busca da nuvem do Stremio!
+  if (db.getItems().length === 0) {
+    try {
+      const cloudItems = await getAccountWatchlist(authKey);
+      if (Array.isArray(cloudItems) && cloudItems.length > 0) {
+        console.log(`[Persistence:api/items] Restaurando ${cloudItems.length} filmes da nuvem do Stremio...`);
+        for (const it of cloudItems) {
+          if (!db.getItem(it.id)) {
+            db.addItem(it);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[Persistence:api/items] Erro ao recuperar da nuvem:', e.message);
+    }
   }
 
   const { filter } = req.query;
@@ -533,8 +586,7 @@ app.get('/api/info', (req, res) => {
   const baseUrl = getBaseUrl(req);
   const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
   const items = db.getItems();
-  const ids = items.map(i => i.id);
-  const encoded = encodeUserData(authKey, ids);
+  const encoded = encodeUserData(authKey, items);
 
   const manifestUrl = authKey ? `${baseUrl}/${encoded}/manifest.json` : `${baseUrl}/manifest.json`;
   const stremioInstallUrl = authKey ? `stremio://${host}/${encoded}/manifest.json` : `stremio://${host}/manifest.json`;
