@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #0c0d14;
+    --bg-card: #151824;
+    --bg-card-hover: #1c2030;
+    --bg-surface: #1f2438;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-active: rgba(138, 75, 255, 0.5);
+
+    --primary: #7b42f6;
+    --primary-hover: #6a34e0;
+    --primary-glow: rgba(123, 66, 246, 0.35);
+
+    --ready-color: #10b981;
+    --ready-bg: rgba(16, 185, 129, 0.15);
+    --ready-border: rgba(16, 185, 129, 0.4);
+
+    --pending-color: #f59e0b;
+    --pending-bg: rgba(245, 158, 11, 0.15);
+    --pending-border: rgba(245, 158, 11, 0.4);
+
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+    --text-dim: #6b7280;
+  }
+}
+
+@keyframes gentle-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(123, 66, 246, 0.6); }
+  70% { box-shadow: 0 0 0 10px rgba(123, 66, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(123, 66, 246, 0); }
+}
+
+.pulse-btn {
+  animation: gentle-pulse 3s infinite;
+}

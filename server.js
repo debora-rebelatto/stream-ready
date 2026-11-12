@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const db = require('./lib/db');
 const { checkMovieQuality } = require('./lib/qualityChecker');
 const { searchMovies, getMeta } = require('./lib/cinemeta');
@@ -28,7 +29,12 @@ app.use((req, res, next) => {
 app.get('/manifest', (req, res) => {
   res.redirect('/manifest.json');
 });
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve compiled React build if present, otherwise fallback to public/
+const distPath = path.join(__dirname, 'dist');
+const publicPath = path.join(__dirname, 'public');
+const clientPath = fs.existsSync(distPath) ? distPath : publicPath;
+app.use(express.static(clientPath));
 
 // Helper to determine base URL
 function getBaseUrl(req) {
@@ -205,7 +211,6 @@ app.post('/api/auth/login', async (req, res) => {
         return res.status(401).json({ success: false, error: 'Invalid or expired authentication key (AuthKey)' });
       }
       const userId = user.email.trim().toLowerCase();
-      await db.claimInitialOwnerIfNeeded(userId);
       db.updateSettings({ stremioAuthKey: authKey, stremioEmail: userId }, userId);
 
       // If this user's database list is empty, restore from their Stremio cloud account
@@ -236,7 +241,6 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     const userId = authResult.user.email.trim().toLowerCase();
-    await db.claimInitialOwnerIfNeeded(userId);
     db.updateSettings({ stremioAuthKey: authResult.authKey, stremioEmail: userId }, userId);
 
     // Se a lista deste usuário no banco estiver vazia, restaura da nuvem do Stremio desta conta
@@ -276,7 +280,6 @@ app.get('/api/auth/me', async (req, res) => {
     }
 
     const userId = user.email.trim().toLowerCase();
-    await db.claimInitialOwnerIfNeeded(userId);
     db.updateSettings({ stremioAuthKey: authKey, stremioEmail: userId }, userId);
 
     // Se a lista deste usuário no banco estiver vazia, restaura da nuvem do Stremio desta conta
@@ -719,6 +722,7 @@ app.listen(PORT, '0.0.0.0', async () => {
   console.log(`👉 Port: ${PORT}`);
   console.log(`👉 Web Dashboard: http://localhost:${PORT}`);
   console.log(`👉 Addon Manifest: http://localhost:${PORT}/manifest.json`);
+  console.log(`👉 Client Source: ${fs.existsSync(distPath) ? '⚛️ REACT BUILD (dist)' : '📁 STATIC (public)'}`);
   console.log(`👉 Database: ${db.isSupabaseConfigured() ? '🟢 SUPABASE CLOUD ACTIVE (MULTI-USER)' : '🟡 LOCAL JSON'}`);
   console.log(`=======================================================`);
 });

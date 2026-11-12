@@ -1,0 +1,66 @@
+import { api } from '../lib/api';
+import { cinemetaService } from './cinemetaService';
+import type { WatchlistItem, WatchlistStats, SearchMovieResult } from '../types';
+
+export const watchlistService = {
+  /**
+   * Search movies using client-side Cinemeta service with fallback to server API
+   */
+  async searchMovies(query: string): Promise<SearchMovieResult[]> {
+    try {
+      const results = await cinemetaService.searchMovies(query);
+      if (results && results.length > 0) {
+        return results;
+      }
+    } catch {
+      // ignore
+    }
+    return api.searchMovies(query);
+  },
+
+  /**
+   * Load user watchlist and calculate stats on the fly
+   */
+  async getWatchlist(filter?: 'ready' | 'pending'): Promise<{
+    items: WatchlistItem[];
+    stats: WatchlistStats;
+    requireAuth: boolean;
+  }> {
+    return api.getItems(filter);
+  },
+
+  /**
+   * Add a movie to user watchlist
+   */
+  async addItem(id: string, type: string = 'movie') {
+    return api.addItem(id, type);
+  },
+
+  /**
+   * Remove a movie from watchlist
+   */
+  async removeItem(id: string) {
+    return api.deleteItem(id);
+  },
+
+  /**
+   * Recheck quality for a single item
+   */
+  async recheckItem(id: string) {
+    return api.recheckSingle(id);
+  },
+
+  /**
+   * Recheck all pending movies
+   */
+  async recheckAll(forceAll = false) {
+    return api.recheckAll(forceAll);
+  },
+
+  /**
+   * Import JSON backup
+   */
+  async importBackup(items: WatchlistItem[]) {
+    return api.importBackup(items);
+  },
+};

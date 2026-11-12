@@ -6,8 +6,8 @@ A cloud-hosted **Stremio** addon that manages your **personal Watchlist** and au
 
 ## 🌐 Official Addon URLs
 
-- **Web Dashboard:** [https://stremiowatchlist.onrender.com](https://stremiowatchlist.onrender.com)
-- **Addon Manifest:** `https://stremiowatchlist.onrender.com/manifest.json`
+- **Web Dashboard:** [https://stremiowatchlist.vercel.app/](https://stremiowatchlist.vercel.app/)
+- **Addon Manifest:** `https://stremiowatchlist.vercel.app/manifest.json`
 
 ---
 
@@ -34,7 +34,7 @@ A cloud-hosted **Stremio** addon that manages your **personal Watchlist** and au
 
 ## 📱 How to Use
 
-1. Open the dashboard: [https://stremiowatchlist.onrender.com](https://stremiowatchlist.onrender.com)
+1. Open the dashboard: [https://stremiowatchlist.vercel.app/](https://stremiowatchlist.vercel.app/)
 2. Click **"🔐 Sign in with Stremio"** and log in with your account.
 3. Click **"✨ Activate Addon on Account (1-Click)"** to automatically install the addon across all your devices.
 4. Search and add your favorite movies to track when they become available in good quality!
