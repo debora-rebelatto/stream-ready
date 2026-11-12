@@ -1,11 +1,13 @@
 -- ============================================================================
--- SCHEMA DO SUPABASE PARA O STREMIO WATCHLIST (ANTI-CAM TRACKER)
+-- SCHEMA DO SUPABASE PARA O STREMIO WATCHLIST (MULTI-USUÁRIO)
 -- Cole e execute este script no "SQL Editor" do seu painel do Supabase
 -- ============================================================================
 
--- 1. Tabela de Filmes da Watchlist
+-- 1. Tabela de Filmes da Watchlist (Isolada por Conta do Stremio via user_id)
 CREATE TABLE IF NOT EXISTS public.watchlist_items (
   id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  imdb_id TEXT NOT NULL,
   type TEXT DEFAULT 'movie',
   name TEXT NOT NULL,
   year TEXT DEFAULT '',
@@ -23,12 +25,12 @@ CREATE TABLE IF NOT EXISTS public.watchlist_items (
   check_error TEXT
 );
 
-CREATE INDEX IF NOT EXISTS idx_watchlist_items_added_at ON public.watchlist_items (added_at DESC);
+CREATE INDEX IF NOT EXISTS idx_watchlist_items_user_id ON public.watchlist_items (user_id, added_at DESC);
 CREATE INDEX IF NOT EXISTS idx_watchlist_items_ready ON public.watchlist_items (has_1080p_plus);
 
--- 2. Tabela de Configurações e Credenciais
+-- 2. Tabela de Configurações e Credenciais (Uma linha por Conta do Stremio)
 CREATE TABLE IF NOT EXISTS public.watchlist_settings (
-  id TEXT PRIMARY KEY DEFAULT 'default',
+  id TEXT PRIMARY KEY,
   auto_check_interval_minutes INTEGER DEFAULT 30,
   torrentio_url TEXT DEFAULT 'https://torrentio.strem.fun',
   enabled_catalogs JSONB DEFAULT '["watchlist_ready", "watchlist_all", "watchlist_pending"]'::jsonb,
@@ -57,10 +59,5 @@ CREATE POLICY "Acesso total watchlist_settings"
   TO anon, authenticated
   USING (true)
   WITH CHECK (true);
-
--- 4. Configuração padrão inicial
-INSERT INTO public.watchlist_settings (id, auto_check_interval_minutes, torrentio_url, enabled_catalogs)
-VALUES ('default', 30, 'https://torrentio.strem.fun', '["watchlist_ready", "watchlist_all", "watchlist_pending"]'::jsonb)
-ON CONFLICT (id) DO NOTHING;
 
 NOTIFY pgrst, 'reload schema';

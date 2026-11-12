@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stremio Watchlist 1080p+ Tracker</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%3E<text y=%2226%22 font-size=%2224%22>🎬</text></svg>">
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -222,36 +222,6 @@
         <hr class="divider">
 
         <div class="form-group">
-          <label><strong>📺 Listas visíveis no Addon do Stremio:</strong></label>
-          <div class="catalog-selection-list">
-            <label class="catalog-check-item">
-              <input type="checkbox" id="catReady" value="watchlist_ready" checked>
-              <div class="catalog-check-info">
-                <span class="catalog-check-title">🟢 Watchlist: Prontos (Não CAM)</span>
-                <span class="catalog-check-desc">Exibe apenas os filmes que já têm versão limpa/digital disponível (não é gravação de cinema).</span>
-              </div>
-            </label>
-            <label class="catalog-check-item">
-              <input type="checkbox" id="catAll" value="watchlist_all" checked>
-              <div class="catalog-check-info">
-                <span class="catalog-check-title">📋 Watchlist: Todos os Filmes</span>
-                <span class="catalog-check-desc">Exibe a lista completa de todos os filmes salvos na sua Watchlist.</span>
-              </div>
-            </label>
-            <label class="catalog-check-item">
-              <input type="checkbox" id="catPending" value="watchlist_pending" checked>
-              <div class="catalog-check-info">
-                <span class="catalog-check-title">⏳ Watchlist: Aguardando (Apenas CAM)</span>
-                <span class="catalog-check-desc">Exibe apenas filmes que ainda não possuem versão limpa (indisponíveis ou apenas gravação de cinema CAM/TS).</span>
-              </div>
-            </label>
-          </div>
-          <small class="field-hint">Marque quais fileiras você deseja ver no Stremio. As alterações são sincronizadas automaticamente com seus aparelhos ao salvar.</small>
-        </div>
-
-        <hr class="divider">
-
-        <div class="form-group">
           <label for="settingInterval">Intervalo de Verificação Automática (minutos):</label>
           <input type="number" id="settingInterval" min="5" max="1440" value="30">
           <small>Verifica periodicamente em segundo plano se filmes que estavam apenas em CAM já ganharam versão limpa.</small>
@@ -284,7 +254,7 @@
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
 

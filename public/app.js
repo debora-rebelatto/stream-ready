@@ -60,27 +60,19 @@ function getAuthHeaders() {
   return key ? { 'x-stremio-auth': key, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
 }
 
+function getUserCacheKey(email) {
+  const targetEmail = (email || currentUser?.email || localStorage.getItem('stremioEmail') || '').trim().toLowerCase();
+  return targetEmail ? `watchlist_cached_items_${targetEmail}` : null;
+}
+
 async function checkAuthStatus() {
+  // Remove cache global legado sem escopo de usuário
+  localStorage.removeItem('watchlist_cached_items');
+
   const key = localStorage.getItem('stremioAuthKey');
   if (!key) {
     setAuthUI(false, null);
     return;
-  }
-
-  // Carrega do cache local imediatamente para exibição instantânea (apenas se tiver chave de login)
-  const cached = localStorage.getItem('watchlist_cached_items');
-  if (cached) {
-    try {
-      const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        allItems = parsed;
-        const total = allItems.length;
-        const ready = allItems.filter(i => i.has1080pPlus).length;
-        const pending = total - ready;
-        updateStats({ total, ready, pending });
-        renderItems();
-      }
-    } catch (e) {}
   }
 
   try {
@@ -95,7 +87,6 @@ async function checkAuthStatus() {
     } else if (res.status === 401 || (data && data.loggedIn === false)) {
       localStorage.removeItem('stremioAuthKey');
       localStorage.removeItem('stremioEmail');
-      localStorage.removeItem('watchlist_cached_items');
       setAuthUI(false, null);
     }
   } catch (err) {
@@ -189,6 +180,8 @@ function setupAuthEventListeners() {
       }
 
       showToast(`🎉 Bem-vindo(a), ${data.user.email}!`, 'success');
+      allItems = [];
+      localStorage.removeItem('watchlist_cached_items');
       localStorage.setItem('stremioAuthKey', data.authKey);
       if (data.user?.email) localStorage.setItem('stremioEmail', data.user.email);
       loginModal.classList.add('hidden');
@@ -228,6 +221,8 @@ function setupAuthEventListeners() {
       }
 
       showToast(`🎉 Conectado com sucesso como ${data.user.email}!`, 'success');
+      allItems = [];
+      localStorage.removeItem('watchlist_cached_items');
       localStorage.setItem('stremioAuthKey', data.authKey);
       if (data.user?.email) localStorage.setItem('stremioEmail', data.user.email);
       loginModal.classList.add('hidden');
@@ -434,28 +429,14 @@ function setupEventListeners() {
   });
 }
 
-// Load Watchlist Data
+// Load Watchlist Data (Isolado por Usuário no Supabase)
 async function loadWatchlist() {
   if (!currentUser) {
     renderItems();
     return;
   }
 
-  // 1. Carregamento instantâneo do cache local para nunca exibir tela vazia
-  const cached = localStorage.getItem('watchlist_cached_items');
-  if (cached) {
-    try {
-      const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        allItems = parsed;
-        const total = allItems.length;
-        const ready = allItems.filter(i => i.has1080pPlus).length;
-        const pending = total - ready;
-        updateStats({ total, ready, pending });
-        renderItems();
-      }
-    } catch (e) {}
-  }
+  const cacheKey = getUserCacheKey(currentUser.email);
 
   try {
     const res = await fetch('/api/items', {
@@ -468,38 +449,13 @@ async function loadWatchlist() {
     }
 
     const serverItems = data.items || [];
-
-    // Se o servidor voltou vazio mas temos itens salvos localmente, reidrata automaticamente!
-    if (serverItems.length === 0 && allItems.length > 0) {
-      try {
-        const syncRes = await fetch('/api/items/sync-batch', {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ items: allItems })
-        });
-        const syncData = await syncRes.json();
-        if (syncData.items && syncData.items.length > 0) {
-          allItems = syncData.items;
-          localStorage.setItem('watchlist_cached_items', JSON.stringify(allItems));
-          updateStats(syncData.stats);
-          renderItems();
-          setupAddonLinks();
-          return;
-        }
-      } catch (syncErr) {
-        console.warn('Aviso ao reidratar itens:', syncErr);
-      }
-      // Se a reidratação ainda está em andamento ou falhou temporariamente, NÃO sobrescreve com array vazio!
-      return;
+    allItems = serverItems;
+    if (cacheKey) {
+      localStorage.setItem(cacheKey, JSON.stringify(allItems));
     }
-
-    if (serverItems.length > 0 || allItems.length === 0) {
-      allItems = serverItems;
-      localStorage.setItem('watchlist_cached_items', JSON.stringify(allItems));
-      updateStats(data.stats);
-      renderItems();
-      setupAddonLinks();
-    }
+    updateStats(data.stats);
+    renderItems();
+    setupAddonLinks();
   } catch (err) {
     console.error('Erro ao carregar watchlist:', err);
     showToast('Erro ao carregar itens da watchlist.', 'error');
@@ -673,7 +629,8 @@ async function handleAddMovie(id) {
     const item = data.item;
     allItems = allItems.filter(i => i.id !== item.id);
     allItems.unshift(item);
-    localStorage.setItem('watchlist_cached_items', JSON.stringify(allItems));
+    const cacheKey = getUserCacheKey();
+    if (cacheKey) localStorage.setItem(cacheKey, JSON.stringify(allItems));
 
     if (item.has1080pPlus) {
       showToast(`🎉 "${item.name}" adicionado! Já está PRONTO em ${item.bestQuality} (Não é CAM)!`, 'success');
@@ -761,7 +718,8 @@ async function handleDeleteItem(id) {
     const data = await res.json();
     if (data.success) {
       allItems = allItems.filter(i => i.id !== id);
-      localStorage.setItem('watchlist_cached_items', JSON.stringify(allItems));
+      const cacheKey = getUserCacheKey();
+      if (cacheKey) localStorage.setItem(cacheKey, JSON.stringify(allItems));
       showToast(`Item removido da watchlist.`, 'info');
       await loadWatchlist();
     }
@@ -780,14 +738,6 @@ function openSettings() {
       if (settings) {
         document.getElementById('settingInterval').value = settings.autoCheckIntervalMinutes || 30;
         document.getElementById('settingTorrentioUrl').value = settings.torrentioUrl || 'https://torrentio.strem.fun';
-
-        const enabled = settings.enabledCatalogs || ['watchlist_ready', 'watchlist_all', 'watchlist_pending'];
-        const catReady = document.getElementById('catReady');
-        const catAll = document.getElementById('catAll');
-        const catPending = document.getElementById('catPending');
-        if (catReady) catReady.checked = enabled.includes('watchlist_ready');
-        if (catAll) catAll.checked = enabled.includes('watchlist_all');
-        if (catPending) catPending.checked = enabled.includes('watchlist_pending');
       }
     })
     .catch(err => {
@@ -803,16 +753,6 @@ async function saveSettings() {
   const interval = parseInt(document.getElementById('settingInterval').value, 10) || 30;
   const torrentioUrl = document.getElementById('settingTorrentioUrl').value.trim();
 
-  const enabledCatalogs = [];
-  if (document.getElementById('catReady')?.checked) enabledCatalogs.push('watchlist_ready');
-  if (document.getElementById('catAll')?.checked) enabledCatalogs.push('watchlist_all');
-  if (document.getElementById('catPending')?.checked) enabledCatalogs.push('watchlist_pending');
-
-  if (enabledCatalogs.length === 0) {
-    showToast('Selecione pelo menos uma lista para exibir no Stremio.', 'error');
-    return;
-  }
-
   const btnSave = document.getElementById('btnSaveSettings');
   const oldText = btnSave.textContent;
 
@@ -825,8 +765,7 @@ async function saveSettings() {
       headers: getAuthHeaders(),
       body: JSON.stringify({
         autoCheckIntervalMinutes: interval,
-        torrentioUrl: torrentioUrl || 'https://torrentio.strem.fun',
-        enabledCatalogs
+        torrentioUrl: torrentioUrl || 'https://torrentio.strem.fun'
       })
     });
 
