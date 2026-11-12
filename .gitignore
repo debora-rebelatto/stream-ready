@@ -2,6 +2,8 @@ node_modules/
 *.log
 .DS_Store
 Thumbs.db
+.env
+.env.local
 
 # Backups e dados privados locais (nunca sobem para o GitHub)
 *backup*

@@ -62,10 +62,6 @@ function getAuthHeaders() {
 
 async function checkAuthStatus() {
   const key = localStorage.getItem('stremioAuthKey');
-  if (!key) {
-    setAuthUI(false, null);
-    return;
-  }
 
   // Carrega do cache local imediatamente para exibição instantânea
   const cached = localStorage.getItem('watchlist_cached_items');
@@ -85,29 +81,32 @@ async function checkAuthStatus() {
 
   try {
     const res = await fetch('/api/auth/me', {
-      headers: { 'x-stremio-auth': key }
+      headers: key ? { 'x-stremio-auth': key } : {}
     });
     const data = await res.json();
     if (data.loggedIn && data.user) {
+      if (data.authKey) localStorage.setItem('stremioAuthKey', data.authKey);
       if (data.user.email) localStorage.setItem('stremioEmail', data.user.email);
       setAuthUI(true, data.user);
       await loadWatchlist();
+    } else if (data.supabaseConfigured) {
+      // Banco Supabase está ativo: libera visualização e edição da Watchlist mesmo sem login no Stremio
+      setAuthUI(false, null, true);
+      await loadWatchlist();
     } else if (res.status === 401 || (data && data.loggedIn === false)) {
       localStorage.removeItem('stremioAuthKey');
-      setAuthUI(false, null);
+      setAuthUI(false, null, false);
     }
   } catch (err) {
     console.warn('Servidor pode estar acordando:', err);
-    // Não desconecta o usuário nem apaga os itens se for apenas lentidão/reinício do servidor
     const cachedEmail = localStorage.getItem('stremioEmail') || 'Conectado';
     setAuthUI(true, { email: cachedEmail });
-    // Tenta reconectar em 6 segundos
     setTimeout(checkAuthStatus, 6000);
   }
 }
 
-function setAuthUI(isLoggedIn, user) {
-  currentUser = isLoggedIn ? user : null;
+function setAuthUI(isLoggedIn, user, allowDatabaseAccess = false) {
+  currentUser = isLoggedIn ? user : (allowDatabaseAccess ? { email: 'Supabase Cloud', dbOnly: true } : null);
   const searchSection = document.querySelector('.search-section');
   const listControls = document.querySelector('.list-controls');
 
@@ -117,6 +116,12 @@ function setAuthUI(isLoggedIn, user) {
     userEmailDisplay.textContent = user.email || 'Conectado';
     accountSyncCard.classList.remove('hidden');
     syncUserEmail.textContent = user.email;
+    if (searchSection) searchSection.classList.remove('hidden');
+    if (listControls) listControls.classList.remove('hidden');
+  } else if (allowDatabaseAccess) {
+    btnOpenLogin.classList.remove('hidden');
+    userLoggedInMenu.classList.add('hidden');
+    accountSyncCard.classList.add('hidden');
     if (searchSection) searchSection.classList.remove('hidden');
     if (listControls) listControls.classList.remove('hidden');
   } else {
@@ -416,9 +421,7 @@ function setupEventListeners() {
   // Ao clicar em qualquer filme no navegador, redirecionar para o filme dentro do app do Stremio
   watchlistContainer.addEventListener('click', (e) => {
     if (
-      e.target.closest('.btn-card-action') ||
-      e.target.closest('.btn-card-remove') ||
-      e.target.closest('.btn-check-item') ||
+      e.target.closest('.btn-card-delete') ||
       e.target.closest('.btn-delete-item') ||
       e.target.closest('button')
     ) {
@@ -576,6 +579,15 @@ function renderItems() {
         <div class="poster-wrap">
           <img class="poster-img" src="${item.poster || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22450%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%231e2235%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22%239ca3af%22 text-anchor=%22middle%22>Sem Imagem</text></svg>'}" alt="${item.name}" loading="lazy">
           <div class="poster-badge ${badgeClass}">${badgeText}</div>
+          <button class="btn-card-delete btn-delete-item" data-id="${item.id}" title="Remover da watchlist" aria-label="Remover ${item.name} da watchlist">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+              <path d="M10 11v6"></path>
+              <path d="M14 11v6"></path>
+              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+            </svg>
+          </button>
         </div>
         <div class="card-details">
           <h3 class="card-title" title="${item.name}">${item.name}</h3>
@@ -586,27 +598,12 @@ function renderItems() {
           <div class="quality-pill ${badgeClass}">
             <span>${qualityText}</span> • <span>${streamsText}</span>
           </div>
-          <div class="card-actions">
-            <button class="btn-card-action btn-check-item" data-id="${item.id}" title="Verificar qualidade agora">
-              🔄 Rechecar
-            </button>
-            <button class="btn-card-action btn-card-remove btn-delete-item" data-id="${item.id}" title="Remover da watchlist">
-              🗑️
-            </button>
-          </div>
         </div>
       </div>
     `;
   }).join('');
 
   // Attach card event listeners
-  watchlistContainer.querySelectorAll('.btn-check-item').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      handleCheckSingle(btn.dataset.id, btn);
-    });
-  });
-
   watchlistContainer.querySelectorAll('.btn-delete-item').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -883,8 +880,16 @@ async function handleImportBackup(e) {
 
 // Toast Notifications
 function showToast(message, type = 'info') {
+  // Evita empilhar avisos idênticos na tela
+  toastContainer.querySelectorAll('.toast').forEach(existing => {
+    if (existing.dataset.msg === message) {
+      existing.remove();
+    }
+  });
+
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
+  toast.dataset.msg = message;
   const icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️');
   toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
   toastContainer.appendChild(toast);

@@ -28,7 +28,11 @@ app.use((req, res, next) => {
 app.get('/manifest', (req, res) => {
   res.redirect('/manifest.json');
 });
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'no-cache');
+  }
+}));
 
 // Helper to determine base URL
 function getBaseUrl(req) {
@@ -70,11 +74,12 @@ async function syncAddonUrlWithAccount(authKey, baseUrl) {
 // -------------------------------------------------------------
 
 // Manifest (root or user-specific)
-app.get(['/manifest.json', '/:authKey/manifest.json'], (req, res) => {
+app.get(['/manifest.json', '/:authKey/manifest.json'], async (req, res) => {
+  await db.ensureLoaded();
   const baseUrl = getBaseUrl(req);
   const authKeyParam = req.params.authKey || getRequestAuthKey(req);
   const userData = decodeUserData(authKeyParam);
-  const effectiveAuthKey = userData.authKey || authKeyParam;
+  const effectiveAuthKey = userData.authKey || authKeyParam || db.getSettings().stremioAuthKey;
   const manifest = getManifest(baseUrl, effectiveAuthKey);
   res.json(manifest);
 });
@@ -88,15 +93,21 @@ app.get(['/configure', '/:authKey/configure'], (req, res) => {
 // Supports: /catalog/:type/:id.json, /:authKey/catalog/:type/:id.json and extras
 const catalogHandler = async (req, res) => {
   try {
+    await db.ensureLoaded();
     const { type, id, authKey } = req.params;
     const userData = decodeUserData(authKey || getRequestAuthKey(req));
     const effectiveAuthKey = userData.authKey || authKey || getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
 
-    // 1. Se vieram filmes decodificados da URL (Smart TV/app), reidrata com status pronto instantaneamente!
+    // 1. Se vieram filmes decodificados da URL (Smart TV/app), adiciona os que ainda não estão no banco
     if (userData.items && userData.items.length > 0) {
       for (const item of userData.items) {
         if (!db.getItem(item.id)) {
           db.addItem(item);
+          if (!item.bestQuality || item.bestQuality === 'Pendente') {
+            checkMovieQuality(item.id, item.type || 'movie').then(q => {
+              if (q) db.updateItem(item.id, { has1080pPlus: q.has1080pPlus, bestQuality: q.bestQuality, streamCount: q.streamCount, count1080pPlus: q.count1080pPlus, lastChecked: q.checkedAt });
+            }).catch(() => {});
+          }
         }
       }
     } else if (userData.ids && userData.ids.length > 0) {
@@ -119,7 +130,7 @@ const catalogHandler = async (req, res) => {
         }
       }
     } else if (effectiveAuthKey && db.getItems().length === 0) {
-      // 2. Se a URL não continha filmes mas temos o authKey, busca da nuvem do Stremio
+      // 2. Se o banco ainda estiver vazio mas temos o authKey, busca da nuvem do Stremio
       const cloudItems = await getAccountWatchlist(effectiveAuthKey);
       if (Array.isArray(cloudItems) && cloudItems.length > 0) {
         for (const it of cloudItems) {
@@ -130,7 +141,7 @@ const catalogHandler = async (req, res) => {
       }
     }
 
-    // Se NÃO estiver em uma conta e não tiver filmes, não renderiza lista
+    // Se NÃO estiver em uma conta e não tiver filmes no banco, retorna lista vazia
     if (!effectiveAuthKey && db.getItems().length === 0) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       return res.json({ metas: [] });
@@ -247,17 +258,18 @@ app.post('/api/auth/login', async (req, res) => {
 // Check current logged in user
 app.get('/api/auth/me', async (req, res) => {
   try {
+    await db.ensureLoaded();
     const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
     if (!authKey) {
-      return res.json({ loggedIn: false });
+      return res.json({ loggedIn: false, supabaseConfigured: db.isSupabaseConfigured() });
     }
 
     const user = await getUserInfo(authKey);
     if (!user) {
-      return res.json({ loggedIn: false });
+      return res.json({ loggedIn: false, supabaseConfigured: db.isSupabaseConfigured() });
     }
 
-    // Se o banco local estiver vazio (ex: reinício/hibernação do Render), restaura da nuvem do Stremio
+    // Se o banco estiver vazio, tenta restaurar da nuvem do Stremio
     if (db.getItems().length === 0) {
       try {
         const cloudItems = await getAccountWatchlist(authKey);
@@ -274,9 +286,9 @@ app.get('/api/auth/me', async (req, res) => {
       }
     }
 
-    res.json({ loggedIn: true, authKey, user, itemsCount: db.getItems().length });
+    res.json({ loggedIn: true, authKey, user, itemsCount: db.getItems().length, supabaseConfigured: db.isSupabaseConfigured() });
   } catch (err) {
-    res.json({ loggedIn: false });
+    res.json({ loggedIn: false, supabaseConfigured: db.isSupabaseConfigured() });
   }
 });
 
@@ -316,10 +328,11 @@ app.post('/api/auth/install-account', async (req, res) => {
 
 // List items and stats
 app.get('/api/items', async (req, res) => {
+  await db.ensureLoaded();
   const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
   
-  // Se não estiver conectado em uma conta, não renderiza nenhuma lista
-  if (!authKey) {
+  // Se não estiver conectado em uma conta, não houver itens no banco e não tiver Supabase, solicita login
+  if (!authKey && db.getItems().length === 0 && !db.isSupabaseConfigured()) {
     return res.json({
       items: [],
       stats: { total: 0, ready: 0, pending: 0 },
@@ -327,8 +340,8 @@ app.get('/api/items', async (req, res) => {
     });
   }
 
-  // Se o banco local estiver vazio (ex: reinício/hibernação do Render), busca da nuvem do Stremio!
-  if (db.getItems().length === 0) {
+  // Se o banco estiver vazio, busca da nuvem do Stremio
+  if (db.getItems().length === 0 && authKey) {
     try {
       const cloudItems = await getAccountWatchlist(authKey);
       if (Array.isArray(cloudItems) && cloudItems.length > 0) {
@@ -581,7 +594,8 @@ app.post('/api/settings', async (req, res) => {
 });
 
 // System info / Cloud URLs helper
-app.get('/api/info', (req, res) => {
+app.get('/api/info', async (req, res) => {
+  await db.ensureLoaded();
   const host = req.get('host') || `localhost:${PORT}`;
   const baseUrl = getBaseUrl(req);
   const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
@@ -597,6 +611,7 @@ app.get('/api/info', (req, res) => {
     manifestUrl,
     stremioInstallUrl,
     webStremioInstallUrl,
+    supabaseConfigured: db.isSupabaseConfigured(),
     port: PORT
   });
 });
@@ -639,10 +654,29 @@ async function runBackgroundCheck() {
   backgroundCheckRunning = true;
 
   try {
+    await db.ensureLoaded();
     const items = db.getItems().filter(i => !i.has1080pPlus);
     if (items.length > 0) {
       console.log(`[AutoChecker] Verificando ${items.length} itens aguardando versão limpa (não CAM)...`);
       for (const item of items) {
+        // Se faltar metadado (ex: veio de backup simples), enriquece via Cinemeta
+        if (!item.description || !item.genres || item.genres.length === 0) {
+          try {
+            const meta = await getMeta(item.type || 'movie', item.id);
+            if (meta) {
+              db.updateItem(item.id, {
+                name: meta.name || item.name,
+                year: meta.year || item.year,
+                poster: meta.poster || item.poster,
+                banner: meta.banner || item.banner,
+                genres: meta.genres || item.genres,
+                description: meta.description || item.description,
+                imdbRating: meta.imdbRating || item.imdbRating
+              });
+            }
+          } catch (e) {}
+        }
+
         const quality = await checkMovieQuality(item.id, item.type || 'movie');
         if (quality.has1080pPlus) {
           console.log(`🎉 [NOVIDADE] O filme "${item.name}" agora está disponível em ${quality.bestQuality}!`);
@@ -671,12 +705,21 @@ const intervalMs = Math.max(5, settings.autoCheckIntervalMinutes || 30) * 60 * 1
 setInterval(runBackgroundCheck, intervalMs);
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
+  await db.ensureLoaded(true);
   console.log(`=======================================================`);
   console.log(`🚀 STREMIO WATCHLIST (ANTI-CAM TRACKER) RODANDO`);
   console.log(`👉 Porta: ${PORT}`);
   console.log(`👉 Painel Web: http://localhost:${PORT}`);
   console.log(`👉 Addon Manifest: http://localhost:${PORT}/manifest.json`);
+  console.log(`👉 Banco de Dados: ${db.isSupabaseConfigured() ? '🟢 SUPABASE CLOUD ATIVO' : '🟡 JSON LOCAL (Configure SUPABASE_URL e SUPABASE_KEY)'}`);
+  console.log(`👉 Filmes carregados: ${db.getItems().length}`);
   console.log(`=======================================================`);
+
+  // Se houver itens ainda nunca checados ("Pendente"), faz uma checagem inicial em background
+  const unchecked = db.getItems().filter(i => !i.lastChecked || i.bestQuality === 'Pendente');
+  if (unchecked.length > 0) {
+    setTimeout(() => runBackgroundCheck(), 3000);
+  }
 });
 

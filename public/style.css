@@ -611,7 +611,7 @@ body {
 .poster-badge {
   position: absolute;
   top: 10px;
-  right: 10px;
+  left: 10px;
   font-size: 0.7rem;
   font-weight: 700;
   padding: 0.25rem 0.55rem;
@@ -622,6 +622,10 @@ body {
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  max-width: calc(100% - 56px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .poster-badge.ready {
@@ -634,6 +638,43 @@ body {
   background: rgba(245, 158, 11, 0.9);
   color: #000;
   border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-card-delete {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(12, 13, 20, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.movie-card:hover .btn-card-delete {
+  opacity: 1;
+}
+
+.btn-card-delete:hover {
+  background: #ef4444;
+  border-color: #f87171;
+  color: #ffffff;
+  transform: scale(1.1);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.5);
+}
+
+.btn-card-delete:active {
+  transform: scale(0.95);
 }
 
 .card-details {
@@ -670,7 +711,7 @@ body {
   font-weight: 600;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  margin-bottom: 0.75rem;
+  margin-top: auto;
   align-self: flex-start;
 }
 
@@ -684,50 +725,6 @@ body {
   background: var(--pending-bg);
   color: var(--pending-color);
   border: 1px solid var(--pending-border);
-}
-
-.card-actions {
-  margin-top: auto;
-  display: flex;
-  gap: 0.4rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border-color);
-}
-
-.btn-card-action {
-  flex: 1;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  padding: 0.4rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  text-align: center;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  transition: all 0.2s;
-}
-
-.btn-card-action:hover {
-  background: var(--bg-card-hover);
-  border-color: rgba(255, 255, 255, 0.25);
-}
-
-.btn-card-remove {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.25);
-  width: 32px;
-  flex: none;
-}
-
-.btn-card-remove:hover {
-  background: rgba(239, 68, 68, 0.25);
 }
 
 /* EMPTY STATE */
@@ -1124,6 +1121,22 @@ body {
 
   .card-title {
     font-size: 0.875rem;
+  }
+
+  .poster-badge {
+    top: 8px;
+    left: 8px;
+    font-size: 0.62rem;
+    padding: 0.2rem 0.45rem;
+    max-width: calc(100% - 48px);
+  }
+
+  .btn-card-delete {
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    opacity: 0.9;
   }
 }
 
