@@ -7,8 +7,9 @@ import { SearchSection } from './components/SearchSection';
 import { MovieCard } from './components/MovieCard';
 import { LoginModal } from './components/LoginModal';
 import { SettingsModal } from './components/SettingsModal';
+import { LandingPage } from './components/LandingPage';
 import { ToastContainer } from './components/ToastContainer';
-import { RotateCw, Lock, Film, Sparkles } from 'lucide-react';
+import { RotateCw, Film } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -148,23 +149,8 @@ export const App: React.FC = () => {
             )}
           </>
         ) : (
-          /* Locked State when user is not signed in */
-          <div className="py-16 sm:py-24 text-center max-w-lg mx-auto p-8 rounded-2xl bg-white/[0.02] border border-dashed border-purple-500/30 flex flex-col items-center">
-            <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 mb-4 shadow-inner">
-              <Lock size={26} />
-            </div>
-            <h3 className="text-lg font-bold text-white mb-2">Sign in to view your watchlist</h3>
-            <p className="text-xs text-gray-400 mb-6 leading-relaxed">
-              Connect your Stremio account to automatically sync your movies, view real-time quality alerts, and track releases across your Smart TV and mobile devices.
-            </p>
-            <button
-              onClick={() => setIsLoginOpen(true)}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white text-xs font-bold shadow-lg transition-all cursor-pointer"
-            >
-              <Sparkles size={14} />
-              Sign in with Stremio
-            </button>
-          </div>
+          /* Landing Page for visitors */
+          <LandingPage onOpenLogin={() => setIsLoginOpen(true)} />
         )}
       </main>
 
@@ -173,15 +159,17 @@ export const App: React.FC = () => {
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <ToastContainer />
 
-      {/* Footer */}
-      <footer className="border-t border-white/5 py-6 px-4 text-center text-xs text-gray-500">
-        <p>
-          🎬 <span className="font-semibold text-gray-400">Stremio Watchlist (Good Quality Tracker)</span> • Beta Version
-        </p>
-        <p className="mt-1 text-[11px] text-gray-600">
-          Disclaimer: This community tool uses public stream metadata and is not affiliated with or endorsed by Stremio.
-        </p>
-      </footer>
+      {/* Footer for authenticated users (LandingPage has its own footer) */}
+      {user && (
+        <footer className="border-t border-white/5 py-6 px-4 text-center text-xs text-gray-500">
+          <p>
+            🎬 <span className="font-semibold text-gray-400">Stremio Watchlist (Good Quality Tracker)</span> • Beta Version
+          </p>
+          <p className="mt-1 text-[11px] text-gray-600">
+            Disclaimer: This community tool uses public stream metadata and is not affiliated with or endorsed by Stremio.
+          </p>
+        </footer>
+      )}
     </div>
   );
 };
