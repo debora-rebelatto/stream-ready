@@ -296,21 +296,12 @@ async function setupAddonLinks() {
     const manifestUrl = info.manifestUrl;
     const installUrl = info.stremioInstallUrl || `stremio://${window.location.host}/manifest.json`;
 
-    // Top buttons: redirect directly to Stremio app
+    // Top button: redirect directly to Stremio app
     btnInstallStremio.href = installUrl;
     btnInstallStremio.onclick = (e) => {
       e.preventDefault();
       window.location.href = installUrl;
     };
-
-    const btnInstallWeb = document.getElementById('btnInstallWeb');
-    if (btnInstallWeb) {
-      btnInstallWeb.href = installUrl;
-      btnInstallWeb.onclick = (e) => {
-        e.preventDefault();
-        window.location.href = installUrl;
-      };
-    }
 
     btnCopyLink.onclick = () => {
       navigator.clipboard.writeText(manifestUrl).then(() => {
@@ -324,8 +315,6 @@ async function setupAddonLinks() {
     const fallbackUrl = `stremio://${window.location.host}/manifest.json`;
     const fallbackManifestUrl = `${window.location.origin}/manifest.json`;
     btnInstallStremio.href = fallbackUrl;
-    const btnInstallWeb = document.getElementById('btnInstallWeb');
-    if (btnInstallWeb) btnInstallWeb.href = fallbackUrl;
     btnCopyLink.onclick = () => {
       navigator.clipboard.writeText(fallbackManifestUrl).then(() => {
         showToast('Link do manifesto copiado! Cole na busca de Addons do Stremio.', 'success');
@@ -424,14 +413,25 @@ function setupEventListeners() {
   const importInput = document.getElementById('importFileInput');
   importInput.addEventListener('change', handleImportBackup);
 
-  // Ao clicar em qualquer filme no navegador, redirecionar para o app do Stremio
+  // Ao clicar em qualquer filme no navegador, redirecionar para o filme dentro do app do Stremio
   watchlistContainer.addEventListener('click', (e) => {
-    if (e.target.closest('.btn-card-remove') || e.target.closest('.btn-recheck')) {
+    if (
+      e.target.closest('.btn-card-action') ||
+      e.target.closest('.btn-card-remove') ||
+      e.target.closest('.btn-check-item') ||
+      e.target.closest('.btn-delete-item') ||
+      e.target.closest('button')
+    ) {
       return;
     }
     const card = e.target.closest('.movie-card');
     if (card && card.dataset.id) {
-      window.location.href = `stremio://detail/movie/${card.dataset.id}`;
+      const id = card.dataset.id;
+      const type = card.dataset.type || 'movie';
+      const stremioDeepLink = type === 'series'
+        ? `stremio:///detail/series/${id}`
+        : `stremio:///detail/movie/${id}/${id}`;
+      window.location.href = stremioDeepLink;
     }
   });
 }
@@ -569,10 +569,10 @@ function renderItems() {
     const badgeText = ready ? '🟢 PRONTO (NÃO CAM)' : '⏳ APENAS CAM';
     const qualityText = item.bestQuality || 'Pendente';
     const streamsText = item.streamCount > 0 ? `${item.streamCount} fontes` : '0 fontes';
-    const stremioUrl = `stremio://detail/movie/${item.id}`;
+    const itemType = item.type || 'movie';
 
     return `
-      <div class="movie-card" data-id="${item.id}">
+      <div class="movie-card" data-id="${item.id}" data-type="${itemType}" title="Clique para abrir no Stremio">
         <div class="poster-wrap">
           <img class="poster-img" src="${item.poster || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22450%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%231e2235%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22%239ca3af%22 text-anchor=%22middle%22>Sem Imagem</text></svg>'}" alt="${item.name}" loading="lazy">
           <div class="poster-badge ${badgeClass}">${badgeText}</div>
@@ -587,9 +587,6 @@ function renderItems() {
             <span>${qualityText}</span> • <span>${streamsText}</span>
           </div>
           <div class="card-actions">
-            <a href="${stremioUrl}" class="btn-card-action" title="Abrir no app Stremio">
-              🎬 Abrir
-            </a>
             <button class="btn-card-action btn-check-item" data-id="${item.id}" title="Verificar qualidade agora">
               🔄 Rechecar
             </button>
@@ -604,11 +601,17 @@ function renderItems() {
 
   // Attach card event listeners
   watchlistContainer.querySelectorAll('.btn-check-item').forEach(btn => {
-    btn.addEventListener('click', () => handleCheckSingle(btn.dataset.id, btn));
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleCheckSingle(btn.dataset.id, btn);
+    });
   });
 
   watchlistContainer.querySelectorAll('.btn-delete-item').forEach(btn => {
-    btn.addEventListener('click', () => handleDeleteItem(btn.dataset.id));
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleDeleteItem(btn.dataset.id);
+    });
   });
 }
 

@@ -11,7 +11,7 @@ const SERVER_URL = process.env.SERVER_URL || 'https://stremiowatchlist.onrender.
 
 async function restore() {
   console.log('=====================================================');
-  console.log('🔄 RESTAURADOR AUTOMÁTICO DE WATCHLIST');
+  console.log('🔄 RESTAURADOR AUTOMÁTICO DE WATCHLIST (BACKUP PRIVADO)');
   console.log('=====================================================');
 
   if (!fs.existsSync(BACKUP_FILE)) {
@@ -29,39 +29,37 @@ async function restore() {
 
   const movies = backup.movies || [];
   if (movies.length === 0) {
-    console.log('⚠️ Nenhum filme cadastrado no backup privado ainda.');
-    console.log('👉 Adicione os nomes ou IDs dos seus filmes em: data/backup_privado_watchlist.json');
+    console.log('⚠️ Nenhum filme cadastrado no backup privado.');
     return;
   }
 
-  console.log(`📋 Encontrados ${movies.length} filme(s) para restaurar...`);
+  console.log(`📋 Encontrados ${movies.length} filme(s) para restaurar no servidor...`);
   console.log(`🌐 Servidor de destino: ${SERVER_URL}\n`);
 
-  let successCount = 0;
+  // 1. Tentar restauração rápida em lote (sync-batch)
+  try {
+    console.log('⚡ Tentando restauração em lote ultra-rápida...');
+    const batchRes = await fetch(`${SERVER_URL}/api/items/sync-batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: movies })
+    });
+    const batchData = await batchRes.json();
+    if (batchData.success) {
+      console.log(`✅ Sucesso! ${batchData.added || movies.length} filmes sincronizados no servidor.`);
+      console.log(`📊 Estatísticas atuais: Total: ${batchData.stats?.total} | Prontos: ${batchData.stats?.ready} | Aguardando: ${batchData.stats?.pending}`);
+      console.log('\n🎉 Todos os seus filmes foram restaurados com sucesso!');
+      return;
+    }
+  } catch (err) {
+    console.log('⚠️ Restauração em lote falhou ou o servidor está acordando. Tentando item a item...');
+  }
 
+  // 2. Restauração individual item a item (fallback)
+  let successCount = 0;
   for (const m of movies) {
     let id = typeof m === 'string' ? m : m.id;
     let name = typeof m === 'object' ? m.name : m;
-
-    // Se for apenas o nome e não um ID IMDb (tt...), pesquisa no Cinemeta
-    if (id && !id.startsWith('tt')) {
-      try {
-        console.log(`🔍 Pesquisando ID IMDb para "${name}"...`);
-        const searchRes = await fetch(`${SERVER_URL}/api/search?q=${encodeURIComponent(name)}`);
-        const results = await searchRes.json();
-        if (results && results.length > 0) {
-          id = results[0].id;
-          name = results[0].name;
-          console.log(`   ↳ Encontrado: ${name} (${id})`);
-        } else {
-          console.warn(`   ⚠️ Nenhum resultado encontrado para "${name}". Pulando.`);
-          continue;
-        }
-      } catch (err) {
-        console.warn(`   ⚠️ Falha ao buscar "${name}":`, err.message);
-        continue;
-      }
-    }
 
     try {
       console.log(`➕ Adicionando "${name || id}" (${id})...`);
@@ -75,7 +73,7 @@ async function restore() {
         console.log(`   ✅ Sucesso! Qualidade: ${data.item.bestQuality} | Pronto: ${data.item.has1080pPlus ? 'SIM' : 'NÃO'}`);
         successCount++;
       } else {
-        console.warn(`   ❌ Erro ao adicionar:`, data.error || 'Erro desconhecido');
+        console.warn(`   ❌ Erro ao adicionar:`, data.error || 'Erro');
       }
     } catch (err) {
       console.error(`   ❌ Falha na requisição para ${id}:`, err.message);
@@ -83,7 +81,7 @@ async function restore() {
   }
 
   console.log('\n=====================================================');
-  console.log(`🎉 Processo finalizado: ${successCount}/${movies.length} filme(s) restaurados com sucesso!`);
+  console.log(`🎉 Processo finalizado: ${successCount}/${movies.length} filme(s) restaurados!`);
   console.log('=====================================================');
 }
 
