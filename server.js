@@ -34,7 +34,15 @@ app.get('/manifest', (req, res) => {
 const distPath = path.join(__dirname, 'dist');
 const publicPath = path.join(__dirname, 'public');
 const clientPath = fs.existsSync(distPath) ? distPath : publicPath;
-app.use(express.static(clientPath));
+app.use(express.static(clientPath, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    } else if (filePath.includes(path.sep + 'assets' + path.sep) || filePath.includes('/assets/')) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
+}));
 
 // Helper to determine base URL
 function getBaseUrl(req) {
@@ -716,6 +724,19 @@ async function runBackgroundCheck() {
 }
 
 setInterval(runBackgroundCheck, 30 * 60 * 1000);
+
+// SPA fallback for frontend client routing
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/assets') || req.path.includes('.')) {
+    return res.status(404).send('Not found');
+  }
+  const indexPath = path.join(clientPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return res.sendFile(indexPath);
+  }
+  res.status(404).send('Not found');
+});
 
 // Start server
 app.listen(PORT, '0.0.0.0', async () => {
