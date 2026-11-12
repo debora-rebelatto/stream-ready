@@ -123,7 +123,7 @@ const catalogHandler = async (req, res) => {
               type: 'movie',
               name: movieId,
               has1080pPlus: false,
-              bestQuality: 'Aguardando verificação',
+              bestQuality: 'Pending',
               streamCount: 0
             }, userId);
             getMeta('movie', movieId).then(meta => {
@@ -202,13 +202,13 @@ app.post('/api/auth/login', async (req, res) => {
     if (authKey) {
       const user = await getUserInfo(authKey);
       if (!user || !user.email) {
-        return res.status(401).json({ success: false, error: 'Chave de autenticação (AuthKey) inválida ou expirada' });
+        return res.status(401).json({ success: false, error: 'Invalid or expired authentication key (AuthKey)' });
       }
       const userId = user.email.trim().toLowerCase();
       await db.claimInitialOwnerIfNeeded(userId);
       db.updateSettings({ stremioAuthKey: authKey, stremioEmail: userId }, userId);
 
-      // Se a lista deste usuário no banco estiver vazia, restaura da nuvem do Stremio desta conta
+      // If this user's database list is empty, restore from their Stremio cloud account
       if (db.getItems(userId).length === 0) {
         try {
           const cloudItems = await getAccountWatchlist(authKey);
@@ -227,7 +227,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, error: 'E-mail e senha são obrigatórios' });
+      return res.status(400).json({ success: false, error: 'Email and password are required' });
     }
 
     const authResult = await loginStremio(email, password);
@@ -318,7 +318,7 @@ app.post('/api/auth/install-account', async (req, res) => {
   try {
     const { authKey, userId } = await getRequestUser(req);
     if (!authKey || !userId) {
-      return res.status(401).json({ error: 'Você precisa estar autenticado com sua conta do Stremio' });
+      return res.status(401).json({ error: 'You must be signed in with your Stremio account' });
     }
 
     const baseUrl = getBaseUrl(req);
@@ -327,10 +327,10 @@ app.post('/api/auth/install-account', async (req, res) => {
 
     const success = await saveAccountWatchlist(authKey, baseUrl, items, manifest);
     if (!success) {
-      return res.status(400).json({ error: 'Falha ao salvar addon na conta oficial do Stremio.' });
+      return res.status(400).json({ error: 'Failed to save addon to your official Stremio account.' });
     }
 
-    res.json({ success: true, message: 'Addon ativado na sua conta oficial com sucesso! Ele já aparecerá na sua Smart TV e em todos os seus aparelhos.' });
+    res.json({ success: true, message: 'Addon activated on your official account! It will now appear on your Smart TV and all your devices.' });
   } catch (err) {
     console.error('[Install to Account Error]', err);
     res.status(500).json({ error: err.message });
@@ -405,11 +405,11 @@ app.post('/api/items', async (req, res) => {
   try {
     const { authKey, userId } = await getRequestUser(req);
     if (!authKey || !userId) {
-      return res.status(401).json({ error: 'Faça login com sua conta do Stremio para adicionar filmes.' });
+      return res.status(401).json({ error: 'Please sign in with your Stremio account to add movies.' });
     }
 
     let { id, type = 'movie' } = req.body;
-    if (!id) return res.status(400).json({ error: 'ID do filme é obrigatório (ex: tt1234567)' });
+    if (!id) return res.status(400).json({ error: 'Movie ID is required (e.g. tt1234567)' });
 
     // Handle full IMDb URLs (e.g. https://www.imdb.com/title/tt1234567/)
     const imdbMatch = id.match(/tt\d{7,8}/i);
@@ -420,13 +420,13 @@ app.post('/api/items', async (req, res) => {
     // Check if already in this user's DB
     const existing = db.getItem(id, userId);
     if (existing) {
-      return res.json({ success: true, item: existing, message: 'Item já estava na sua watchlist' });
+      return res.json({ success: true, item: existing, message: 'Item is already in your watchlist' });
     }
 
     // Fetch Cinemeta metadata
     const meta = await getMeta(type, id);
     if (!meta) {
-      return res.status(404).json({ error: `Não foi possível encontrar metadados para ${id}` });
+      return res.status(404).json({ error: `Could not find metadata for ${id}` });
     }
 
     // Immediately check stream quality
@@ -467,11 +467,11 @@ app.post('/api/items', async (req, res) => {
 app.post('/api/check/:id', async (req, res) => {
   try {
     const { userId } = await getRequestUser(req);
-    if (!userId) return res.status(401).json({ error: 'Não autenticado' });
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const { id } = req.params;
     const item = db.getItem(id, userId);
-    if (!item) return res.status(404).json({ error: 'Item não encontrado na watchlist' });
+    if (!item) return res.status(404).json({ error: 'Item not found in watchlist' });
 
     const quality = await checkMovieQuality(id, item.type || 'movie');
     const wasReady = item.has1080pPlus;
@@ -499,7 +499,7 @@ app.post('/api/check/:id', async (req, res) => {
 app.post('/api/check-all', async (req, res) => {
   try {
     const { userId } = await getRequestUser(req);
-    if (!userId) return res.status(401).json({ error: 'Não autenticado' });
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const { forceAll } = req.body;
     let items = db.getItems(userId);
@@ -545,7 +545,7 @@ app.post('/api/check-all', async (req, res) => {
 // Delete item
 app.delete('/api/items/:id', async (req, res) => {
   const { authKey, userId } = await getRequestUser(req);
-  if (!authKey || !userId) return res.status(401).json({ error: 'Não autenticado' });
+  if (!authKey || !userId) return res.status(401).json({ error: 'Unauthorized' });
 
   const { id } = req.params;
   const removed = db.removeItem(id, userId);
@@ -560,7 +560,7 @@ app.delete('/api/items/:id', async (req, res) => {
 app.post('/api/items/sync-batch', async (req, res) => {
   try {
     const { authKey, userId } = await getRequestUser(req);
-    if (!authKey || !userId) return res.status(401).json({ error: 'Não autenticado' });
+    if (!authKey || !userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const { items: clientItems } = req.body;
     if (!Array.isArray(clientItems) || clientItems.length === 0) {
@@ -573,7 +573,7 @@ app.post('/api/items/sync-batch', async (req, res) => {
       if (!db.getItem(item.id, userId)) {
         db.addItem(item, userId);
         added++;
-        if (!item.bestQuality || item.bestQuality === 'Pendente' || item.bestQuality === 'Verificando...') {
+        if (!item.bestQuality || item.bestQuality === 'Pending' || item.bestQuality === 'Pendente' || item.bestQuality === 'Checking...' || item.bestQuality === 'Verificando...') {
           checkMovieQuality(item.id, item.type || 'movie').then(q => {
             if (q) db.updateItem(item.id, { has1080pPlus: q.has1080pPlus, bestQuality: q.bestQuality, streamCount: q.streamCount }, userId);
           }).catch(() => {});
@@ -601,7 +601,7 @@ app.get('/api/settings', async (req, res) => {
 app.post('/api/settings', async (req, res) => {
   try {
     const { authKey, userId } = await getRequestUser(req);
-    if (!userId) return res.status(401).json({ error: 'Não autenticado' });
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const updated = db.updateSettings(req.body, userId);
 
@@ -653,11 +653,11 @@ app.get('/api/export', async (req, res) => {
 app.post('/api/import', async (req, res) => {
   try {
     const { userId } = await getRequestUser(req);
-    if (!userId) return res.status(401).json({ error: 'Não autenticado' });
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const { items } = req.body;
     if (!Array.isArray(items)) {
-      return res.status(400).json({ error: 'Array de itens inválido' });
+      return res.status(400).json({ error: 'Invalid items array' });
     }
     let addedCount = 0;
     for (const item of items) {
@@ -685,11 +685,11 @@ async function runBackgroundCheck() {
     await db.ensureLoaded();
     const allPending = db.getAllUsersItems().filter(entry => !entry.item.has1080pPlus);
     if (allPending.length > 0) {
-      console.log(`[AutoChecker] Verificando ${allPending.length} itens aguardando versão limpa...`);
+      console.log(`[AutoChecker] Checking ${allPending.length} items waiting for good quality...`);
       for (const { userId, item } of allPending) {
         const quality = await checkMovieQuality(item.id, item.type || 'movie');
         if (quality.has1080pPlus) {
-          console.log(`🎉 [NOVIDADE:${userId}] O filme "${item.name}" agora está disponível em ${quality.bestQuality}!`);
+          console.log(`🎉 [NEW:${userId}] "${item.name}" is now available in ${quality.bestQuality}!`);
         }
         db.updateItem(item.id, {
           has1080pPlus: quality.has1080pPlus,
@@ -715,10 +715,10 @@ setInterval(runBackgroundCheck, 30 * 60 * 1000);
 app.listen(PORT, '0.0.0.0', async () => {
   await db.ensureLoaded(true);
   console.log(`=======================================================`);
-  console.log(`🚀 STREMIO WATCHLIST (ANTI-CAM TRACKER) RODANDO`);
-  console.log(`👉 Porta: ${PORT}`);
-  console.log(`👉 Painel Web: http://localhost:${PORT}`);
+  console.log(`🚀 STREMIO WATCHLIST (GOOD QUALITY TRACKER) RUNNING`);
+  console.log(`👉 Port: ${PORT}`);
+  console.log(`👉 Web Dashboard: http://localhost:${PORT}`);
   console.log(`👉 Addon Manifest: http://localhost:${PORT}/manifest.json`);
-  console.log(`👉 Banco de Dados: ${db.isSupabaseConfigured() ? '🟢 SUPABASE CLOUD ATIVO (MULTI-USUÁRIO)' : '🟡 JSON LOCAL'}`);
+  console.log(`👉 Database: ${db.isSupabaseConfigured() ? '🟢 SUPABASE CLOUD ACTIVE (MULTI-USER)' : '🟡 LOCAL JSON'}`);
   console.log(`=======================================================`);
 });

@@ -43,6 +43,16 @@ const formLoginAuthKey = document.getElementById('formLoginAuthKey');
 
 const toastContainer = document.getElementById('toastContainer');
 
+function formatQualityLabel(raw) {
+  if (!raw) return 'Pending';
+  const q = String(raw).trim();
+  if (/ainda não lançado|não lançado|indisponível|unreleased/i.test(q)) return 'Unreleased';
+  if (/^pendente$|^aguardando verificação$/i.test(q)) return 'Pending';
+  if (/gravação de cinema/i.test(q)) return 'CAM / Theater Rip';
+  if (/erro na verificação/i.test(q)) return 'Check Error';
+  return q;
+}
+
 // Init
 document.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
@@ -66,7 +76,7 @@ function getUserCacheKey(email) {
 }
 
 async function checkAuthStatus() {
-  // Remove cache global legado sem escopo de usuário
+  // Remove legacy global cache without user scope
   localStorage.removeItem('watchlist_cached_items');
 
   const key = localStorage.getItem('stremioAuthKey');
@@ -90,8 +100,8 @@ async function checkAuthStatus() {
       setAuthUI(false, null);
     }
   } catch (err) {
-    console.warn('Servidor pode estar acordando:', err);
-    const cachedEmail = localStorage.getItem('stremioEmail') || 'Conectado';
+    console.warn('Server might be waking up:', err);
+    const cachedEmail = localStorage.getItem('stremioEmail') || 'Connected';
     setAuthUI(true, { email: cachedEmail });
     setTimeout(checkAuthStatus, 6000);
   }
@@ -105,7 +115,7 @@ function setAuthUI(isLoggedIn, user) {
   if (isLoggedIn && user) {
     btnOpenLogin.classList.add('hidden');
     userLoggedInMenu.classList.remove('hidden');
-    userEmailDisplay.textContent = user.email || 'Conectado';
+    userEmailDisplay.textContent = user.email || 'Connected';
     accountSyncCard.classList.remove('hidden');
     syncUserEmail.textContent = user.email;
     if (searchSection) searchSection.classList.remove('hidden');
@@ -162,7 +172,7 @@ function setupAuthEventListeners() {
 
     try {
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Autenticando com Stremio...';
+      submitBtn.textContent = 'Signing in with Stremio...';
 
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -172,14 +182,14 @@ function setupAuthEventListeners() {
 
       const data = await res.json();
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Entrar com Stremio';
+      submitBtn.textContent = 'Sign in with Stremio';
 
       if (!res.ok || !data.success) {
-        showToast(data.error || 'Falha ao autenticar.', 'error');
+        showToast(data.error || 'Authentication failed.', 'error');
         return;
       }
 
-      showToast(`🎉 Bem-vindo(a), ${data.user.email}!`, 'success');
+      showToast(`🎉 Welcome, ${data.user.email}!`, 'success');
       allItems = [];
       localStorage.removeItem('watchlist_cached_items');
       localStorage.setItem('stremioAuthKey', data.authKey);
@@ -190,8 +200,8 @@ function setupAuthEventListeners() {
       await loadWatchlist();
     } catch (err) {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Entrar com Stremio';
-      showToast('Erro ao conectar com os servidores do Stremio.', 'error');
+      submitBtn.textContent = 'Sign in with Stremio';
+      showToast('Error connecting to Stremio servers.', 'error');
     }
   });
 
@@ -203,7 +213,7 @@ function setupAuthEventListeners() {
 
     try {
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Validando AuthKey...';
+      submitBtn.textContent = 'Validating AuthKey...';
 
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -213,14 +223,14 @@ function setupAuthEventListeners() {
 
       const data = await res.json();
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Validar AuthKey';
+      submitBtn.textContent = 'Validate AuthKey';
 
       if (!res.ok || !data.success) {
-        showToast(data.error || 'AuthKey inválida.', 'error');
+        showToast(data.error || 'Invalid AuthKey.', 'error');
         return;
       }
 
-      showToast(`🎉 Conectado com sucesso como ${data.user.email}!`, 'success');
+      showToast(`🎉 Connected as ${data.user.email}!`, 'success');
       allItems = [];
       localStorage.removeItem('watchlist_cached_items');
       localStorage.setItem('stremioAuthKey', data.authKey);
@@ -231,8 +241,8 @@ function setupAuthEventListeners() {
       await loadWatchlist();
     } catch (err) {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Validar AuthKey';
-      showToast('Erro ao validar chave.', 'error');
+      submitBtn.textContent = 'Validate AuthKey';
+      showToast('Error validating key.', 'error');
     }
   });
 
@@ -246,15 +256,15 @@ function setupAuthEventListeners() {
     localStorage.removeItem('watchlist_cached_items');
     setAuthUI(false, null);
     setupAddonLinks();
-    showToast('Desconectado com sucesso.', 'info');
+    showToast('Signed out successfully.', 'info');
   });
 
   // Direct 1-Click Install to Account
   btnInstallAccountDirect.addEventListener('click', async () => {
     try {
       btnInstallAccountDirect.disabled = true;
-      btnInstallAccountDirect.textContent = 'Ativando na conta...';
-      showToast('Instalando addon diretamente na sua conta do Stremio...', 'info');
+      btnInstallAccountDirect.textContent = 'Activating on account...';
+      showToast('Installing addon directly to your Stremio account...', 'info');
 
       const res = await fetch('/api/auth/install-account', {
         method: 'POST',
@@ -263,18 +273,18 @@ function setupAuthEventListeners() {
       const data = await res.json();
 
       btnInstallAccountDirect.disabled = false;
-      btnInstallAccountDirect.textContent = '✨ Ativar na Conta (1-Click)';
+      btnInstallAccountDirect.textContent = '✨ Activate Addon on Account (1-Click)';
 
       if (!res.ok || data.error) {
-        showToast(data.error || 'Erro ao instalar na conta.', 'error');
+        showToast(data.error || 'Error installing to account.', 'error');
         return;
       }
 
-      showToast('🎉 Sucesso! O addon foi instalado na sua conta e já está disponível na sua Smart TV e em todos os seus aparelhos!', 'success');
+      showToast('🎉 Success! The addon has been installed on your account and is now available on your Smart TV and all your devices!', 'success');
     } catch (err) {
       btnInstallAccountDirect.disabled = false;
-      btnInstallAccountDirect.textContent = '✨ Ativar na Conta (1-Click)';
-      showToast('Falha ao ativar na conta.', 'error');
+      btnInstallAccountDirect.textContent = '✨ Activate Addon on Account (1-Click)';
+      showToast('Failed to activate on account.', 'error');
     }
   });
 }
@@ -300,21 +310,21 @@ async function setupAddonLinks() {
 
     btnCopyLink.onclick = () => {
       navigator.clipboard.writeText(manifestUrl).then(() => {
-        showToast('Link do manifesto copiado! Cole na busca de Addons do Stremio.', 'success');
+        showToast('Manifest link copied! Paste it into the Stremio Addons search bar.', 'success');
       }).catch(() => {
-        prompt('Copie o link do Addon abaixo:', manifestUrl);
+        prompt('Copy the Addon link below:', manifestUrl);
       });
     };
   } catch (err) {
-    console.error('Erro ao obter info do servidor:', err);
+    console.error('Error getting server info:', err);
     const fallbackUrl = `stremio://${window.location.host}/manifest.json`;
     const fallbackManifestUrl = `${window.location.origin}/manifest.json`;
     btnInstallStremio.href = fallbackUrl;
     btnCopyLink.onclick = () => {
       navigator.clipboard.writeText(fallbackManifestUrl).then(() => {
-        showToast('Link do manifesto copiado! Cole na busca de Addons do Stremio.', 'success');
+        showToast('Manifest link copied! Paste it into the Stremio Addons search bar.', 'success');
       }).catch(() => {
-        prompt('Copie o link do Addon abaixo:', fallbackManifestUrl);
+        prompt('Copy the Addon link below:', fallbackManifestUrl);
       });
     };
   }
@@ -408,7 +418,7 @@ function setupEventListeners() {
   const importInput = document.getElementById('importFileInput');
   importInput.addEventListener('change', handleImportBackup);
 
-  // Ao clicar em qualquer filme no navegador, redirecionar para o filme dentro do app do Stremio
+  // Clicking any movie card opens it directly in the Stremio app
   watchlistContainer.addEventListener('click', (e) => {
     if (
       e.target.closest('.btn-card-delete') ||
@@ -429,7 +439,7 @@ function setupEventListeners() {
   });
 }
 
-// Load Watchlist Data (Isolado por Usuário no Supabase)
+// Load Watchlist Data (User-Isolated in Supabase)
 async function loadWatchlist() {
   if (!currentUser) {
     renderItems();
@@ -457,8 +467,8 @@ async function loadWatchlist() {
     renderItems();
     setupAddonLinks();
   } catch (err) {
-    console.error('Erro ao carregar watchlist:', err);
-    showToast('Erro ao carregar itens da watchlist.', 'error');
+    console.error('Error loading watchlist:', err);
+    showToast('Error loading watchlist items.', 'error');
   }
 }
 
@@ -476,15 +486,15 @@ function updateStats(stats) {
 
 // Render Items based on Active Tab
 function renderItems() {
-  // Se não estiver conectado em uma conta, não renderiza nenhuma lista
+  // If not signed in, show locked state
   if (!currentUser) {
     watchlistContainer.innerHTML = `
       <div class="empty-state auth-locked-box">
         <div class="empty-icon">🔒</div>
-        <h3>Nenhuma lista disponível sem login</h3>
-        <p>Conecte sua conta do Stremio para carregar, visualizar e gerenciar seus filmes sem gravações de cinema.</p>
+        <h3>Sign in to view your watchlist</h3>
+        <p>Connect your Stremio account to load, view, and track your movies in good quality.</p>
         <button class="btn btn-primary" id="btnLockedLoginAction" style="margin-top: 1.25rem;">
-          🔐 Entrar com Stremio
+          🔐 Sign in with Stremio
         </button>
       </div>
     `;
@@ -503,15 +513,15 @@ function renderItems() {
   }
 
   if (filtered.length === 0) {
-    let emptyMsg = 'Sua watchlist está vazia.';
-    if (currentTab === 'ready') emptyMsg = 'Nenhum filme com versão limpa disponível ainda.';
-    if (currentTab === 'pending') emptyMsg = 'Nenhum filme aguardando versão limpa!';
+    let emptyMsg = 'Your watchlist is empty.';
+    if (currentTab === 'ready') emptyMsg = 'No movies available in good quality yet.';
+    if (currentTab === 'pending') emptyMsg = 'No movies waiting for good quality!';
 
     watchlistContainer.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">${currentTab === 'ready' ? '🎬' : '⏳'}</div>
         <h3>${emptyMsg}</h3>
-        <p>Use a barra de busca acima para pesquisar ou clique em "Sincronizar Biblioteca" para importar seus filmes.</p>
+        <p>Use the search bar above to find and add movies to your watchlist.</p>
       </div>
     `;
     return;
@@ -519,25 +529,25 @@ function renderItems() {
 
   watchlistContainer.innerHTML = filtered.map(item => {
     const ready = item.has1080pPlus;
-    const rawQuality = item.bestQuality || 'Pendente';
+    const rawQuality = formatQualityLabel(item.bestQuality);
     const isUnreleased = !ready && (
-      /não lançado|indisponível/i.test(rawQuality) ||
+      /unreleased|not released|unavailable|não lançado|indisponível/i.test(rawQuality) ||
       ((!item.streamCount || item.streamCount === 0) && !/cam/i.test(rawQuality))
     );
     const badgeClass = ready ? 'ready' : 'pending';
     const badgeText = ready
-      ? '🟢 PRONTO (NÃO CAM)'
-      : (isUnreleased ? '📅 AINDA NÃO LANÇADO' : '⏳ APENAS CAM');
-    const qualityText = isUnreleased ? 'Ainda não lançado' : rawQuality;
-    const streamsText = item.streamCount > 0 ? `${item.streamCount} fontes` : '0 fontes';
+      ? '🟢 GOOD QUALITY'
+      : (isUnreleased ? '📅 UNRELEASED' : '⏳ WAITING FOR QUALITY');
+    const qualityText = isUnreleased ? 'Unreleased' : rawQuality;
+    const streamsText = item.streamCount > 0 ? `${item.streamCount} sources` : '0 sources';
     const itemType = item.type || 'movie';
 
     return `
-      <div class="movie-card" data-id="${item.id}" data-type="${itemType}" title="Clique para abrir no Stremio">
+      <div class="movie-card" data-id="${item.id}" data-type="${itemType}" title="Click to open in Stremio">
         <div class="poster-wrap">
-          <img class="poster-img" src="${item.poster || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22450%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%231e2235%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22%239ca3af%22 text-anchor=%22middle%22>Sem Imagem</text></svg>'}" alt="${item.name}" loading="lazy">
+          <img class="poster-img" src="${item.poster || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22450%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%231e2235%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22%239ca3af%22 text-anchor=%22middle%22>No Image</text></svg>'}" alt="${item.name}" loading="lazy">
           <div class="poster-badge ${badgeClass}">${badgeText}</div>
-          <button class="btn-card-delete btn-delete-item" data-id="${item.id}" title="Remover da watchlist" aria-label="Remover ${item.name} da watchlist">
+          <button class="btn-card-delete btn-delete-item" data-id="${item.id}" title="Remove from watchlist" aria-label="Remove ${item.name} from watchlist">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
@@ -573,14 +583,14 @@ function renderItems() {
 // Search Cinemeta API
 async function executeSearch(query) {
   try {
-    searchResults.innerHTML = '<div class="search-item">Buscando filmes...</div>';
+    searchResults.innerHTML = '<div class="search-item">Searching movies...</div>';
     searchResults.classList.remove('hidden');
 
     const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
     const results = await res.json();
 
     if (!results || results.length === 0) {
-      searchResults.innerHTML = '<div class="search-item" style="color: var(--text-muted)">Nenhum filme encontrado. Tente outro termo ou o ID do IMDb (ex: tt1234567).</div>';
+      searchResults.innerHTML = '<div class="search-item" style="color: var(--text-muted)">No movies found. Try another title or an IMDb ID (e.g. tt1234567).</div>';
       return;
     }
 
@@ -594,7 +604,7 @@ async function executeSearch(query) {
             <div class="search-meta">${movie.year || ''} • IMDb: ${movie.id}</div>
           </div>
           <button class="btn-add-search" data-id="${movie.id}" ${isAlreadyAdded ? 'disabled style="opacity:0.5"' : ''}>
-            ${isAlreadyAdded ? '✓ Na Watchlist' : '+ Adicionar'}
+            ${isAlreadyAdded ? '✓ In Watchlist' : '+ Add'}
           </button>
         </div>
       `;
@@ -608,15 +618,15 @@ async function executeSearch(query) {
     });
 
   } catch (err) {
-    console.error('Erro na busca:', err);
-    searchResults.innerHTML = '<div class="search-item" style="color: #ef4444">Erro ao buscar resultados.</div>';
+    console.error('Search error:', err);
+    searchResults.innerHTML = '<div class="search-item" style="color: #ef4444">Error searching results.</div>';
   }
 }
 
 // Add Movie to Watchlist
 async function handleAddMovie(id) {
   try {
-    showToast(`Adicionando filme e verificando qualidade 1080p+...`, 'info');
+    showToast(`Adding movie and checking quality...`, 'info');
     searchResults.classList.add('hidden');
     searchInput.value = '';
     btnClearSearch.classList.add('hidden');
@@ -629,7 +639,7 @@ async function handleAddMovie(id) {
 
     const data = await res.json();
     if (!res.ok || data.error) {
-      showToast(data.error || 'Erro ao adicionar filme.', 'error');
+      showToast(data.error || 'Error adding movie.', 'error');
       return;
     }
 
@@ -639,18 +649,19 @@ async function handleAddMovie(id) {
     const cacheKey = getUserCacheKey();
     if (cacheKey) localStorage.setItem(cacheKey, JSON.stringify(allItems));
 
+    const qualityLabel = formatQualityLabel(item.bestQuality);
     if (item.has1080pPlus) {
-      showToast(`🎉 "${item.name}" adicionado! Já está PRONTO em ${item.bestQuality} (Não é CAM)!`, 'success');
-    } else if (!item.streamCount || item.streamCount === 0 || /não lançado|indisponível/i.test(item.bestQuality || '')) {
-      showToast(`📅 "${item.name}" adicionado! Ainda não foi lançado.`, 'info');
+      showToast(`🎉 "${item.name}" added! Already READY in good quality (${qualityLabel})!`, 'success');
+    } else if (!item.streamCount || item.streamCount === 0 || /unreleased|not released|unavailable|não lançado|indisponível/i.test(qualityLabel)) {
+      showToast(`📅 "${item.name}" added! Not released yet.`, 'info');
     } else {
-      showToast(`⏳ "${item.name}" adicionado! Aguardando versão limpa (atualmente: ${item.bestQuality}).`, 'info');
+      showToast(`⏳ "${item.name}" added! Waiting for a good quality release (current: ${qualityLabel}).`, 'info');
     }
 
     await loadWatchlist();
   } catch (err) {
-    console.error('Erro ao adicionar:', err);
-    showToast('Erro ao comunicar com o servidor.', 'error');
+    console.error('Add error:', err);
+    showToast('Error communicating with the server.', 'error');
   }
 }
 
@@ -658,7 +669,7 @@ async function handleAddMovie(id) {
 async function handleCheckSingle(id, btnElement) {
   try {
     const originalText = btnElement.innerHTML;
-    btnElement.innerHTML = '⏳ Checando...';
+    btnElement.innerHTML = '⏳ Checking...';
     btnElement.disabled = true;
 
     const res = await fetch(`/api/check/${id}`, { method: 'POST', headers: getAuthHeaders() });
@@ -668,18 +679,19 @@ async function handleCheckSingle(id, btnElement) {
     btnElement.disabled = false;
 
     if (data.success && data.item) {
+      const qualityLabel = formatQualityLabel(data.item.bestQuality);
       if (data.becameReady) {
-        showToast(`🎉 Boa notícia! "${data.item.name}" já tem versão limpa disponível em ${data.item.bestQuality}!`, 'success');
+        showToast(`🎉 Great news! "${data.item.name}" is now available in good quality (${qualityLabel})!`, 'success');
       } else {
-        showToast(`Verificado: ${data.item.name} (${data.item.bestQuality} - ${data.item.streamCount} fontes)`, 'info');
+        showToast(`Checked: ${data.item.name} (${qualityLabel} - ${data.item.streamCount} sources)`, 'info');
       }
       await loadWatchlist();
     }
   } catch (err) {
-    console.error('Erro ao checar item:', err);
-    btnElement.innerHTML = '🔄 Rechecar';
+    console.error('Error checking item:', err);
+    btnElement.innerHTML = '🔄 Recheck';
     btnElement.disabled = false;
-    showToast('Falha ao verificar qualidade.', 'error');
+    showToast('Failed to check quality.', 'error');
   }
 }
 
@@ -689,7 +701,7 @@ async function handleCheckAllPending() {
   try {
     icon.classList.add('spinning');
     btnCheckAllPending.disabled = true;
-    showToast('Rechecando fontes para todos os itens aguardando...', 'info');
+    showToast('Rechecking sources for all pending movies...', 'info');
 
     const res = await fetch('/api/check-all', {
       method: 'POST',
@@ -703,24 +715,24 @@ async function handleCheckAllPending() {
 
     if (data.success) {
       if (data.newlyReady > 0) {
-        showToast(`🎉 ${data.newlyReady} novo(s) filme(s) saíram de CAM e já estão prontos para assistir!`, 'success');
+        showToast(`🎉 ${data.newlyReady} movie(s) are now available in good quality!`, 'success');
       } else {
-        showToast(`Verificação concluída. Nenhum novo lançamento detectado no momento.`, 'info');
+        showToast(`Check completed. No new good quality releases detected yet.`, 'info');
       }
       await loadWatchlist();
     }
   } catch (err) {
     icon.classList.remove('spinning');
     btnCheckAllPending.disabled = false;
-    showToast('Erro ao verificar pendentes.', 'error');
+    showToast('Error checking pending movies.', 'error');
   }
 }
 
 // Delete Item
 async function handleDeleteItem(id) {
   const item = allItems.find(i => i.id === id);
-  const name = item ? item.name : 'este item';
-  if (!confirm(`Deseja remover "${name}" da sua Watchlist?`)) return;
+  const name = item ? item.name : 'this item';
+  if (!confirm(`Remove "${name}" from your Watchlist?`)) return;
 
   try {
     const res = await fetch(`/api/items/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
@@ -729,12 +741,12 @@ async function handleDeleteItem(id) {
       allItems = allItems.filter(i => i.id !== id);
       const cacheKey = getUserCacheKey();
       if (cacheKey) localStorage.setItem(cacheKey, JSON.stringify(allItems));
-      showToast(`Item removido da watchlist.`, 'info');
+      showToast(`Removed from watchlist.`, 'info');
       await loadWatchlist();
     }
   } catch (err) {
-    console.error('Erro ao remover:', err);
-    showToast('Erro ao remover item.', 'error');
+    console.error('Error removing item:', err);
+    showToast('Error removing item.', 'error');
   }
 }
 
@@ -750,7 +762,7 @@ function openSettings() {
       }
     })
     .catch(err => {
-      console.error('Erro ao carregar configurações:', err);
+      console.error('Error loading settings:', err);
     });
 }
 
@@ -766,7 +778,7 @@ async function saveSettings() {
   const oldText = btnSave.textContent;
 
   try {
-    btnSave.textContent = 'Salvando e sincronizando...';
+    btnSave.textContent = 'Saving and syncing...';
     btnSave.disabled = true;
 
     const res = await fetch('/api/settings', {
@@ -782,15 +794,15 @@ async function saveSettings() {
     btnSave.disabled = false;
 
     if (res.ok) {
-      showToast('Configurações salvas e Addon sincronizado no Stremio!', 'success');
+      showToast('Settings saved and Addon synced with Stremio!', 'success');
       closeSettings();
     } else {
-      showToast('Erro ao salvar configurações.', 'error');
+      showToast('Error saving settings.', 'error');
     }
   } catch (err) {
     btnSave.textContent = oldText;
     btnSave.disabled = false;
-    showToast('Erro ao salvar configurações.', 'error');
+    showToast('Error saving settings.', 'error');
   }
 }
 
@@ -810,12 +822,12 @@ async function handleImportBackup(e) {
       });
       const data = await res.json();
       if (data.success) {
-        showToast(`${data.addedCount} itens importados com sucesso!`, 'success');
+        showToast(`${data.addedCount} items imported successfully!`, 'success');
         closeSettings();
         await loadWatchlist();
       }
     } catch (err) {
-      showToast('Arquivo JSON inválido.', 'error');
+      showToast('Invalid JSON file.', 'error');
     }
   };
   reader.readAsText(file);
@@ -823,7 +835,7 @@ async function handleImportBackup(e) {
 
 // Toast Notifications
 function showToast(message, type = 'info') {
-  // Evita empilhar avisos idênticos na tela
+  // Prevent stacking identical toast messages
   toastContainer.querySelectorAll('.toast').forEach(existing => {
     if (existing.dataset.msg === message) {
       existing.remove();
@@ -844,4 +856,3 @@ function showToast(message, type = 'info') {
     setTimeout(() => toast.remove(), 300);
   }, 4000);
 }
-

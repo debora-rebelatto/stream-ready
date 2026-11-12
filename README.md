@@ -1,40 +1,40 @@
-# 🎬 Stremio Watchlist (1080p+ Tracker)
+# 🎬 Stremio Watchlist (Good Quality Tracker)
 
-Um addon para o aplicativo **Stremio** hospedado na nuvem que gerencia sua **Watchlist pessoal** e sinaliza automaticamente quando os filmes estiverem disponíveis em qualidade **1080p (Full HD)** ou **4K (UHD)**, funcionando 24h por dia na sua **Smart TV**, **Celular** e **Computador**.
-
----
-
-## 🌐 Endereço Oficial do Addon
-
-- **Painel de Controle:** [https://stremiowatchlist.onrender.com](https://stremiowatchlist.onrender.com)
-- **Manifesto do Addon:** `https://stremiowatchlist.onrender.com/manifest.json`
+A cloud-hosted **Stremio** addon that manages your **personal Watchlist** and automatically flags movies as soon as they become available in **good quality** (**HD**, **Full HD 1080p**, or **4K UHD**), working 24/7 across your **Smart TV**, **Phone**, and **Computer**.
 
 ---
 
-## ✨ Funcionalidades
+## 🌐 Official Addon URLs
 
-1. 🔐 **Autenticação com a Conta do Stremio**:
-   - Conecte sua conta do Stremio diretamente pelo painel web.
-   - **Instalação com 1-Click:** Ative o addon diretamente na sua conta do Stremio via API oficial, sem precisar copiar ou colar links em nenhum aparelho!
-
-2. 🟢 **Filtro Anti-CAM em Tempo Real**:
-   - Analisa fontes e torrents em tempo real no Torrentio.
-   - Filmes com versão limpa (4K, 1080p, 720p, WEB-DL) recebem o selo **🟢 [Pronto]**.
-   - Filmes que ainda estão em cinema (CAM/TS) ficam como **⏳ [Apenas CAM]**.
-
-3. 📺 **Catálogos Nativos no Stremio**:
-   - 🟢 **Watchlist: Prontos (Não CAM)**
-   - 📋 **Watchlist: Todos os Filmes**
-   - ⏳ **Watchlist: Aguardando (Apenas CAM)**
-
-4. 🤖 **Monitoramento Contínuo**:
-   - O servidor verifica periodicamente em segundo plano se filmes da sua Watchlist já ganharam versão limpa.
+- **Web Dashboard:** [https://stremiowatchlist.onrender.com](https://stremiowatchlist.onrender.com)
+- **Addon Manifest:** `https://stremiowatchlist.onrender.com/manifest.json`
 
 ---
 
-## 📱 Como Usar
+## ✨ Features
 
-1. Acesse o painel: [https://stremiowatchlist.onrender.com](https://stremiowatchlist.onrender.com)
-2. Clique em **"🔐 Entrar com Stremio"** e faça login com sua conta.
-3. Clique em **"✨ Ativar na Conta (1-Click)"** para instalar o addon em todos os seus aparelhos automaticamente.
-4. Clique em **"🔄 Sincronizar Biblioteca"** para importar seus filmes favoritos e começar a rastrear a qualidade 1080p+ de cada um!
+1. 🔐 **Stremio Account Authentication**:
+   - Connect your Stremio account directly from the web dashboard.
+   - **1-Click Install:** Activate the addon directly on your Stremio account via the official API—no need to copy or paste links on any device!
+
+2. 🟢 **Real-Time Good Quality Tracker**:
+   - Analyzes streams and torrents in real time via Torrentio.
+   - Movies available in good quality (4K, 1080p, 720p, WEB-DL) receive the **🟢 [Ready]** badge.
+   - Movies still awaiting a quality digital release stay marked as **⏳ [Waiting]**.
+
+3. 📺 **Native Stremio Catalogs**:
+   - 🟢 **Watchlist: Ready (Good Quality)**
+   - 📋 **Watchlist: All Movies**
+   - ⏳ **Watchlist: Waiting for Quality**
+
+4. 🤖 **Continuous Background Monitoring**:
+   - The server periodically checks in the background whether pending movies in your Watchlist have gained a good quality release.
+
+---
+
+## 📱 How to Use
+
+1. Open the dashboard: [https://stremiowatchlist.onrender.com](https://stremiowatchlist.onrender.com)
+2. Click **"🔐 Sign in with Stremio"** and log in with your account.
+3. Click **"✨ Activate Addon on Account (1-Click)"** to automatically install the addon across all your devices.
+4. Search and add your favorite movies to track when they become available in good quality!

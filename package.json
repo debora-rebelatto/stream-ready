@@ -1,7 +1,7 @@
 {
   "name": "stremio-watchlist-1080p",
   "version": "1.0.0",
-  "description": "Addon para o Stremio com watchlist pessoal e sinalização de filmes prontos para assistir (sem gravação CAM)",
+  "description": "Stremio addon with personal watchlist and good quality movie tracking (Good Quality Tracker)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -11,7 +11,7 @@
     "stremio",
     "stremio-addon",
     "watchlist",
-    "anti-cam",
+    "good-quality-tracker",
     "movies"
   ],
   "author": "",
