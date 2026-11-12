@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWatchlist, useToast } from '../context/AppContext';
+import { useWatchlist, useToast } from '../context/useAppContext';
 import { watchlistService } from '../services/watchlistService';
 import { X, BookOpen, Download, Upload } from 'lucide-react';
 

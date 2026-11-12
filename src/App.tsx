@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { isItemUnreleased } from './lib/utils';
-import { useAuth, useWatchlist } from './context/AppContext';
+import { useAuth, useWatchlist } from './context/useAppContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { SearchSection } from './components/SearchSection';

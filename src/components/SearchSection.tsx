@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useWatchlist } from '../context/AppContext';
+import { useWatchlist } from '../context/useAppContext';
 import { watchlistService } from '../services/watchlistService';
 import type { SearchMovieResult } from '../types';
 import { Search, X, Plus, Check } from 'lucide-react';

@@ -1,41 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { WatchlistItem, WatchlistStats, StremioUser, ToastMessage } from '../types';
 import { authService } from '../services/authService';
 import { watchlistService } from '../services/watchlistService';
 import { isItemUnreleased } from '../lib/utils';
-
-interface AuthContextType {
-  user: StremioUser | null;
-  isLoading: boolean;
-  loginWithCreds: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  loginWithKey: (authKey: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void>;
-  installToAccount: () => Promise<{ success: boolean; message?: string; error?: string }>;
-}
-
-interface WatchlistContextType {
-  items: WatchlistItem[];
-  stats: WatchlistStats;
-  currentTab: 'all' | 'ready' | 'pending' | 'unreleased';
-  setCurrentTab: (tab: 'all' | 'ready' | 'pending' | 'unreleased') => void;
-  isLoading: boolean;
-  isCheckingAll: boolean;
-  refreshWatchlist: () => Promise<void>;
-  addItem: (id: string) => Promise<void>;
-  removeItem: (id: string, name: string) => Promise<void>;
-  recheckItem: (id: string) => Promise<void>;
-  recheckAll: () => Promise<void>;
-}
-
-interface ToastContextType {
-  toasts: ToastMessage[];
-  showToast: (message: string, type?: 'info' | 'success' | 'error') => void;
-  removeToast: (id: string) => void;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
-const WatchlistContext = createContext<WatchlistContextType | null>(null);
-const ToastContext = createContext<ToastContextType | null>(null);
+import { AuthContext, WatchlistContext, ToastContext, useToast } from './useAppContext';
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -47,7 +15,6 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const showToast = useCallback((message: string, type: 'info' | 'success' | 'error' = 'info') => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => {
-      // deduplicate exact identical message if active
       const filtered = prev.filter((t) => t.message !== message);
       return [...filtered, { id, message, type }];
     });
@@ -62,12 +29,6 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {children}
     </ToastContext.Provider>
   );
-};
-
-export const useToast = () => {
-  const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error('useToast must be used within ToastProvider');
-  return ctx;
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -129,7 +90,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         pending,
         unreleased,
       });
-    } catch (err) {
+    } catch {
       showToast('Error loading watchlist items.', 'error');
     } finally {
       setIsLoadingList(false);
@@ -298,16 +259,4 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       </WatchlistContext.Provider>
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AppProvider');
-  return ctx;
-};
-
-export const useWatchlist = () => {
-  const ctx = useContext(WatchlistContext);
-  if (!ctx) throw new Error('useWatchlist must be used within AppProvider');
-  return ctx;
 };

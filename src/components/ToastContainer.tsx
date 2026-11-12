@@ -1,5 +1,5 @@
 import React from 'react';
-import { useToast } from '../context/AppContext';
+import { useToast } from '../context/useAppContext';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 export const ToastContainer: React.FC = () => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth, useToast } from '../context/AppContext';
+import { useAuth, useToast } from '../context/useAppContext';
 import { api } from '../lib/api';
 import { Settings, Copy, ExternalLink, LogIn, LogOut, Menu, X, Play } from 'lucide-react';
 
