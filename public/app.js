@@ -312,19 +312,27 @@ async function setupAddonLinks() {
       };
     }
 
-    btnCopyLink.addEventListener('click', () => {
+    btnCopyLink.onclick = () => {
       navigator.clipboard.writeText(manifestUrl).then(() => {
         showToast('Link do manifesto copiado! Cole na busca de Addons do Stremio.', 'success');
       }).catch(() => {
         prompt('Copie o link do Addon abaixo:', manifestUrl);
       });
-    });
+    };
   } catch (err) {
     console.error('Erro ao obter info do servidor:', err);
     const fallbackUrl = `stremio://${window.location.host}/manifest.json`;
+    const fallbackManifestUrl = `${window.location.origin}/manifest.json`;
     btnInstallStremio.href = fallbackUrl;
     const btnInstallWeb = document.getElementById('btnInstallWeb');
     if (btnInstallWeb) btnInstallWeb.href = fallbackUrl;
+    btnCopyLink.onclick = () => {
+      navigator.clipboard.writeText(fallbackManifestUrl).then(() => {
+        showToast('Link do manifesto copiado! Cole na busca de Addons do Stremio.', 'success');
+      }).catch(() => {
+        prompt('Copie o link do Addon abaixo:', fallbackManifestUrl);
+      });
+    };
   }
 }
 
