@@ -9,7 +9,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading: isAuthLoading } = useAuth();
   const { showToast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [manifestUrl, setManifestUrl] = useState('');
@@ -71,7 +71,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin }) =
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-2.5">
-          {user ? (
+          {isAuthLoading ? (
+            <div className="flex items-center gap-2 bg-[#1f2438]/60 border border-white/5 px-3 py-1.5 rounded-lg text-xs text-gray-400">
+              <div className="w-3.5 h-3.5 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
+              <span>Verifying session...</span>
+            </div>
+          ) : user ? (
             <div className="flex items-center gap-2 bg-[#1f2438] border border-white/10 px-3 py-1.5 rounded-lg text-xs font-medium">
               <span className="text-gray-400">👤</span>
               <span className="text-white max-w-[140px] truncate">{user.email}</span>

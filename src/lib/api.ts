@@ -32,15 +32,26 @@ export function getAuthHeaders(): HeadersInit {
 }
 
 export const api = {
-  async getAuthStatus(): Promise<{ loggedIn: boolean; user?: StremioUser }> {
+  async getAuthStatus(): Promise<{ loggedIn: boolean; user?: StremioUser; isUnauthorized?: boolean }> {
     const key = getAuthKey();
-    if (!key) return { loggedIn: false };
+    if (!key) return { loggedIn: false, isUnauthorized: true };
 
-    const res = await fetch('/api/auth/me', {
-      headers: { 'x-stremio-auth': key },
-    });
-    if (!res.ok) return { loggedIn: false };
-    return res.json();
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { 'x-stremio-auth': key },
+      });
+      if (res.status === 401) {
+        return { loggedIn: false, isUnauthorized: true };
+      }
+      if (!res.ok) {
+        return { loggedIn: false, isUnauthorized: false };
+      }
+      const data = await res.json();
+      return { ...data, isUnauthorized: false };
+    } catch (err) {
+      console.warn('Network error checking auth status:', err);
+      return { loggedIn: false, isUnauthorized: false };
+    }
   },
 
   async login(creds: { email?: string; password?: string; authKey?: string }): Promise<{

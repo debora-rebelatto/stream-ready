@@ -6,7 +6,7 @@ export const authService = {
   setAuthKey,
   clearAuth,
 
-  async getStatus(): Promise<{ loggedIn: boolean; user?: StremioUser }> {
+  async getStatus(): Promise<{ loggedIn: boolean; user?: StremioUser; isUnauthorized?: boolean }> {
     return api.getAuthStatus();
   },
 

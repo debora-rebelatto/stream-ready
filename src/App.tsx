@@ -11,13 +11,13 @@ import { ToastContainer } from './components/ToastContainer';
 import { RotateCw, Lock, Film, Sparkles } from 'lucide-react';
 
 export const App: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const {
     items,
     stats,
     currentTab,
     setCurrentTab,
-    isLoading,
+    isLoading: isWatchlistLoading,
     isCheckingAll,
     removeItem,
     recheckAll,
@@ -44,7 +44,14 @@ export const App: React.FC = () => {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <Hero onOpenSettings={() => setIsSettingsOpen(true)} />
 
-        {user ? (
+        {isAuthLoading ? (
+          /* Loading State while checking authentication */
+          <div className="py-24 text-center flex flex-col items-center justify-center">
+            <div className="w-10 h-10 border-3 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mb-4" />
+            <p className="text-sm font-medium text-gray-300">Checking Stremio session...</p>
+            <p className="text-xs text-gray-500 mt-1">Loading your profile and quality tracker</p>
+          </div>
+        ) : user ? (
           <>
             <SearchSection />
 
@@ -110,7 +117,7 @@ export const App: React.FC = () => {
             </div>
 
             {/* Watchlist Grid */}
-            {isLoading ? (
+            {isWatchlistLoading ? (
               <div className="py-20 text-center text-sm text-gray-400">Loading your watchlist...</div>
             ) : filtered.length === 0 ? (
               <div className="py-20 text-center flex flex-col items-center justify-center">

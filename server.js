@@ -271,16 +271,26 @@ app.get('/api/auth/me', async (req, res) => {
     await db.ensureLoaded();
     const authKey = getRequestAuthKey(req);
     if (!authKey) {
-      return res.json({ loggedIn: false });
+      return res.status(401).json({ loggedIn: false });
     }
 
-    const user = await getUserInfo(authKey);
+    // 1. Tenta resolver do cache local/banco primeiro (resposta imediata sem bloquear na API externa)
+    let userId = await db.resolveUserId(authKey, null);
+    let user = null;
+
+    if (userId) {
+      user = { email: userId };
+    } else {
+      user = await getUserInfo(authKey);
+      if (user && user.email) {
+        userId = user.email.trim().toLowerCase();
+        await db.updateSettings({ stremioAuthKey: authKey, stremioEmail: userId }, userId);
+      }
+    }
+
     if (!user || !user.email) {
-      return res.json({ loggedIn: false });
+      return res.status(401).json({ loggedIn: false, error: 'Invalid or expired Stremio session' });
     }
-
-    const userId = user.email.trim().toLowerCase();
-    db.updateSettings({ stremioAuthKey: authKey, stremioEmail: userId }, userId);
 
     // Se a lista deste usuário no banco estiver vazia, restaura da nuvem do Stremio desta conta
     if (db.getItems(userId).length === 0) {
@@ -290,7 +300,7 @@ app.get('/api/auth/me', async (req, res) => {
           console.log(`[Persistence:auth/me] Restaurando ${cloudItems.length} filmes da nuvem do Stremio para ${userId}...`);
           for (const it of cloudItems) {
             if (!db.getItem(it.id, userId)) {
-              db.addItem(it, userId);
+              await db.addItem(it, userId);
             }
           }
         }
@@ -302,12 +312,15 @@ app.get('/api/auth/me', async (req, res) => {
     res.json({
       loggedIn: true,
       authKey,
-      user,
+      user: {
+        id: user.id || userId,
+        email: userId
+      },
       itemsCount: db.getItems(userId).length,
       supabaseConfigured: db.isSupabaseConfigured()
     });
   } catch (err) {
-    res.json({ loggedIn: false });
+    res.status(500).json({ loggedIn: false, error: err.message });
   }
 });
 
@@ -435,22 +448,16 @@ app.post('/api/items', async (req, res) => {
     // Immediately check stream quality
     const quality = await checkMovieQuality(id, type);
 
-    const saved = db.addItem({
+    const saved = await db.addItem({
       id: meta.id,
       type: meta.type || type,
       name: meta.name,
       year: meta.year,
       poster: meta.poster,
-      banner: meta.banner,
-      genres: meta.genres,
-      description: meta.description,
-      imdbRating: meta.imdbRating,
       has1080pPlus: quality.has1080pPlus,
       bestQuality: quality.bestQuality,
       streamCount: quality.streamCount,
-      count1080pPlus: quality.count1080pPlus,
-      lastChecked: quality.checkedAt,
-      checkError: quality.error || null
+      lastChecked: quality.checkedAt
     }, userId);
 
     console.log(`[Watchlist:${userId}] Adicionado: ${saved.name} (${saved.id}) -> Qualidade: ${saved.bestQuality}`);
@@ -479,13 +486,11 @@ app.post('/api/check/:id', async (req, res) => {
     const quality = await checkMovieQuality(id, item.type || 'movie');
     const wasReady = item.has1080pPlus;
 
-    const updated = db.updateItem(id, {
+    const updated = await db.updateItem(id, {
       has1080pPlus: quality.has1080pPlus,
       bestQuality: quality.bestQuality,
       streamCount: quality.streamCount,
-      count1080pPlus: quality.count1080pPlus,
-      lastChecked: quality.checkedAt,
-      checkError: quality.error || null
+      lastChecked: quality.checkedAt
     }, userId);
 
     res.json({
@@ -517,13 +522,11 @@ app.post('/api/check-all', async (req, res) => {
       const quality = await checkMovieQuality(item.id, item.type || 'movie');
       const wasReady = item.has1080pPlus;
 
-      const updated = db.updateItem(item.id, {
+      const updated = await db.updateItem(item.id, {
         has1080pPlus: quality.has1080pPlus,
         bestQuality: quality.bestQuality,
         streamCount: quality.streamCount,
-        count1080pPlus: quality.count1080pPlus,
-        lastChecked: quality.checkedAt,
-        checkError: quality.error || null
+        lastChecked: quality.checkedAt
       }, userId);
 
       if (!wasReady && quality.has1080pPlus) {
@@ -551,7 +554,7 @@ app.delete('/api/items/:id', async (req, res) => {
   if (!authKey || !userId) return res.status(401).json({ error: 'Unauthorized' });
 
   const { id } = req.params;
-  const removed = db.removeItem(id, userId);
+  const removed = await db.removeItem(id, userId);
 
   const baseUrl = getBaseUrl(req);
   syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});

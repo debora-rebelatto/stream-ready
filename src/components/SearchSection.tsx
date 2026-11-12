@@ -60,6 +60,17 @@ export const SearchSection: React.FC = () => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={async (e) => {
+            if (e.key === 'Enter' && query.trim()) {
+              e.preventDefault();
+              const imdbMatch = query.match(/tt\d{7,8}/i);
+              if (imdbMatch) {
+                await handleAdd(imdbMatch[0]);
+              } else if (results.length > 0) {
+                await handleAdd(results[0].id);
+              }
+            }
+          }}
           placeholder="Search movie by title (e.g. Gladiator II, Dune, Oppenheimer) or paste IMDb ID/URL..."
           className="w-full bg-transparent text-sm text-white placeholder-gray-500 focus:outline-none py-2"
         />

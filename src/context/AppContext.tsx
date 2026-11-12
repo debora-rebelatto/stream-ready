@@ -48,9 +48,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await authService.getStatus();
       if (res.loggedIn && res.user) {
         setUser(res.user);
-      } else {
+      } else if (res.isUnauthorized) {
         setUser(null);
         authService.clearAuth();
+      } else {
+        // Temporary server/network error: keep token in localStorage so user isn't logged out
+        setUser(null);
       }
     } catch {
       setUser(null);
