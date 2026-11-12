@@ -13,13 +13,17 @@ export interface AuthContextType {
 export interface WatchlistContextType {
   items: WatchlistItem[];
   stats: WatchlistStats;
-  currentTab: 'all' | 'ready' | 'pending' | 'unreleased';
-  setCurrentTab: (tab: 'all' | 'ready' | 'pending' | 'unreleased') => void;
+  currentTab: 'all' | 'ready' | 'pending' | 'unreleased' | 'watched';
+  setCurrentTab: (tab: 'all' | 'ready' | 'pending' | 'unreleased' | 'watched') => void;
+  globalMinQuality: '1080p' | '4k';
+  setGlobalMinQuality: (quality: '1080p' | '4k') => Promise<void>;
   isLoading: boolean;
   isCheckingAll: boolean;
   refreshWatchlist: () => Promise<void>;
   addItem: (id: string) => Promise<void>;
   removeItem: (id: string, name: string) => Promise<void>;
+  markWatched: (id: string, watched: boolean) => Promise<void>;
+  setItemMinQuality: (id: string, minQuality: '1080p' | '4k' | null) => Promise<void>;
   recheckItem: (id: string) => Promise<void>;
   recheckAll: () => Promise<void>;
 }

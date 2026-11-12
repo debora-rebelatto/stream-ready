@@ -385,13 +385,22 @@ app.get('/api/items', async (req, res) => {
     }
   }
 
-  const { filter } = req.query;
+  const { filter, tab } = req.query;
+  const effectiveFilter = tab || filter;
   let items = db.getItems(userId);
+  const userSettings = db.getSettings(userId);
+  const globalMinQuality = userSettings.minQuality || '1080p';
 
-  if (filter === 'ready') {
-    items = items.filter(i => i.has1080pPlus);
-  } else if (filter === 'pending') {
-    items = items.filter(i => !i.has1080pPlus);
+  if (effectiveFilter === 'watched') {
+    items = items.filter(i => Boolean(i.isWatched));
+  } else if (effectiveFilter === 'ready') {
+    items = items.filter(i => !i.isWatched && db.isItemReady(i, globalMinQuality));
+  } else if (effectiveFilter === 'pending') {
+    items = items.filter(i => !i.isWatched && !db.isItemReady(i, globalMinQuality) && !db.isItemUnreleased(i));
+  } else if (effectiveFilter === 'unreleased') {
+    items = items.filter(i => !i.isWatched && db.isItemUnreleased(i));
+  } else if (effectiveFilter === 'unwatched') {
+    items = items.filter(i => !i.isWatched);
   }
 
   res.json({
@@ -557,6 +566,46 @@ app.delete('/api/items/:id', async (req, res) => {
   syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
 
   res.json({ success: removed, stats: db.getStats(userId) });
+});
+
+// Set watched status for item
+app.post('/api/items/:id/watched', async (req, res) => {
+  try {
+    const { authKey, userId } = await getRequestUser(req);
+    if (!authKey || !userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { id } = req.params;
+    const { watched } = req.body;
+    const updated = await db.setWatched(id, watched !== false, userId);
+    if (!updated) return res.status(404).json({ error: 'Item not found in watchlist' });
+
+    const baseUrl = getBaseUrl(req);
+    syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
+
+    res.json({ success: true, item: updated, stats: db.getStats(userId) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Set item-specific minimum quality target ('1080p' | '4k' | null)
+app.post('/api/items/:id/min-quality', async (req, res) => {
+  try {
+    const { authKey, userId } = await getRequestUser(req);
+    if (!authKey || !userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { id } = req.params;
+    const { minQuality } = req.body;
+    const updated = await db.updateItem(id, { minQuality: minQuality || null }, userId);
+    if (!updated) return res.status(404).json({ error: 'Item not found in watchlist' });
+
+    const baseUrl = getBaseUrl(req);
+    syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
+
+    res.json({ success: true, item: updated, stats: db.getStats(userId) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Batch sync items

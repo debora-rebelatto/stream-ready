@@ -44,6 +44,20 @@ export const watchlistService = {
   },
 
   /**
+   * Mark movie as watched or restore to unwatched
+   */
+  async setWatched(id: string, watched: boolean) {
+    return api.setWatched(id, watched);
+  },
+
+  /**
+   * Update minimum desired quality for a single movie
+   */
+  async setItemMinQuality(id: string, minQuality: '1080p' | '4k' | null) {
+    return api.setItemMinQuality(id, minQuality);
+  },
+
+  /**
    * Recheck quality for a single item
    */
   async recheckItem(id: string) {

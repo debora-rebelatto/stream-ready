@@ -15,6 +15,10 @@ export interface WatchlistItem {
   count1080pPlus?: number;
   lastChecked?: string | null;
   checkError?: string | null;
+  readyAt?: string | null;
+  isWatched?: boolean;
+  watchedAt?: string | null;
+  minQuality?: '1080p' | '4k' | null;
 }
 
 export interface WatchlistStats {
@@ -22,6 +26,7 @@ export interface WatchlistStats {
   ready: number;
   pending: number;
   unreleased: number;
+  watched: number;
 }
 
 export interface StremioUser {
@@ -31,6 +36,7 @@ export interface StremioUser {
 
 export interface AppSettings {
   stremioAuthKey?: string | null;
+  minQuality?: '1080p' | '4k';
 }
 
 export interface ServerInfo {

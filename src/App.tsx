@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { isItemUnreleased } from './lib/utils';
+import { isItemReady, isItemUnreleased } from './lib/utils';
 import { useAuth, useWatchlist } from './context/useAppContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -18,6 +18,7 @@ export const App: React.FC = () => {
     stats,
     currentTab,
     setCurrentTab,
+    globalMinQuality,
     isLoading: isWatchlistLoading,
     isCheckingAll,
     removeItem,
@@ -29,9 +30,17 @@ export const App: React.FC = () => {
 
   // Filter items
   const filtered = items.filter((item) => {
-    if (currentTab === 'ready') return item.has1080pPlus;
-    if (currentTab === 'unreleased') return !item.has1080pPlus && isItemUnreleased(item);
-    if (currentTab === 'pending') return !item.has1080pPlus && !isItemUnreleased(item);
+    if (currentTab === 'watched') {
+      return Boolean(item.isWatched);
+    }
+
+    // All active tabs hide watched items
+    if (item.isWatched) return false;
+
+    const ready = isItemReady(item, globalMinQuality);
+    if (currentTab === 'ready') return ready;
+    if (currentTab === 'unreleased') return !ready && isItemUnreleased(item);
+    if (currentTab === 'pending') return !ready && !isItemUnreleased(item);
     return true;
   });
 
@@ -103,6 +112,17 @@ export const App: React.FC = () => {
                 >
                   📅 Unreleased ({stats.unreleased})
                 </button>
+
+                <button
+                  onClick={() => setCurrentTab('watched')}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    currentTab === 'watched'
+                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  👁️ Watched ({stats.watched})
+                </button>
               </div>
 
               {/* Action Buttons */}
@@ -123,7 +143,15 @@ export const App: React.FC = () => {
             ) : filtered.length === 0 ? (
               <div className="py-20 text-center flex flex-col items-center justify-center">
                 <div className="text-4xl mb-3 opacity-60">
-                  {currentTab === 'ready' ? '🎬' : currentTab === 'pending' ? '⏳' : '📋'}
+                  {currentTab === 'ready'
+                    ? '🎬'
+                    : currentTab === 'pending'
+                    ? '⏳'
+                    : currentTab === 'watched'
+                    ? '👁️'
+                    : currentTab === 'unreleased'
+                    ? '📅'
+                    : '📋'}
                 </div>
                 <h4 className="text-base font-bold text-white mb-1">
                   {currentTab === 'ready'
@@ -132,10 +160,14 @@ export const App: React.FC = () => {
                     ? 'No movies waiting for good quality!'
                     : currentTab === 'unreleased'
                     ? 'No unreleased movies found!'
+                    : currentTab === 'watched'
+                    ? 'No movies in your watched history'
                     : 'Your watchlist is empty'}
                 </h4>
                 <p className="text-xs text-gray-400 max-w-sm">
-                  {items.length === 0
+                  {currentTab === 'watched'
+                    ? 'Click the eye icon on any movie card to mark it as watched and archive it.'
+                    : items.length === 0
                     ? 'Use the search bar above to start tracking movies.'
                     : 'Switch tabs or add more items to monitor.'}
                 </p>

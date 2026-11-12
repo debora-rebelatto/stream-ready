@@ -1,7 +1,8 @@
 import React from 'react';
 import type { WatchlistItem } from '../types';
-import { formatQualityLabel } from '../lib/utils';
-import { Trash2, Star, CheckCircle, Clock, Calendar } from 'lucide-react';
+import { formatQualityLabel, isItemReady, isItemNewRelease, isItemUnreleased } from '../lib/utils';
+import { useWatchlist } from '../context/useAppContext';
+import { Trash2, Star, CheckCircle, Clock, Calendar, Eye, EyeOff, Flame, SlidersHorizontal, RotateCcw } from 'lucide-react';
 
 interface MovieCardProps {
   item: WatchlistItem;
@@ -9,19 +10,19 @@ interface MovieCardProps {
 }
 
 export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
-  const ready = item.has1080pPlus;
-  const rawQuality = formatQualityLabel(item.bestQuality);
-  const isUnreleased =
-    !ready &&
-    (/unreleased|not released|unavailable|não lançado|indisponível/i.test(rawQuality) ||
-      ((!item.streamCount || item.streamCount === 0) && !/cam/i.test(rawQuality)));
+  const { markWatched, setItemMinQuality, globalMinQuality } = useWatchlist();
 
-  const qualityText = isUnreleased ? 'Unreleased' : rawQuality;
+  const isWatched = Boolean(item.isWatched);
+  const ready = isItemReady(item, globalMinQuality);
+  const isNew = isItemNewRelease(item) && !isWatched;
+  const unreleased = isItemUnreleased(item);
+  const rawQuality = formatQualityLabel(item.bestQuality);
+  const qualityText = unreleased ? 'Unreleased' : rawQuality;
   const streamsText = item.streamCount > 0 ? `${item.streamCount} sources` : '0 sources';
 
   const handleClick = (e: React.MouseEvent) => {
-    // If click is on delete button, do not navigate
-    if ((e.target as HTMLElement).closest('button')) return;
+    // If click is on an interactive button or select, do not navigate
+    if ((e.target as HTMLElement).closest('button, select, input, label')) return;
 
     const stremioDeepLink =
       item.type === 'series'
@@ -30,10 +31,37 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
     window.location.href = stremioDeepLink;
   };
 
+  const handleToggleWatched = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    markWatched(item.id, !isWatched);
+  };
+
+  const handleCycleTargetQuality = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Cycles: Default (inherits global) -> 1080p -> 4k -> Default
+    let next: '1080p' | '4k' | null = null;
+    if (!item.minQuality) {
+      next = globalMinQuality === '1080p' ? '4k' : '1080p';
+    } else if (item.minQuality === '1080p') {
+      next = '4k';
+    } else {
+      next = null; // back to default (inherits global)
+    }
+    setItemMinQuality(item.id, next);
+  };
+
+  const activeTargetQuality = item.minQuality || globalMinQuality || '1080p';
+
   return (
     <div
       onClick={handleClick}
-      className="group relative flex flex-col bg-[#151824] border border-white/10 hover:border-white/25 rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
+      className={`group relative flex flex-col bg-[#151824] border rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
+        isWatched
+          ? 'border-white/5 opacity-75 hover:opacity-100 hover:border-purple-500/30'
+          : isNew
+          ? 'border-amber-500/50 hover:border-amber-400 shadow-amber-500/10'
+          : 'border-white/10 hover:border-white/25'
+      }`}
       title="Click to open in Stremio"
     >
       {/* Poster */}
@@ -45,50 +73,69 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
           }
           alt={item.name}
           loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${
+            isWatched ? 'grayscale-[30%]' : ''
+          }`}
         />
 
-        {/* Status Badge */}
-        <div
-          className={`absolute top-2.5 left-2.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-md flex items-center gap-1 ${
-            ready
-              ? 'bg-emerald-500/90 text-white border border-emerald-400/40'
-              : isUnreleased
-              ? 'bg-blue-600/90 text-white border border-blue-400/40'
-              : 'bg-amber-500/90 text-black border border-amber-300/40'
-          }`}
-        >
-          {ready ? (
-            <>
+        {/* Status Badge (Top-Left) */}
+        <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start">
+          {isWatched ? (
+            <div className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-md flex items-center gap-1 bg-purple-900/90 text-purple-200 border border-purple-500/40">
+              <Eye size={10} /> Watched
+            </div>
+          ) : isNew ? (
+            <div className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-lg flex items-center gap-1 bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 text-white border border-amber-300 animate-pulse">
+              <Flame size={11} className="fill-current text-yellow-200" /> NEW RELEASE
+            </div>
+          ) : ready ? (
+            <div className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-md flex items-center gap-1 bg-emerald-500/90 text-white border border-emerald-400/40">
               <CheckCircle size={10} /> Good Quality
-            </>
-          ) : isUnreleased ? (
-            <>
+            </div>
+          ) : unreleased ? (
+            <div className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-md flex items-center gap-1 bg-blue-600/90 text-white border border-blue-400/40">
               <Calendar size={10} /> Unreleased
-            </>
+            </div>
           ) : (
-            <>
+            <div className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-md flex items-center gap-1 bg-amber-500/90 text-black border border-amber-300/40">
               <Clock size={10} /> Waiting
-            </>
+            </div>
           )}
         </div>
 
-        {/* Delete Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(item.id, item.name);
-          }}
-          className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-black/60 hover:bg-red-500 text-gray-300 hover:text-white border border-white/20 backdrop-blur-md opacity-80 group-hover:opacity-100 transition-all cursor-pointer shadow-md"
-          title={`Remove ${item.name} from watchlist`}
-          aria-label={`Remove ${item.name}`}
-        >
-          <Trash2 size={13} />
-        </button>
+        {/* Action Buttons (Top-Right) */}
+        <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-all">
+          {/* Mark as Watched / Restore Button */}
+          <button
+            onClick={handleToggleWatched}
+            className={`p-1.5 rounded-full backdrop-blur-md border transition-all cursor-pointer shadow-md ${
+              isWatched
+                ? 'bg-purple-600/80 hover:bg-purple-500 text-white border-purple-400/40'
+                : 'bg-black/60 hover:bg-emerald-600 text-gray-300 hover:text-white border-white/20'
+            }`}
+            title={isWatched ? 'Restore to active Watchlist' : 'Mark as Watched (Archive)'}
+            aria-label={isWatched ? 'Restore movie' : 'Mark as watched'}
+          >
+            {isWatched ? <RotateCcw size={13} /> : <Eye size={13} />}
+          </button>
+
+          {/* Delete Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(item.id, item.name);
+            }}
+            className="p-1.5 rounded-full bg-black/60 hover:bg-red-500 text-gray-300 hover:text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer shadow-md"
+            title={`Remove ${item.name} from watchlist`}
+            aria-label={`Remove ${item.name}`}
+          >
+            <Trash2 size={13} />
+          </button>
+        </div>
       </div>
 
       {/* Details */}
-      <div className="p-3.5 flex flex-col flex-1 justify-between gap-2">
+      <div className="p-3.5 flex flex-col flex-1 justify-between gap-2.5">
         <div>
           <h4 className="text-sm font-bold text-white line-clamp-2 leading-tight group-hover:text-purple-300 transition-colors">
             {item.name}
@@ -104,17 +151,37 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
           </div>
         </div>
 
-        {/* Quality Pill */}
-        <div
-          className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-1 rounded border self-start ${
-            ready
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-              : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-          }`}
-        >
-          <span>{qualityText}</span>
-          <span className="text-gray-500">•</span>
-          <span>{streamsText}</span>
+        {/* Quality Info & Min Quality Target Selector */}
+        <div className="flex flex-col gap-1.5 pt-1 border-t border-white/5">
+          {/* Detected Quality Pill */}
+          <div
+            className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded border self-start ${
+              ready
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+            }`}
+          >
+            <span>{qualityText}</span>
+            <span className="text-gray-500">•</span>
+            <span>{streamsText}</span>
+          </div>
+
+          {/* Target Quality Override Pill */}
+          <button
+            type="button"
+            onClick={handleCycleTargetQuality}
+            className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md border font-medium transition-colors cursor-pointer self-start ${
+              item.minQuality === '4k'
+                ? 'bg-purple-900/30 text-purple-300 border-purple-500/40 hover:bg-purple-900/50'
+                : item.minQuality === '1080p'
+                ? 'bg-blue-900/30 text-blue-300 border-blue-500/40 hover:bg-blue-900/50'
+                : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-gray-200'
+            }`}
+            title="Click to toggle minimum quality target (Auto / 1080p / 4K)"
+          >
+            <SlidersHorizontal size={9} />
+            <span>Target: {item.minQuality ? item.minQuality.toUpperCase() : `Auto (${activeTargetQuality.toUpperCase()})`}</span>
+          </button>
         </div>
       </div>
     </div>

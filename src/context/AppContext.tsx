@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { WatchlistItem, WatchlistStats, StremioUser, ToastMessage } from '../types';
 import { authService } from '../services/authService';
 import { watchlistService } from '../services/watchlistService';
-import { isItemUnreleased } from '../lib/utils';
+import { api } from '../lib/api';
+import { isItemReady, isItemUnreleased } from '../lib/utils';
 import { AuthContext, WatchlistContext, ToastContext, useToast } from './useAppContext';
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -37,8 +38,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   const [items, setItems] = useState<WatchlistItem[]>([]);
-  const [stats, setStats] = useState<WatchlistStats>({ total: 0, ready: 0, pending: 0, unreleased: 0 });
-  const [currentTab, setCurrentTab] = useState<'all' | 'ready' | 'pending' | 'unreleased'>('all');
+  const [stats, setStats] = useState<WatchlistStats>({ total: 0, ready: 0, pending: 0, unreleased: 0, watched: 0 });
+  const [currentTab, setCurrentTab] = useState<'all' | 'ready' | 'pending' | 'unreleased' | 'watched'>('all');
+  const [globalMinQuality, setGlobalMinQualityState] = useState<'1080p' | '4k'>('1080p');
   const [isLoadingList, setIsLoadingList] = useState(false);
   const [isCheckingAll, setIsCheckingAll] = useState(false);
 
@@ -48,6 +50,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await authService.getStatus();
       if (res.loggedIn && res.user) {
         setUser(res.user);
+        try {
+          const settings = await api.getSettings();
+          if (settings?.minQuality === '4k' || settings?.minQuality === '1080p') {
+            setGlobalMinQualityState(settings.minQuality);
+          }
+        } catch {}
       } else if (res.isUnauthorized) {
         setUser(null);
         authService.clearAuth();
@@ -69,7 +77,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const refreshWatchlist = useCallback(async () => {
     if (!user) {
       setItems([]);
-      setStats({ total: 0, ready: 0, pending: 0, unreleased: 0 });
+      setStats({ total: 0, ready: 0, pending: 0, unreleased: 0, watched: 0 });
       return;
     }
 
@@ -82,23 +90,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return;
       }
       const loadedItems = res.items || [];
-      const ready = loadedItems.filter((i) => i.has1080pPlus).length;
-      const unreleased = loadedItems.filter((i) => !i.has1080pPlus && isItemUnreleased(i)).length;
-      const pending = loadedItems.filter((i) => !i.has1080pPlus && !isItemUnreleased(i)).length;
+      const unwatched = loadedItems.filter((i) => !i.isWatched);
+      const ready = unwatched.filter((i) => isItemReady(i, globalMinQuality)).length;
+      const unreleased = unwatched.filter((i) => !isItemReady(i, globalMinQuality) && isItemUnreleased(i)).length;
+      const pending = unwatched.filter((i) => !isItemReady(i, globalMinQuality) && !isItemUnreleased(i)).length;
+      const watched = loadedItems.filter((i) => Boolean(i.isWatched)).length;
 
       setItems(loadedItems);
       setStats({
-        total: loadedItems.length,
+        total: unwatched.length,
         ready,
         pending,
         unreleased,
+        watched,
       });
     } catch {
       showToast('Error loading watchlist items.', 'error');
     } finally {
       setIsLoadingList(false);
     }
-  }, [user, showToast]);
+  }, [user, globalMinQuality, showToast]);
 
   useEffect(() => {
     if (user) {
@@ -232,6 +243,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const setGlobalMinQuality = async (quality: '1080p' | '4k') => {
+    setGlobalMinQualityState(quality);
+    try {
+      await api.saveSettings({ minQuality: quality });
+      showToast(`🎯 Quality preference set to ${quality.toUpperCase()}!`, 'success');
+      await refreshWatchlist();
+    } catch {
+      showToast('Failed to save quality preference.', 'error');
+    }
+  };
+
+  const markWatched = async (id: string, watched: boolean) => {
+    try {
+      const res = await watchlistService.setWatched(id, watched);
+      if (res.success) {
+        setItems((prev) =>
+          prev.map((i) =>
+            i.id === id ? { ...i, isWatched: watched, watchedAt: watched ? new Date().toISOString() : null } : i
+          )
+        );
+        if (res.stats) setStats(res.stats);
+        showToast(
+          watched ? '👁️ Movie moved to Watched History.' : '↩️ Movie restored to active watchlist.',
+          'success'
+        );
+      }
+    } catch {
+      showToast('Failed to update watched status.', 'error');
+    }
+  };
+
+  const setItemMinQuality = async (id: string, minQuality: '1080p' | '4k' | null) => {
+    try {
+      const res = await watchlistService.setItemMinQuality(id, minQuality);
+      if (res.success) {
+        setItems((prev) =>
+          prev.map((i) => (i.id === id ? { ...i, minQuality } : i))
+        );
+        if (res.stats) setStats(res.stats);
+        showToast(`Target quality set to ${minQuality ? minQuality.toUpperCase() : 'Default'}.`, 'success');
+      }
+    } catch {
+      showToast('Failed to update item target quality.', 'error');
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -249,11 +306,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           stats,
           currentTab,
           setCurrentTab,
+          globalMinQuality,
+          setGlobalMinQuality,
           isLoading: isLoadingList,
           isCheckingAll,
           refreshWatchlist,
           addItem,
           removeItem,
+          markWatched,
+          setItemMinQuality,
           recheckItem,
           recheckAll,
         }}

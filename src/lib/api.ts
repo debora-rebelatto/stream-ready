@@ -125,6 +125,24 @@ export const api = {
     return res.json();
   },
 
+  async setWatched(id: string, watched: boolean): Promise<{ success: boolean; item: WatchlistItem; stats: WatchlistStats }> {
+    const res = await fetch(`/api/items/${id}/watched`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ watched }),
+    });
+    return res.json();
+  },
+
+  async setItemMinQuality(id: string, minQuality: '1080p' | '4k' | null): Promise<{ success: boolean; item: WatchlistItem; stats: WatchlistStats }> {
+    const res = await fetch(`/api/items/${id}/min-quality`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ minQuality }),
+    });
+    return res.json();
+  },
+
   async recheckSingle(id: string): Promise<{
     success: boolean;
     item: WatchlistItem;
