@@ -255,18 +255,18 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Check current logged in user
+// Check current logged in user (estritamente pela chave enviada pelo cliente, sem fallback global)
 app.get('/api/auth/me', async (req, res) => {
   try {
     await db.ensureLoaded();
-    const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
+    const authKey = getRequestAuthKey(req);
     if (!authKey) {
-      return res.json({ loggedIn: false, supabaseConfigured: db.isSupabaseConfigured() });
+      return res.json({ loggedIn: false });
     }
 
     const user = await getUserInfo(authKey);
     if (!user) {
-      return res.json({ loggedIn: false, supabaseConfigured: db.isSupabaseConfigured() });
+      return res.json({ loggedIn: false });
     }
 
     // Se o banco estiver vazio, tenta restaurar da nuvem do Stremio
@@ -288,7 +288,7 @@ app.get('/api/auth/me', async (req, res) => {
 
     res.json({ loggedIn: true, authKey, user, itemsCount: db.getItems().length, supabaseConfigured: db.isSupabaseConfigured() });
   } catch (err) {
-    res.json({ loggedIn: false, supabaseConfigured: db.isSupabaseConfigured() });
+    res.json({ loggedIn: false });
   }
 });
 
@@ -326,13 +326,13 @@ app.post('/api/auth/install-account', async (req, res) => {
 // REST API ENDPOINTS (FOR WEB UI)
 // -------------------------------------------------------------
 
-// List items and stats
+// List items and stats (exige autenticação do usuário no painel web)
 app.get('/api/items', async (req, res) => {
   await db.ensureLoaded();
-  const authKey = getRequestAuthKey(req) || db.getSettings().stremioAuthKey;
+  const authKey = getRequestAuthKey(req);
   
-  // Se não estiver conectado em uma conta, não houver itens no banco e não tiver Supabase, solicita login
-  if (!authKey && db.getItems().length === 0 && !db.isSupabaseConfigured()) {
+  // Se não estiver conectado em uma conta na sessão atual do navegador, não renderiza nenhuma lista
+  if (!authKey) {
     return res.json({
       items: [],
       stats: { total: 0, ready: 0, pending: 0 },
@@ -341,7 +341,7 @@ app.get('/api/items', async (req, res) => {
   }
 
   // Se o banco estiver vazio, busca da nuvem do Stremio
-  if (db.getItems().length === 0 && authKey) {
+  if (db.getItems().length === 0) {
     try {
       const cloudItems = await getAccountWatchlist(authKey);
       if (Array.isArray(cloudItems) && cloudItems.length > 0) {

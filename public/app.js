@@ -62,8 +62,12 @@ function getAuthHeaders() {
 
 async function checkAuthStatus() {
   const key = localStorage.getItem('stremioAuthKey');
+  if (!key) {
+    setAuthUI(false, null);
+    return;
+  }
 
-  // Carrega do cache local imediatamente para exibição instantânea
+  // Carrega do cache local imediatamente para exibição instantânea (apenas se tiver chave de login)
   const cached = localStorage.getItem('watchlist_cached_items');
   if (cached) {
     try {
@@ -81,21 +85,18 @@ async function checkAuthStatus() {
 
   try {
     const res = await fetch('/api/auth/me', {
-      headers: key ? { 'x-stremio-auth': key } : {}
+      headers: { 'x-stremio-auth': key }
     });
     const data = await res.json();
     if (data.loggedIn && data.user) {
-      if (data.authKey) localStorage.setItem('stremioAuthKey', data.authKey);
       if (data.user.email) localStorage.setItem('stremioEmail', data.user.email);
       setAuthUI(true, data.user);
       await loadWatchlist();
-    } else if (data.supabaseConfigured) {
-      // Banco Supabase está ativo: libera visualização e edição da Watchlist mesmo sem login no Stremio
-      setAuthUI(false, null, true);
-      await loadWatchlist();
     } else if (res.status === 401 || (data && data.loggedIn === false)) {
       localStorage.removeItem('stremioAuthKey');
-      setAuthUI(false, null, false);
+      localStorage.removeItem('stremioEmail');
+      localStorage.removeItem('watchlist_cached_items');
+      setAuthUI(false, null);
     }
   } catch (err) {
     console.warn('Servidor pode estar acordando:', err);
@@ -105,8 +106,8 @@ async function checkAuthStatus() {
   }
 }
 
-function setAuthUI(isLoggedIn, user, allowDatabaseAccess = false) {
-  currentUser = isLoggedIn ? user : (allowDatabaseAccess ? { email: 'Supabase Cloud', dbOnly: true } : null);
+function setAuthUI(isLoggedIn, user) {
+  currentUser = isLoggedIn ? user : null;
   const searchSection = document.querySelector('.search-section');
   const listControls = document.querySelector('.list-controls');
 
@@ -116,12 +117,6 @@ function setAuthUI(isLoggedIn, user, allowDatabaseAccess = false) {
     userEmailDisplay.textContent = user.email || 'Conectado';
     accountSyncCard.classList.remove('hidden');
     syncUserEmail.textContent = user.email;
-    if (searchSection) searchSection.classList.remove('hidden');
-    if (listControls) listControls.classList.remove('hidden');
-  } else if (allowDatabaseAccess) {
-    btnOpenLogin.classList.remove('hidden');
-    userLoggedInMenu.classList.add('hidden');
-    accountSyncCard.classList.add('hidden');
     if (searchSection) searchSection.classList.remove('hidden');
     if (listControls) listControls.classList.remove('hidden');
   } else {
