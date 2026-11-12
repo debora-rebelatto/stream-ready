@@ -519,9 +519,16 @@ function renderItems() {
 
   watchlistContainer.innerHTML = filtered.map(item => {
     const ready = item.has1080pPlus;
+    const rawQuality = item.bestQuality || 'Pendente';
+    const isUnreleased = !ready && (
+      /não lançado|indisponível/i.test(rawQuality) ||
+      ((!item.streamCount || item.streamCount === 0) && !/cam/i.test(rawQuality))
+    );
     const badgeClass = ready ? 'ready' : 'pending';
-    const badgeText = ready ? '🟢 PRONTO (NÃO CAM)' : '⏳ APENAS CAM';
-    const qualityText = item.bestQuality || 'Pendente';
+    const badgeText = ready
+      ? '🟢 PRONTO (NÃO CAM)'
+      : (isUnreleased ? '📅 AINDA NÃO LANÇADO' : '⏳ APENAS CAM');
+    const qualityText = isUnreleased ? 'Ainda não lançado' : rawQuality;
     const streamsText = item.streamCount > 0 ? `${item.streamCount} fontes` : '0 fontes';
     const itemType = item.type || 'movie';
 
@@ -634,6 +641,8 @@ async function handleAddMovie(id) {
 
     if (item.has1080pPlus) {
       showToast(`🎉 "${item.name}" adicionado! Já está PRONTO em ${item.bestQuality} (Não é CAM)!`, 'success');
+    } else if (!item.streamCount || item.streamCount === 0 || /não lançado|indisponível/i.test(item.bestQuality || '')) {
+      showToast(`📅 "${item.name}" adicionado! Ainda não foi lançado.`, 'info');
     } else {
       showToast(`⏳ "${item.name}" adicionado! Aguardando versão limpa (atualmente: ${item.bestQuality}).`, 'info');
     }
