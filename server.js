@@ -25,6 +25,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Health check endpoint for uptime monitors (UptimeRobot, Render, Railway, BetterStack)
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: Math.round(process.uptime()),
+    timestamp: new Date().toISOString(),
+    supabase: db.isSupabaseConfigured()
+  });
+});
+
 // Fallback redirect for manifest without .json
 app.get('/manifest', (req, res) => {
   res.redirect('/manifest.json');
