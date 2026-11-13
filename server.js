@@ -102,6 +102,45 @@ async function syncAddonUrlWithAccount(authKey, baseUrl, userId) {
 }
 
 // -------------------------------------------------------------
+// SMART ON-DEMAND SYNC & CHECKER (Zero Cron Dependency)
+// -------------------------------------------------------------
+const userSyncThrottle = new Map();
+
+function triggerUserOnDemandSync(authKey, userId) {
+  if (!authKey || !userId) return;
+  const now = Date.now();
+  const lastSync = userSyncThrottle.get(userId) || 0;
+  // Throttle: 10 minutos (não repete se verificado recentemente)
+  if (now - lastSync < 10 * 60 * 1000) return;
+  userSyncThrottle.set(userId, now);
+
+  // Executa em segundo plano de forma assíncrona (não atrasa a resposta da requisição)
+  (async () => {
+    try {
+      // 1. Sincroniza filmes assistidos no Stremio
+      await db.syncWatchedWithStremio(authKey, userId);
+
+      // 2. Confere qualidade dos filmes pendentes deste usuário
+      const pendingItems = db.getItems(userId).filter(i => !i.has1080pPlus && !i.isWatched);
+      for (const item of pendingItems.slice(0, 5)) {
+        const q = await checkMovieQuality(item.id, item.type || 'movie');
+        if (q && q.has1080pPlus) {
+          await db.updateItem(item.id, {
+            has1080pPlus: q.has1080pPlus,
+            bestQuality: q.bestQuality,
+            streamCount: q.streamCount,
+            lastChecked: q.checkedAt
+          }, userId);
+        }
+        await new Promise(r => setTimeout(r, 600));
+      }
+    } catch (err) {
+      console.warn(`[OnDemandSync:${userId}] Erro na checagem:`, err.message);
+    }
+  })();
+}
+
+// -------------------------------------------------------------
 // STREMIO ADDON ENDPOINTS
 // -------------------------------------------------------------
 
@@ -132,6 +171,9 @@ const catalogHandler = async (req, res) => {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       return res.json({ metas: [] });
     }
+
+    // Atualização inteligente sob demanda ao abrir o catálogo no Stremio (com throttle de 10 min)
+    triggerUserOnDemandSync(authKey, userId);
 
     // 1. Se o banco desse usuário estiver vazio e vieram filmes na URL, restaura para esse usuário
     if (db.getItems(userId).length === 0) {
@@ -301,6 +343,9 @@ app.get('/api/auth/me', async (req, res) => {
 
     const userId = user.id;
 
+    // Atualização inteligente sob demanda ao carregar usuário (com throttle de 10 min)
+    triggerUserOnDemandSync(authKey, userId);
+
     // Se a lista deste usuário no banco estiver vazia, restaura da nuvem do Stremio desta conta
     if (db.getItems(userId).length === 0) {
       try {
@@ -379,6 +424,9 @@ app.get('/api/items', async (req, res) => {
       requireAuth: true
     });
   }
+
+  // Atualização inteligente sob demanda ao carregar a lista no site (com throttle de 10 min)
+  triggerUserOnDemandSync(authKey, userId);
 
   // Se o banco deste usuário estiver vazio, busca da nuvem do Stremio desta conta
   if (db.getItems(userId).length === 0) {
