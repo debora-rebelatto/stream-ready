@@ -84,4 +84,27 @@ export const watchlistService = {
   async importBackup(items: WatchlistItem[]) {
     return api.importBackup(items);
   },
+
+  /**
+   * Custom user lists
+   */
+  async getCustomLists() {
+    return api.getCustomLists();
+  },
+
+  async createCustomList(name: string, emoji = '🎬') {
+    return api.createCustomList(name, emoji);
+  },
+
+  async updateCustomList(id: string, name: string, emoji?: string) {
+    return api.updateCustomList(id, name, emoji);
+  },
+
+  async deleteCustomList(id: string) {
+    return api.deleteCustomList(id);
+  },
+
+  async setItemCustomLists(id: string, listIds: string[]) {
+    return api.setItemCustomLists(id, listIds);
+  },
 };

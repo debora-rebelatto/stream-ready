@@ -7,10 +7,11 @@ import { SearchSection } from './components/SearchSection';
 import { MovieCard } from './components/MovieCard';
 import { LoginModal } from './components/LoginModal';
 import { SettingsModal } from './components/SettingsModal';
+import { ManageListsModal } from './components/ManageListsModal';
 import { LandingPage } from './components/LandingPage';
 import { ToastContainer } from './components/ToastContainer';
 import { Pagination } from './components/Pagination';
-import { RotateCw, Film, Eye } from 'lucide-react';
+import { RotateCw, Film, Eye, Folder, FolderPlus } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -19,6 +20,9 @@ export const App: React.FC = () => {
     stats,
     currentTab,
     setCurrentTab,
+    customLists,
+    activeCustomListId,
+    setActiveCustomListId,
     globalMinQuality,
     isLoading: isWatchlistLoading,
     isCheckingAll,
@@ -30,12 +34,20 @@ export const App: React.FC = () => {
 
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isManageListsOpen, setIsManageListsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const listTopRef = useRef<HTMLDivElement>(null);
 
   // Filter items
   const filtered = items.filter((item) => {
+    // If a custom list is selected, filter by that list
+    if (activeCustomListId) {
+      if (!Array.isArray(item.customLists) || !item.customLists.includes(activeCustomListId)) {
+        return false;
+      }
+    }
+
     if (currentTab === 'watched') {
       return Boolean(item.isWatched);
     }
@@ -50,10 +62,10 @@ export const App: React.FC = () => {
     return true;
   });
 
-  // Reset page when switching tabs or changing items per page
+  // Reset page when switching tabs, list filter, or changing items per page
   useEffect(() => {
     setCurrentPage(1);
-  }, [currentTab, itemsPerPage]);
+  }, [currentTab, activeCustomListId, itemsPerPage]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
 
@@ -74,11 +86,14 @@ export const App: React.FC = () => {
     }
   };
 
+  const activeList = customLists.find((l) => l.id === activeCustomListId);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0c0d14]">
       <Navbar
         onOpenLogin={() => setIsLoginOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenLists={() => setIsManageListsOpen(true)}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
@@ -93,6 +108,76 @@ export const App: React.FC = () => {
           <>
             <Hero onOpenSettings={() => setIsSettingsOpen(true)} />
             <SearchSection />
+
+            {/* Custom Lists Selector & Management Bar */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 shrink-0">
+                <Folder size={14} className="text-purple-400" />
+                <span>Listas:</span>
+              </div>
+
+              <button
+                onClick={() => setActiveCustomListId(null)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                  activeCustomListId === null
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-900/30'
+                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                🌐 Todas as listas
+              </button>
+
+              {customLists.map((l) => {
+                const count = items.filter(
+                  (i) => Array.isArray(i.customLists) && i.customLists.includes(l.id)
+                ).length;
+                const isSelected = activeCustomListId === l.id;
+                return (
+                  <button
+                    key={l.id}
+                    onClick={() => setActiveCustomListId(isSelected ? null : l.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30 border border-purple-400/40'
+                        : 'bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 border border-white/5'
+                    }`}
+                  >
+                    <span>{l.emoji || '🎬'}</span>
+                    <span>{l.name}</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/30 text-gray-300 font-mono">
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => setIsManageListsOpen(true)}
+                className="px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 flex items-center gap-1.5 shrink-0"
+                title="Criar e gerenciar listas personalizadas"
+              >
+                <FolderPlus size={13} />
+                <span>+ Nova Lista</span>
+              </button>
+            </div>
+
+            {/* Active List Filter Banner */}
+            {activeList && (
+              <div className="mb-4 p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-purple-200">
+                  <span className="text-xl">{activeList.emoji || '🎬'}</span>
+                  <span>
+                    Exibindo filmes da lista <strong>{activeList.name}</strong> ({filtered.length} filme{filtered.length === 1 ? '' : 's'})
+                  </span>
+                </div>
+                <button
+                  onClick={() => setActiveCustomListId(null)}
+                  className="text-xs text-purple-400 hover:text-purple-200 font-semibold px-2 py-1 rounded-lg hover:bg-purple-500/10 transition-colors"
+                >
+                  Ver todos os filmes ✕
+                </button>
+              </div>
+            )}
 
             {/* List Header & Controls */}
             <div ref={listTopRef} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-white/10 scroll-mt-24">
@@ -241,6 +326,7 @@ export const App: React.FC = () => {
       {/* Modals & Toast */}
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <ManageListsModal isOpen={isManageListsOpen} onClose={() => setIsManageListsOpen(false)} />
       <ToastContainer />
 
       {/* Footer for authenticated users (LandingPage has its own footer) */}

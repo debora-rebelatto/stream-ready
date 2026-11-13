@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import type { WatchlistItem, WatchlistStats, StremioUser, ToastMessage } from '../types';
+import type { WatchlistItem, WatchlistStats, StremioUser, ToastMessage, CustomList } from '../types';
 import { authService } from '../services/authService';
 import { watchlistService } from '../services/watchlistService';
 import { api } from '../lib/api';
@@ -40,10 +40,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [items, setItems] = useState<WatchlistItem[]>([]);
   const [stats, setStats] = useState<WatchlistStats>({ total: 0, ready: 0, pending: 0, unreleased: 0, watched: 0 });
   const [currentTab, setCurrentTab] = useState<'all' | 'ready' | 'pending' | 'unreleased' | 'watched'>('all');
+  const [customLists, setCustomLists] = useState<CustomList[]>([]);
+  const [activeCustomListId, setActiveCustomListId] = useState<string | null>(null);
+  const [isListsLoading, setIsListsLoading] = useState(false);
   const [globalMinQuality, setGlobalMinQualityState] = useState<'1080p' | '4k'>('1080p');
   const [isLoadingList, setIsLoadingList] = useState(false);
   const [isCheckingAll, setIsCheckingAll] = useState(false);
   const [isSyncingWatched, setIsSyncingWatched] = useState(false);
+
+  const fetchCustomLists = useCallback(async () => {
+    if (!user) {
+      setCustomLists([]);
+      return;
+    }
+    setIsListsLoading(true);
+    try {
+      const res = await watchlistService.getCustomLists();
+      if (res.success && Array.isArray(res.lists)) {
+        setCustomLists(res.lists);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setIsListsLoading(false);
+    }
+  }, [user]);
 
   const checkAuth = useCallback(async () => {
     setIsLoadingAuth(true);
@@ -115,11 +136,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     if (user) {
       refreshWatchlist();
+      fetchCustomLists();
     } else {
       setItems([]);
-      setStats({ total: 0, ready: 0, pending: 0, unreleased: 0 });
+      setCustomLists([]);
+      setActiveCustomListId(null);
+      setStats({ total: 0, ready: 0, pending: 0, unreleased: 0, watched: 0 });
     }
-  }, [user, refreshWatchlist]);
+  }, [user, refreshWatchlist, fetchCustomLists]);
 
   const loginWithCreds = async (email: string, pass: string) => {
     try {
@@ -315,6 +339,95 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const createCustomList = async (name: string, emoji = '🎬'): Promise<boolean> => {
+    try {
+      const res = await watchlistService.createCustomList(name, emoji);
+      if (res.success && res.list) {
+        setCustomLists((prev) => [...prev, res.list]);
+        showToast(`📁 Lista "${res.list.name}" criada com sucesso!`, 'success');
+        return true;
+      } else {
+        showToast(res.error || 'Erro ao criar lista.', 'error');
+        return false;
+      }
+    } catch {
+      showToast('Erro ao criar lista.', 'error');
+      return false;
+    }
+  };
+
+  const updateCustomList = async (id: string, name: string, emoji?: string): Promise<boolean> => {
+    try {
+      const res = await watchlistService.updateCustomList(id, name, emoji);
+      if (res.success && res.list) {
+        setCustomLists((prev) => prev.map((l) => (l.id === id ? { ...l, ...res.list } : l)));
+        showToast('Lista atualizada com sucesso!', 'success');
+        return true;
+      } else {
+        showToast(res.error || 'Erro ao atualizar lista.', 'error');
+        return false;
+      }
+    } catch {
+      showToast('Erro ao atualizar lista.', 'error');
+      return false;
+    }
+  };
+
+  const deleteCustomList = async (id: string): Promise<boolean> => {
+    try {
+      const res = await watchlistService.deleteCustomList(id);
+      if (res.success) {
+        setCustomLists((prev) => prev.filter((l) => l.id !== id));
+        if (activeCustomListId === id) {
+          setActiveCustomListId(null);
+        }
+        setItems((prev) =>
+          prev.map((item) => ({
+            ...item,
+            customLists: (item.customLists || []).filter((lid) => lid !== id),
+          }))
+        );
+        showToast('Lista removida com sucesso.', 'info');
+        return true;
+      } else {
+        showToast(res.error || 'Erro ao remover lista.', 'error');
+        return false;
+      }
+    } catch {
+      showToast('Erro ao remover lista.', 'error');
+      return false;
+    }
+  };
+
+  const setItemCustomLists = async (itemId: string, listIds: string[]) => {
+    try {
+      const res = await watchlistService.setItemCustomLists(itemId, listIds);
+      if (res.success) {
+        setItems((prev) =>
+          prev.map((item) => (item.id === itemId ? { ...item, customLists: listIds } : item))
+        );
+        await fetchCustomLists();
+        showToast('Listas do filme atualizadas!', 'success');
+      } else {
+        showToast(res.error || 'Erro ao atualizar listas do filme.', 'error');
+      }
+    } catch {
+      showToast('Erro ao atualizar listas do filme.', 'error');
+    }
+  };
+
+  const toggleItemCustomList = async (itemId: string, listId: string) => {
+    const item = items.find((i) => i.id === itemId);
+    if (!item) return;
+    const currentLists = item.customLists || [];
+    const exists = currentLists.includes(listId);
+    const updatedLists = exists
+      ? currentLists.filter((id) => id !== listId)
+      : [...currentLists, listId];
+
+    await setItemCustomLists(itemId, updatedLists);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -332,6 +445,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           stats,
           currentTab,
           setCurrentTab,
+          customLists,
+          activeCustomListId,
+          setActiveCustomListId,
+          createCustomList,
+          updateCustomList,
+          deleteCustomList,
+          setItemCustomLists,
+          toggleItemCustomList,
+          isListsLoading,
           globalMinQuality,
           setGlobalMinQuality,
           isLoading: isLoadingList,

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { WatchlistItem } from '../types';
 import { formatQualityLabel, isItemReady, isItemNewRelease, isItemUnreleased } from '../lib/utils';
 import { useWatchlist } from '../context/useAppContext';
-import { Trash2, Star, CheckCircle, Clock, Calendar, Eye, EyeOff, Flame, SlidersHorizontal, RotateCcw } from 'lucide-react';
+import { Trash2, Star, CheckCircle, Clock, Calendar, Eye, EyeOff, Flame, SlidersHorizontal, RotateCcw, Folder, Check } from 'lucide-react';
 
 interface MovieCardProps {
   item: WatchlistItem;
@@ -10,7 +10,8 @@ interface MovieCardProps {
 }
 
 export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
-  const { markWatched, setItemMinQuality, globalMinQuality } = useWatchlist();
+  const { markWatched, setItemMinQuality, globalMinQuality, customLists, toggleItemCustomList } = useWatchlist();
+  const [isListMenuOpen, setIsListMenuOpen] = useState(false);
 
   const isWatched = Boolean(item.isWatched);
   const ready = isItemReady(item, globalMinQuality);
@@ -19,6 +20,8 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
   const rawQuality = formatQualityLabel(item.bestQuality);
   const qualityText = unreleased ? 'Unreleased' : rawQuality;
   const streamsText = item.streamCount > 0 ? `${item.streamCount} sources` : '0 sources';
+
+  const itemLists = customLists.filter((l) => (item.customLists || []).includes(l.id));
 
   const handleClick = (e: React.MouseEvent) => {
     // If click is on an interactive button or select, do not navigate
@@ -182,6 +185,94 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
             <SlidersHorizontal size={9} />
             <span>Target: {item.minQuality ? item.minQuality.toUpperCase() : `Auto (${activeTargetQuality.toUpperCase()})`}</span>
           </button>
+
+          {/* Custom Lists Tags & Menu */}
+          <div className="relative pt-1 border-t border-white/5">
+            <div className="flex items-center justify-between gap-1.5">
+              <div className="flex items-center gap-1 overflow-hidden flex-wrap max-h-5 flex-1 min-w-0">
+                {itemLists.length > 0 ? (
+                  itemLists.map((l) => (
+                    <span
+                      key={l.id}
+                      className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20 truncate max-w-[85px]"
+                      title={l.name}
+                    >
+                      <span>{l.emoji || '🎬'}</span>
+                      <span className="truncate">{l.name}</span>
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-[10px] text-gray-500">Sem lista</span>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsListMenuOpen(!isListMenuOpen);
+                }}
+                className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border transition-colors shrink-0 ${
+                  itemLists.length > 0
+                    ? 'bg-purple-900/40 text-purple-300 border-purple-500/40 hover:bg-purple-900/60'
+                    : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
+                }`}
+                title="Organizar em listas personalizadas"
+              >
+                <Folder size={10} />
+                <span>{itemLists.length > 0 ? `${itemLists.length}` : '+ Lista'}</span>
+              </button>
+            </div>
+
+            {/* Dropdown Menu */}
+            {isListMenuOpen && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute bottom-full mb-1 right-0 z-30 w-48 bg-[#161826] border border-white/15 rounded-xl p-2 shadow-2xl backdrop-blur-xl animate-in fade-in duration-150"
+              >
+                <div className="text-[11px] font-semibold text-gray-400 px-2 py-1 border-b border-white/5 mb-1 flex items-center justify-between">
+                  <span>Adicionar à lista</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsListMenuOpen(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {customLists.length === 0 ? (
+                  <div className="p-2 text-center text-xs text-gray-400">
+                    Nenhuma lista criada ainda. Crie uma lista no topo da página!
+                  </div>
+                ) : (
+                  <div className="max-h-40 overflow-y-auto space-y-1">
+                    {customLists.map((l) => {
+                      const inList = (item.customLists || []).includes(l.id);
+                      return (
+                        <button
+                          key={l.id}
+                          type="button"
+                          onClick={() => toggleItemCustomList(item.id, l.id)}
+                          className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-xs transition-colors text-left ${
+                            inList
+                              ? 'bg-purple-500/20 text-purple-200 font-medium'
+                              : 'text-gray-300 hover:bg-white/5'
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5 truncate">
+                            <span>{l.emoji || '🎬'}</span>
+                            <span className="truncate">{l.name}</span>
+                          </span>
+                          {inList && <Check size={12} className="text-purple-400 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

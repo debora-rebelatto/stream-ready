@@ -19,6 +19,17 @@ export interface WatchlistItem {
   isWatched?: boolean;
   watchedAt?: string | null;
   minQuality?: '1080p' | '4k' | null;
+  customLists?: string[];
+}
+
+export interface CustomList {
+  id: string;
+  userId: string;
+  name: string;
+  emoji?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  itemsCount?: number;
 }
 
 export interface WatchlistStats {

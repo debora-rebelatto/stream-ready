@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { WatchlistItem, WatchlistStats, StremioUser, ToastMessage } from '../types';
+import type { WatchlistItem, WatchlistStats, StremioUser, ToastMessage, CustomList } from '../types';
 
 export interface AuthContextType {
   user: StremioUser | null;
@@ -15,6 +15,15 @@ export interface WatchlistContextType {
   stats: WatchlistStats;
   currentTab: 'all' | 'ready' | 'pending' | 'unreleased' | 'watched';
   setCurrentTab: (tab: 'all' | 'ready' | 'pending' | 'unreleased' | 'watched') => void;
+  customLists: CustomList[];
+  activeCustomListId: string | null;
+  setActiveCustomListId: (id: string | null) => void;
+  createCustomList: (name: string, emoji?: string) => Promise<boolean>;
+  updateCustomList: (id: string, name: string, emoji?: string) => Promise<boolean>;
+  deleteCustomList: (id: string) => Promise<boolean>;
+  setItemCustomLists: (itemId: string, listIds: string[]) => Promise<void>;
+  toggleItemCustomList: (itemId: string, listId: string) => Promise<void>;
+  isListsLoading: boolean;
   globalMinQuality: '1080p' | '4k';
   setGlobalMinQuality: (quality: '1080p' | '4k') => Promise<void>;
   isLoading: boolean;

@@ -4,7 +4,8 @@ import type {
   StremioUser,
   AppSettings,
   ServerInfo,
-  SearchMovieResult
+  SearchMovieResult,
+  CustomList
 } from '../types';
 
 export function getAuthKey(): string | null {
@@ -210,6 +211,48 @@ export const api = {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ items }),
+    });
+    return res.json();
+  },
+
+  async getCustomLists(): Promise<{ success: boolean; lists: CustomList[] }> {
+    const res = await fetch('/api/lists', {
+      headers: getAuthHeaders(),
+    });
+    return res.json();
+  },
+
+  async createCustomList(name: string, emoji = '🎬'): Promise<{ success: boolean; list: CustomList; error?: string }> {
+    const res = await fetch('/api/lists', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name, emoji }),
+    });
+    return res.json();
+  },
+
+  async updateCustomList(id: string, name: string, emoji?: string): Promise<{ success: boolean; list: CustomList; error?: string }> {
+    const res = await fetch(`/api/lists/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name, emoji }),
+    });
+    return res.json();
+  },
+
+  async deleteCustomList(id: string): Promise<{ success: boolean; error?: string }> {
+    const res = await fetch(`/api/lists/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return res.json();
+  },
+
+  async setItemCustomLists(id: string, listIds: string[]): Promise<{ success: boolean; item: WatchlistItem; error?: string }> {
+    const res = await fetch(`/api/items/${id}/lists`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ listIds }),
     });
     return res.json();
   },

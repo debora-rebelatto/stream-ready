@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, useToast } from '../context/useAppContext';
 import { api } from '../lib/api';
-import { Settings, Copy, ExternalLink, LogIn, LogOut, Menu, X, Play, MessageSquare } from 'lucide-react';
+import { Settings, Copy, ExternalLink, LogIn, LogOut, Menu, X, Play, MessageSquare, Folder } from 'lucide-react';
 
 interface NavbarProps {
   onOpenSettings: () => void;
   onOpenLogin: () => void;
+  onOpenLists?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onOpenLists }) => {
   const { user, logout, isLoading: isAuthLoading } = useAuth();
   const { showToast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -116,6 +117,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin }) =
             Copy Link
           </button>
 
+          {user && onOpenLists && (
+            <button
+              onClick={onOpenLists}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-white border border-purple-500/30 transition-all cursor-pointer"
+            >
+              <Folder size={13} />
+              Suas Listas
+            </button>
+          )}
+
           <button
             onClick={onOpenSettings}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#1f2438] hover:bg-[#252b42] text-gray-200 border border-white/10 transition-all cursor-pointer"
@@ -188,6 +199,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin }) =
             <Copy size={13} />
             Copy Link
           </button>
+
+          {user && onOpenLists && (
+            <button
+              onClick={() => {
+                onOpenLists();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/30"
+            >
+              <Folder size={14} />
+              Suas Listas Personalizadas
+            </button>
+          )}
 
           <button
             onClick={() => {

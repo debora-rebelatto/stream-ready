@@ -445,11 +445,15 @@ app.get('/api/items', async (req, res) => {
     }
   }
 
-  const { filter, tab } = req.query;
+  const { filter, tab, listId } = req.query;
   const effectiveFilter = tab || filter;
   let items = db.getItems(userId);
   const userSettings = db.getSettings(userId);
   const globalMinQuality = userSettings.minQuality || '1080p';
+
+  if (listId) {
+    items = items.filter(i => Array.isArray(i.customLists) && i.customLists.includes(listId));
+  }
 
   if (effectiveFilter === 'watched') {
     items = items.filter(i => Boolean(i.isWatched));
@@ -722,6 +726,127 @@ app.post('/api/items/sync-batch', async (req, res) => {
     }
 
     res.json({ success: true, added, items: db.getItems(userId), stats: db.getStats(userId) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// -------------------------------------------------------------
+// CUSTOM LISTS (LISTAS PERSONALIZADAS POR USUÁRIO)
+// -------------------------------------------------------------
+
+// List all custom lists of the authenticated user
+app.get('/api/lists', async (req, res) => {
+  try {
+    await db.ensureLoaded();
+    const { userId } = await getRequestUser(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const lists = db.getCustomLists(userId);
+    const userItems = db.getItems(userId);
+
+    const listsWithCount = lists.map(l => {
+      const count = userItems.filter(i => Array.isArray(i.customLists) && i.customLists.includes(l.id)).length;
+      return {
+        ...l,
+        itemsCount: count
+      };
+    });
+
+    res.json({ success: true, lists: listsWithCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create a new custom list
+app.post('/api/lists', async (req, res) => {
+  try {
+    await db.ensureLoaded();
+    const { authKey, userId } = await getRequestUser(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { name, emoji } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Nome da lista é obrigatório' });
+    }
+
+    const newList = await db.createCustomList(userId, { name, emoji });
+
+    // Atualiza catálogo da conta no Stremio com o novo catálogo personalizado
+    if (authKey) {
+      const baseUrl = getBaseUrl(req);
+      syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
+    }
+
+    res.json({ success: true, list: { ...newList, itemsCount: 0 } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update a custom list (rename, change emoji)
+app.put('/api/lists/:id', async (req, res) => {
+  try {
+    await db.ensureLoaded();
+    const { authKey, userId } = await getRequestUser(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { id } = req.params;
+    const { name, emoji } = req.body;
+
+    const updated = await db.updateCustomList(userId, id, { name, emoji });
+
+    if (authKey) {
+      const baseUrl = getBaseUrl(req);
+      syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
+    }
+
+    res.json({ success: true, list: updated });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete a custom list
+app.delete('/api/lists/:id', async (req, res) => {
+  try {
+    await db.ensureLoaded();
+    const { authKey, userId } = await getRequestUser(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { id } = req.params;
+    await db.deleteCustomList(userId, id);
+
+    if (authKey) {
+      const baseUrl = getBaseUrl(req);
+      syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Associate custom lists to a specific movie
+app.post('/api/items/:id/lists', async (req, res) => {
+  try {
+    await db.ensureLoaded();
+    const { authKey, userId } = await getRequestUser(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { id } = req.params;
+    const { listIds } = req.body;
+
+    const updatedItem = await db.setItemCustomLists(userId, id, listIds);
+
+    if (authKey) {
+      const baseUrl = getBaseUrl(req);
+      syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
+    }
+
+    res.json({ success: true, item: updatedItem });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
