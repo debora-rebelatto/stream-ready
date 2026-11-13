@@ -1,7 +1,7 @@
 import React from 'react';
 import { useWatchlist, useToast, useAuth } from '../context/useAppContext';
 import { watchlistService } from '../services/watchlistService';
-import { X, BookOpen, Download, Upload, Sliders, Tv, Eye, RefreshCw } from 'lucide-react';
+import { X, BookOpen, Download, Upload, Sliders, Tv, Eye, RefreshCw, Info } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -117,51 +117,60 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   {globalMinQuality === '4k' && <span className="text-purple-400 text-xs">✓ Active</span>}
                 </div>
                 <span className="text-[10px] text-gray-400 leading-normal">
-                  For OLED & Home Theater. Only marks ready when 2160p / 4K UHD is found.
+                  Pristine quality. Alerts only when 4K UHD or 2160p is detected.
                 </span>
               </button>
             </div>
           </div>
 
           {/* Stremio Watched Synchronization */}
-          <div className="p-4 rounded-xl bg-[#1f2438] border border-white/10 space-y-3">
+          <div className="p-4 rounded-xl bg-[#1f2438] border border-white/10 space-y-3.5">
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold text-white flex items-center gap-2">
                 <Eye size={16} className="text-purple-400" />
-                Sincronizar Filmes Vistos (Stremio)
+                Sincronizar Filmes Assistidos (Stremio)
               </span>
-              {stats && (
-                <span className="text-[11px] font-semibold text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded">
-                  {stats.watched} {stats.watched === 1 ? 'visto' : 'vistos'}
+              {stats.watched > 0 && (
+                <span className="text-[10px] font-semibold text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded">
+                  {stats.watched} vistos
                 </span>
               )}
             </div>
 
-            <p className="text-[11px] text-gray-400 leading-relaxed">
-              Sincronize o histórico de filmes assistidos na sua conta do Stremio. Os filmes já vistos são organizados na aba <strong>Vistos</strong>, mantendo sua lista ativa sempre limpa e focada em novidades.
-            </p>
+            {/* Como funciona */}
+            <div className="space-y-2 text-[11px] bg-[#151824]/70 p-3 rounded-xl border border-white/5 leading-relaxed">
+              <div className="font-semibold text-purple-300 flex items-center gap-1.5">
+                <Info size={13} className="text-purple-400" />
+                Como funciona a sincronização?
+              </div>
+              <ul className="space-y-1.5 list-disc list-inside text-gray-400 text-[10.5px]">
+                <li>
+                  <strong className="text-gray-200">Limpeza da lista ativa:</strong> Filmes da sua watchlist que você já assistiu no Stremio são automaticamente movidos para a aba <strong className="text-purple-300">Vistos</strong>, mantendo sua lista principal sempre limpa e focada em novidades.
+                </li>
+                <li>
+                  <strong className="text-gray-200">Importação do histórico:</strong> Busca diretamente na biblioteca oficial da sua conta do Stremio todos os filmes marcados como assistidos ou com progresso assistido superior a 80%.
+                </li>
+                <li>
+                  <strong className="text-gray-200">Controle total:</strong> Por padrão, a sincronização não acontece automaticamente para novos usuários, para não sobrecarregar sua lista. Você decide exatamente quando sincronizar!
+                </li>
+              </ul>
+            </div>
 
-            <div className="pt-1">
+            <div className="pt-0.5">
               <button
                 type="button"
                 onClick={async () => {
                   await syncWatchedFromStremio();
                 }}
                 disabled={isSyncingWatched || !user}
-                className={`w-full py-2.5 px-4 rounded-lg font-semibold text-xs transition-all flex items-center justify-center gap-2 border cursor-pointer ${
-                  isSyncingWatched
-                    ? 'bg-purple-600/30 border-purple-500/50 text-purple-200 cursor-wait'
-                    : !user
-                    ? 'bg-[#151824] border-white/10 text-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white border-purple-500/30 shadow-md shadow-purple-900/20 active:scale-[0.99]'
-                }`}
+                className="w-full inline-flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs transition-all shadow cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <RefreshCw size={14} className={isSyncingWatched ? 'animate-spin text-purple-300' : ''} />
+                <RefreshCw size={13} className={isSyncingWatched ? 'animate-spin' : ''} />
                 {isSyncingWatched ? 'Sincronizando Histórico do Stremio...' : 'Sincronizar Filmes Vistos Agora'}
               </button>
               {!user && (
                 <p className="text-[10px] text-amber-400/90 mt-1.5 flex items-center gap-1">
-                  ⚠️ Conecte sua conta do Stremio para sincronizar os filmes assistidos.
+                  ⚠️ Conecte sua conta do Stremio (no botão de Login) para sincronizar os filmes assistidos.
                 </p>
               )}
             </div>

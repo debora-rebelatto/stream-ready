@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, useToast } from '../context/useAppContext';
 import { api } from '../lib/api';
-import { Settings, Copy, ExternalLink, LogIn, LogOut, Menu, X, Play, MessageSquare, Folder } from 'lucide-react';
+import { Settings, Copy, LogIn, LogOut, Menu, X, Play, MessageSquare, Folder } from 'lucide-react';
 
 interface NavbarProps {
   onOpenSettings: () => void;
@@ -45,17 +45,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0c0d14]/85 backdrop-blur-md border-b border-white/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
+    <header className="sticky top-0 z-50 bg-[#0c0d14]/90 backdrop-blur-md border-b border-white/10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-4">
         {/* Brand */}
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">🎬</span>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-lg font-bold tracking-tight text-white">Stremio Watchlist</h1>
-            <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-              Good Quality Tracker
-            </span>
-            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
+        <div className="flex items-center gap-2.5 shrink-0">
+          <span className="text-xl sm:text-2xl select-none">🎬</span>
+          <div className="flex items-center gap-2">
+            <h1 className="text-base sm:text-lg font-bold tracking-tight text-white whitespace-nowrap">
+              Stremio Watchlist
+            </h1>
+            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30">
               BETA
             </span>
           </div>
@@ -64,102 +63,119 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
         {/* Mobile toggle */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:text-white"
+          className="md:hidden p-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:text-white transition-colors"
           aria-label="Toggle menu"
         >
-          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-2.5">
+        <div className="hidden md:flex items-center gap-2">
+          {/* Primary Install & Copy Addon */}
+          <div className="flex items-center bg-[#161826] border border-white/10 rounded-lg p-0.5 shadow-sm">
+            <a
+              href={installUrl || '#'}
+              onClick={handleInstallClick}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-[#7b42f6] hover:bg-[#6a34e0] text-white shadow-sm transition-all cursor-pointer"
+            >
+              <Play size={12} fill="currentColor" />
+              <span>Install in App</span>
+            </a>
+            <button
+              onClick={handleCopy}
+              className="p-1.5 text-gray-300 hover:text-white hover:bg-white/5 rounded-md transition-colors cursor-pointer"
+              title="Copy manifest link"
+              aria-label="Copy manifest link"
+            >
+              <Copy size={13} />
+            </button>
+          </div>
+
+          {/* User Custom Lists (if authenticated) */}
+          {user && onOpenLists && (
+            <button
+              onClick={onOpenLists}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-white border border-purple-500/25 transition-all cursor-pointer"
+              title="Manage custom lists"
+            >
+              <Folder size={13} />
+              <span>Lists</span>
+            </button>
+          )}
+
+          {/* Quick Utility Icon Buttons (Settings & Feedback) */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onOpenSettings}
+              className="p-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 border border-white/10 transition-colors cursor-pointer"
+              title="Settings & Guide"
+              aria-label="Settings & Guide"
+            >
+              <Settings size={15} />
+            </button>
+
+            <a
+              href="https://tally.so/r/dbazxA"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 border border-white/10 transition-colors cursor-pointer"
+              title="Send Feedback"
+              aria-label="Send Feedback"
+            >
+              <MessageSquare size={15} />
+            </a>
+          </div>
+
+          <div className="h-4 w-px bg-white/10 mx-0.5" />
+
+          {/* Auth State */}
           {isAuthLoading ? (
-            <div className="flex items-center gap-2 bg-[#1f2438]/60 border border-white/5 px-3 py-1.5 rounded-lg text-xs text-gray-400">
-              <div className="w-3.5 h-3.5 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
-              <span>Verifying session...</span>
+            <div className="flex items-center gap-2 bg-[#1f2438]/50 border border-white/5 px-2.5 py-1.5 rounded-lg text-xs text-gray-400">
+              <div className="w-3 h-3 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
             </div>
           ) : user ? (
-            <div className="flex items-center gap-2 bg-[#1f2438] border border-white/10 px-3 py-1.5 rounded-lg text-xs font-medium">
-              <span className="text-gray-400">👤</span>
-              <span className="text-white max-w-[140px] truncate">{user.email}</span>
+            <div className="flex items-center gap-1.5 bg-[#151824] border border-white/10 pl-2.5 pr-1 py-1 rounded-lg text-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+              <span className="text-gray-200 max-w-[130px] truncate text-[11px] font-medium" title={user.email}>
+                {user.email}
+              </span>
               <button
                 onClick={logout}
-                className="text-red-400 hover:text-red-300 ml-1 text-xs font-semibold cursor-pointer"
+                className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer ml-0.5"
                 title="Sign Out"
+                aria-label="Sign Out"
               >
-                Sign Out
+                <LogOut size={13} />
               </button>
             </div>
           ) : (
             <button
               onClick={onOpenLogin}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white shadow-sm border border-white/20 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white shadow-sm border border-white/15 transition-all cursor-pointer"
             >
-              <LogIn size={14} />
-              Sign in with Stremio
+              <LogIn size={13} />
+              <span>Sign In</span>
             </button>
           )}
-
-          <a
-            href={installUrl || '#'}
-            onClick={handleInstallClick}
-            className="pulse-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#7b42f6] hover:bg-[#6a34e0] text-white shadow-[0_0_15px_rgba(123,66,246,0.4)] transition-all cursor-pointer"
-          >
-            <Play size={13} fill="currentColor" />
-            Install in App
-          </a>
-
-          <button
-            onClick={handleCopy}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#1f2438] hover:bg-[#252b42] text-gray-200 border border-white/10 transition-all cursor-pointer"
-            title="Copy manifest URL"
-          >
-            <Copy size={13} />
-            Copy Link
-          </button>
-
-          {user && onOpenLists && (
-            <button
-              onClick={onOpenLists}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-white border border-purple-500/30 transition-all cursor-pointer"
-            >
-              <Folder size={13} />
-              Suas Listas
-            </button>
-          )}
-
-          <button
-            onClick={onOpenSettings}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#1f2438] hover:bg-[#252b42] text-gray-200 border border-white/10 transition-all cursor-pointer"
-          >
-            <Settings size={13} />
-            Guide & Backup
-          </button>
-
-          <a
-            href="https://tally.so/r/dbazxA"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-white border border-purple-500/30 transition-all"
-            title="Send suggestions & feedback"
-          >
-            <MessageSquare size={13} />
-            Feedback
-          </a>
         </div>
       </div>
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/10 px-4 py-3 bg-[#0c0d14] flex flex-col gap-2">
+        <div className="md:hidden border-t border-white/10 p-3 bg-[#0e101a] space-y-2.5 animate-in fade-in duration-150">
+          {/* User Profile / Login row */}
           {user ? (
-            <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#1f2438] border border-white/10">
-              <span className="text-xs text-gray-300 truncate">👤 {user.email}</span>
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#151824] border border-white/10">
+              <div className="flex items-center gap-2 truncate">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                <span className="text-xs text-gray-200 truncate font-medium">{user.email}</span>
+              </div>
               <button
                 onClick={() => {
                   logout();
                   setMobileMenuOpen(false);
                 }}
-                className="text-xs font-bold text-red-400 hover:underline"
+                className="text-xs font-semibold text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 transition-colors"
               >
                 Sign Out
               </button>
@@ -170,70 +186,74 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
                 onOpenLogin();
                 setMobileMenuOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-[#7b42f6] to-indigo-600 text-white"
+              className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-[#7b42f6] to-indigo-600 text-white"
             >
               <LogIn size={14} />
               Sign in with Stremio
             </button>
           )}
 
+          {/* Primary Install Button */}
           <a
             href={installUrl || '#'}
             onClick={(e) => {
               handleInstallClick(e);
               setMobileMenuOpen(false);
             }}
-            className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg bg-[#7b42f6] text-white"
+            className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-xl bg-[#7b42f6] text-white shadow-md shadow-purple-900/30"
           >
             <Play size={13} fill="currentColor" />
             Install in App
           </a>
 
-          <button
-            onClick={() => {
-              handleCopy();
-              setMobileMenuOpen(false);
-            }}
-            className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium rounded-lg bg-[#1f2438] text-gray-200 border border-white/10"
-          >
-            <Copy size={13} />
-            Copy Link
-          </button>
-
-          {user && onOpenLists && (
+          {/* 2-Column Action Grid for Secondary Items */}
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => {
-                onOpenLists();
+                handleCopy();
                 setMobileMenuOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/30"
+              className="flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium rounded-xl bg-[#151824] text-gray-200 border border-white/10"
             >
-              <Folder size={14} />
-              Suas Listas Personalizadas
+              <Copy size={13} />
+              <span>Copy Link</span>
             </button>
-          )}
 
-          <button
-            onClick={() => {
-              onOpenSettings();
-              setMobileMenuOpen(false);
-            }}
-            className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium rounded-lg bg-[#1f2438] text-gray-200 border border-white/10"
-          >
-            <Settings size={13} />
-            Guide & Backup
-          </button>
+            {user && onOpenLists && (
+              <button
+                onClick={() => {
+                  onOpenLists();
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium rounded-xl bg-purple-500/10 text-purple-300 border border-purple-500/25"
+              >
+                <Folder size={13} />
+                <span>Your Lists</span>
+              </button>
+            )}
 
-          <a
-            href="https://tally.so/r/dbazxA"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setMobileMenuOpen(false)}
-            className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/30"
-          >
-            <MessageSquare size={13} />
-            Give Feedback
-          </a>
+            <button
+              onClick={() => {
+                onOpenSettings();
+                setMobileMenuOpen(false);
+              }}
+              className="flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium rounded-xl bg-[#151824] text-gray-200 border border-white/10"
+            >
+              <Settings size={13} />
+              <span>Guide & Backup</span>
+            </button>
+
+            <a
+              href="https://tally.so/r/dbazxA"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium rounded-xl bg-[#151824] text-gray-200 border border-white/10"
+            >
+              <MessageSquare size={13} />
+              <span>Feedback</span>
+            </a>
+          </div>
         </div>
       )}
     </header>

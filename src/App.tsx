@@ -26,8 +26,6 @@ export const App: React.FC = () => {
     globalMinQuality,
     isLoading: isWatchlistLoading,
     isCheckingAll,
-    isSyncingWatched,
-    syncWatchedFromStremio,
     removeItem,
     recheckAll,
   } = useWatchlist();
@@ -51,38 +49,33 @@ export const App: React.FC = () => {
     if (currentTab === 'watched') {
       return Boolean(item.isWatched);
     }
+    // Never show watched movies in other active tabs
+    if (item.isWatched) {
+      return false;
+    }
 
-    // All active tabs hide watched items
-    if (item.isWatched) return false;
-
-    const ready = isItemReady(item, globalMinQuality);
-    if (currentTab === 'ready') return ready;
-    if (currentTab === 'unreleased') return !ready && isItemUnreleased(item);
-    if (currentTab === 'pending') return !ready && !isItemUnreleased(item);
+    if (currentTab === 'all') return true;
+    if (currentTab === 'ready') return isItemReady(item, globalMinQuality);
+    if (currentTab === 'unreleased') return isItemUnreleased(item);
+    if (currentTab === 'pending') return !isItemReady(item, globalMinQuality) && !isItemUnreleased(item);
     return true;
   });
 
-  // Reset page when switching tabs, list filter, or changing items per page
+  // Reset to first page when changing tabs, lists, or itemsPerPage
   useEffect(() => {
     setCurrentPage(1);
   }, [currentTab, activeCustomListId, itemsPerPage]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-
-  // Keep currentPage within bounds if items are removed
-  useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
-    }
-  }, [totalPages, currentPage]);
-
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedItems = filtered.slice(startIndex, startIndex + itemsPerPage);
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
     if (listTopRef.current) {
       listTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 300, behavior: 'smooth' });
     }
   };
 
@@ -109,11 +102,11 @@ export const App: React.FC = () => {
             <Hero onOpenSettings={() => setIsSettingsOpen(true)} />
             <SearchSection />
 
-            {/* Custom Lists Selector & Management Bar */}
+            {/* Custom Lists Bar */}
             <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 shrink-0">
                 <Folder size={14} className="text-purple-400" />
-                <span>Listas:</span>
+                <span>Lists:</span>
               </div>
 
               <button
@@ -124,7 +117,7 @@ export const App: React.FC = () => {
                     : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                 }`}
               >
-                🌐 Todas as listas
+                🌐 All Lists
               </button>
 
               {customLists.map((l) => {
@@ -138,13 +131,15 @@ export const App: React.FC = () => {
                     onClick={() => setActiveCustomListId(isSelected ? null : l.id)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                       isSelected
-                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30 border border-purple-400/40'
-                        : 'bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 border border-white/5'
+                        ? 'bg-purple-600 text-white shadow-md shadow-purple-900/30'
+                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    <span>{l.emoji || '🎬'}</span>
+                    <span>{l.emoji || '📁'}</span>
                     <span>{l.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/30 text-gray-300 font-mono">
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                      isSelected ? 'bg-purple-800 text-purple-200' : 'bg-white/10 text-gray-400'
+                    }`}>
                       {count}
                     </span>
                   </button>
@@ -154,121 +149,109 @@ export const App: React.FC = () => {
               <button
                 onClick={() => setIsManageListsOpen(true)}
                 className="px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 flex items-center gap-1.5 shrink-0"
-                title="Criar e gerenciar listas personalizadas"
+                title="Create and manage custom lists"
               >
                 <FolderPlus size={13} />
-                <span>+ Nova Lista</span>
+                <span>+ New List</span>
               </button>
             </div>
 
-            {/* Active List Filter Banner */}
+            {/* Active List Indicator Banner */}
             {activeList && (
-              <div className="mb-4 p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-between">
+              <div className="mb-4 p-3 rounded-xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-purple-200">
                   <span className="text-xl">{activeList.emoji || '🎬'}</span>
                   <span>
-                    Exibindo filmes da lista <strong>{activeList.name}</strong> ({filtered.length} filme{filtered.length === 1 ? '' : 's'})
+                    Showing movies in list <strong>{activeList.name}</strong> ({filtered.length} movie{filtered.length === 1 ? '' : 's'})
                   </span>
                 </div>
                 <button
                   onClick={() => setActiveCustomListId(null)}
                   className="text-xs text-purple-400 hover:text-purple-200 font-semibold px-2 py-1 rounded-lg hover:bg-purple-500/10 transition-colors"
                 >
-                  Ver todos os filmes ✕
+                  Show all movies ✕
                 </button>
               </div>
             )}
 
-            {/* List Header & Controls */}
-            <div ref={listTopRef} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-white/10 scroll-mt-24">
-              {/* Tabs */}
-              <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
-                <button
-                  onClick={() => setCurrentTab('all')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                    currentTab === 'all'
-                      ? 'bg-[#1f2438] text-white border border-white/20 shadow'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  📋 All ({stats.total})
-                </button>
-
+            {/* Filter Tabs & Header */}
+            <div ref={listTopRef} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-1 bg-[#151824] p-1 rounded-xl border border-white/5 overflow-x-auto">
                 <button
                   onClick={() => setCurrentTab('ready')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                     currentTab === 'ready'
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm'
+                      : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
                   🟢 Ready ({stats.ready})
                 </button>
-
                 <button
                   onClick={() => setCurrentTab('pending')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                     currentTab === 'pending'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-sm'
+                      : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
                   ⏳ Waiting ({stats.pending})
                 </button>
-
                 <button
                   onClick={() => setCurrentTab('unreleased')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                     currentTab === 'unreleased'
-                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-sm'
+                      : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
                   📅 Unreleased ({stats.unreleased})
                 </button>
-
                 <button
                   onClick={() => setCurrentTab('watched')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                     currentTab === 'watched'
-                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-sm'
+                      : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
                   👁️ Watched ({stats.watched})
+                </button>
+                <button
+                  onClick={() => setCurrentTab('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                    currentTab === 'all'
+                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 shadow-sm'
+                      : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  📋 All ({stats.total})
                 </button>
               </div>
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
                 <button
-                  onClick={syncWatchedFromStremio}
-                  disabled={isSyncingWatched}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-white border border-purple-500/30 transition-all cursor-pointer disabled:opacity-50"
-                  title="Sync watched movies from your official Stremio history"
-                >
-                  <Eye size={13} className={isSyncingWatched ? 'animate-pulse text-purple-400' : ''} />
-                  {isSyncingWatched ? 'Syncing...' : 'Sync Stremio Watched'}
-                </button>
-
-                <button
                   onClick={recheckAll}
                   disabled={isCheckingAll}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-transparent hover:bg-white/5 text-gray-300 hover:text-white border border-white/15 transition-all cursor-pointer disabled:opacity-50"
-                  title="Recheck streams for all pending movies"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#1f2438] hover:bg-[#252b42] text-gray-200 border border-white/10 transition-all cursor-pointer disabled:opacity-50"
+                  title="Check Torrentio sources for all movies right now"
                 >
                   <RotateCw size={13} className={isCheckingAll ? 'animate-spin text-purple-400' : ''} />
-                  {isCheckingAll ? 'Checking...' : 'Recheck Pending'}
+                  {isCheckingAll ? 'Checking...' : 'Check All Now'}
                 </button>
               </div>
             </div>
 
-            {/* Watchlist Grid */}
+            {/* Movie List Content */}
             {isWatchlistLoading ? (
-              <div className="py-20 text-center text-sm text-gray-400">Loading your watchlist...</div>
-            ) : filtered.length === 0 ? (
               <div className="py-20 text-center flex flex-col items-center justify-center">
-                <div className="text-4xl mb-3 opacity-60">
+                <div className="w-8 h-8 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mb-3" />
+                <p className="text-xs text-gray-400">Loading your watchlist...</p>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="py-20 text-center rounded-2xl border border-white/5 bg-white/[0.01]">
+                <div className="text-4xl mb-3">
                   {currentTab === 'ready'
                     ? '🎬'
                     : currentTab === 'pending'
@@ -318,7 +301,6 @@ export const App: React.FC = () => {
             )}
           </>
         ) : (
-          /* Landing Page for visitors */
           <LandingPage onOpenLogin={() => setIsLoginOpen(true)} />
         )}
       </main>

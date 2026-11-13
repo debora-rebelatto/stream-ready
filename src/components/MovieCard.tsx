@@ -210,7 +210,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
                     </span>
                   ))
                 ) : (
-                  <span className="text-[10px] text-gray-500">Sem lista</span>
+                  <span className="text-[10px] text-gray-500">No list</span>
                 )}
               </div>
 
@@ -225,10 +225,10 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
                     ? 'bg-purple-900/40 text-purple-300 border-purple-500/40 hover:bg-purple-900/60'
                     : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
                 }`}
-                title="Organizar em listas personalizadas"
+                title="Organize in custom lists"
               >
                 <Folder size={10} />
-                <span>{itemLists.length > 0 ? `${itemLists.length}` : '+ Lista'}</span>
+                <span>{itemLists.length > 0 ? `${itemLists.length}` : '+ List'}</span>
               </button>
             </div>
 
@@ -239,7 +239,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
                 className="absolute bottom-full mb-1.5 -left-2 -right-2 z-40 bg-[#161826]/95 border border-purple-500/30 rounded-xl p-2.5 shadow-2xl backdrop-blur-xl animate-in fade-in duration-150"
               >
                 <div className="text-[11px] font-semibold text-gray-300 px-1 py-1 border-b border-white/10 mb-2 flex items-center justify-between">
-                  <span className="truncate font-medium">Adicionar à lista</span>
+                  <span className="truncate font-medium">Add to list</span>
                   <button
                     type="button"
                     onClick={() => setIsListMenuOpen(false)}
@@ -251,7 +251,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
 
                 {customLists.length === 0 ? (
                   <div className="p-2 text-center text-xs text-gray-400">
-                    Nenhuma lista criada ainda. Crie uma lista no topo da página!
+                    No lists created yet. Create a list in the top navbar!
                   </div>
                 ) : (
                   <div className="max-h-44 overflow-y-auto space-y-1 custom-scrollbar">

@@ -289,12 +289,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       await api.saveSettings({ autoSyncWatched: enabled });
       showToast(
         enabled
-          ? 'Sincronização automática de vistos ativada.'
-          : 'Sincronização automática de vistos desativada.',
+          ? 'Auto-sync for watched movies enabled.'
+          : 'Auto-sync for watched movies disabled.',
         'success'
       );
     } catch {
-      showToast('Falha ao salvar preferência de sincronização.', 'error');
+      showToast('Failed to save sync preference.', 'error');
     }
   };
 
@@ -363,14 +363,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await watchlistService.createCustomList(name, emoji);
       if (res.success && res.list) {
         setCustomLists((prev) => [...prev, res.list]);
-        showToast(`📁 Lista "${res.list.name}" criada com sucesso!`, 'success');
+        showToast(`📁 List "${res.list.name}" created successfully!`, 'success');
         return true;
       } else {
-        showToast(res.error || 'Erro ao criar lista.', 'error');
+        showToast(res.error || 'Failed to create list.', 'error');
         return false;
       }
     } catch {
-      showToast('Erro ao criar lista.', 'error');
+      showToast('Failed to create list.', 'error');
       return false;
     }
   };
@@ -380,14 +380,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await watchlistService.updateCustomList(id, name, emoji);
       if (res.success && res.list) {
         setCustomLists((prev) => prev.map((l) => (l.id === id ? { ...l, ...res.list } : l)));
-        showToast('Lista atualizada com sucesso!', 'success');
+        showToast('List updated successfully!', 'success');
         return true;
       } else {
-        showToast(res.error || 'Erro ao atualizar lista.', 'error');
+        showToast(res.error || 'Failed to update list.', 'error');
         return false;
       }
     } catch {
-      showToast('Erro ao atualizar lista.', 'error');
+      showToast('Failed to update list.', 'error');
       return false;
     }
   };
@@ -406,14 +406,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             customLists: (item.customLists || []).filter((lid) => lid !== id),
           }))
         );
-        showToast('Lista removida com sucesso.', 'info');
+        showToast('List deleted successfully.', 'info');
         return true;
       } else {
-        showToast(res.error || 'Erro ao remover lista.', 'error');
+        showToast(res.error || 'Failed to delete list.', 'error');
         return false;
       }
     } catch {
-      showToast('Erro ao remover lista.', 'error');
+      showToast('Failed to delete list.', 'error');
       return false;
     }
   };
@@ -426,12 +426,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           prev.map((item) => (item.id === itemId ? { ...item, customLists: listIds } : item))
         );
         await fetchCustomLists();
-        showToast('Listas do filme atualizadas!', 'success');
+        showToast('Movie lists updated!', 'success');
       } else {
-        showToast(res.error || 'Erro ao atualizar listas do filme.', 'error');
+        showToast(res.error || 'Failed to update movie lists.', 'error');
       }
     } catch {
-      showToast('Erro ao atualizar listas do filme.', 'error');
+      showToast('Failed to update movie lists.', 'error');
     }
   };
 
