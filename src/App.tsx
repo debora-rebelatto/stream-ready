@@ -97,6 +97,13 @@ export const App: React.FC = () => {
     return true;
   });
 
+  // Helper to extract 4-digit release year
+  const getYearNum = (y?: string | number) => {
+    if (!y) return 0;
+    const match = String(y).match(/\d{4}/);
+    return match ? parseInt(match[0], 10) : 0;
+  };
+
   // Sort items
   const sorted = [...filtered].sort((a, b) => {
     switch (sortBy) {
@@ -106,14 +113,24 @@ export const App: React.FC = () => {
         return da - db;
       }
       case 'year_desc': {
-        const ya = parseInt(String(a.year), 10) || 0;
-        const yb = parseInt(String(b.year), 10) || 0;
-        return yb - ya;
+        const ya = getYearNum(a.year);
+        const yb = getYearNum(b.year);
+        if (ya !== yb) {
+          if (ya === 0) return 1;
+          if (yb === 0) return -1;
+          return yb - ya;
+        }
+        return (a.name || '').localeCompare(b.name || '');
       }
       case 'year_asc': {
-        const ya = parseInt(String(a.year), 10) || 9999;
-        const yb = parseInt(String(b.year), 10) || 9999;
-        return ya - yb;
+        const ya = getYearNum(a.year);
+        const yb = getYearNum(b.year);
+        if (ya !== yb) {
+          if (ya === 0) return 1;
+          if (yb === 0) return -1;
+          return ya - yb;
+        }
+        return (a.name || '').localeCompare(b.name || '');
       }
       case 'title_asc': {
         return (a.name || '').localeCompare(b.name || '');

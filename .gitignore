@@ -7,6 +7,7 @@ Thumbs.db
 .env.local
 
 # Backups e dados privados locais (nunca sobem para o GitHub)
+coverage/
 *backup*
 *.private.json
 private/
