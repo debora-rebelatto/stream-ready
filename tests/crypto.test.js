@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { encryptText, decryptText } = require('../lib/crypto');
 
 describe('Crypto Module', () => {
@@ -35,9 +36,28 @@ describe('Crypto Module', () => {
     expect(decryptText(undefined)).toBeNull();
   });
 
+  test('deve retornar null se cipherText não tiver exatamente 3 partes após enc:', () => {
+    expect(decryptText('enc:so_duas_partes:aqui')).toBeNull();
+    expect(decryptText('enc:uma_parte')).toBeNull();
+    expect(decryptText('enc:parte1:parte2:parte3:parte4')).toBeNull();
+  });
+
   test('deve retornar null ao tentar descriptografar dados corrompidos', () => {
     const invalidCipher = 'enc:invalido:dados:incompletos';
     const result = decryptText(invalidCipher);
     expect(result).toBeNull();
+  });
+
+  test('deve capturar erro e retornar null se a criação do cipher falhar', () => {
+    const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = jest.spyOn(crypto, 'createCipheriv').mockImplementationOnce(() => {
+      throw new Error('Falha simulada no cipher');
+    });
+
+    const result = encryptText('texto_qualquer');
+    expect(result).toBeNull();
+
+    spy.mockRestore();
+    errSpy.mockRestore();
   });
 });

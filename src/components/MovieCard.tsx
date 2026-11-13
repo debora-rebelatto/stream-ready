@@ -152,7 +152,9 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
             {item.name}
           </h4>
           <div className="flex items-center justify-between text-xs text-gray-400 mt-1">
-            <span>{item.year || ''}</span>
+            <span className="font-semibold text-gray-300 bg-white/5 px-1.5 py-0.5 rounded text-[11px] border border-white/5">
+              {item.year || 'Sem ano'}
+            </span>
             {item.imdbRating && (
               <span className="flex items-center gap-1 text-amber-400 font-semibold">
                 <Star size={11} fill="currentColor" />

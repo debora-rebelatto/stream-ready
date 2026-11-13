@@ -124,7 +124,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       setItems(loadedItems);
       setStats({
-        total: unwatched.length,
+        total: loadedItems.length,
         ready,
         pending,
         unreleased,

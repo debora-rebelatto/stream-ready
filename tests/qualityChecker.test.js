@@ -1,4 +1,4 @@
-const { parseStreams } = require('../lib/qualityChecker');
+const { parseStreams, checkMovieQuality } = require('../lib/qualityChecker');
 
 describe('QualityChecker - parseStreams', () => {
   test('deve marcar como Unreleased quando não houver streams', () => {
@@ -54,6 +54,20 @@ describe('QualityChecker - parseStreams', () => {
     expect(result.bestQuality).toBe('720p HD');
   });
 
+  test('deve detectar stream limpa sem resolução explícita como Digital (WEB/SD)', () => {
+    const streams = [
+      {
+        name: 'Torrentio\nOther',
+        title: 'Classic.Film.1995.DVDRip.AAC2.0.x264'
+      }
+    ];
+
+    const result = parseStreams(streams);
+    expect(result.isReady).toBe(true);
+    expect(result.bestQuality).toBe('Digital (WEB/SD)');
+    expect(result.cleanStreamCount).toBe(1);
+  });
+
   test('deve identificar gravação de cinema (CAM / HDCAM / TS)', () => {
     const streams = [
       {
@@ -90,5 +104,72 @@ describe('QualityChecker - parseStreams', () => {
     expect(result.has1080pPlus).toBe(true);
     expect(result.bestQuality).toBe('1080p FHD');
     expect(result.cleanStreamCount).toBe(1);
+  });
+});
+
+describe('QualityChecker - checkMovieQuality', () => {
+  const originalFetch = global.fetch;
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  test('deve consultar Torrentio e retornar parse dos streams quando resposta for OK', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        streams: [
+          {
+            name: 'Torrentio\n1080p',
+            title: 'Test.Movie.2024.1080p.WEB-DL.DDP5.1'
+          }
+        ]
+      })
+    });
+
+    const result = await checkMovieQuality('tt1234567');
+    expect(result.isReady).toBe(true);
+    expect(result.bestQuality).toBe('1080p FHD');
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/stream/movie/tt1234567.json'),
+      expect.any(Object)
+    );
+  });
+
+  test('deve retornar Unreleased quando Torrentio responder com 404', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 404
+    });
+
+    const result = await checkMovieQuality('tt0000000');
+    expect(result.isUnreleased).toBe(true);
+    expect(result.bestQuality).toBe('Unreleased');
+    expect(result.has1080pPlus).toBe(false);
+  });
+
+  test('deve retornar Check Error quando Torrentio responder com erro de status (ex: 500)', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500
+    });
+
+    const result = await checkMovieQuality('tt1234567');
+    expect(result.bestQuality).toBe('Check Error');
+    expect(result.error).toContain('Torrentio responded with status 500');
+    expect(result.has1080pPlus).toBe(false);
+    warnSpy.mockRestore();
+  });
+
+  test('deve retornar Check Error quando fetch falhar por timeout ou erro de rede', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
+
+    const result = await checkMovieQuality('tt1234567');
+    expect(result.bestQuality).toBe('Check Error');
+    expect(result.error).toBe('Network error');
+    warnSpy.mockRestore();
   });
 });

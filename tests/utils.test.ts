@@ -1,4 +1,4 @@
-import { cn, formatQualityLabel, isItemReady, isItemNewRelease } from '../src/lib/utils';
+import { cn, formatQualityLabel, isItemReady, isItemNewRelease, isItemUnreleased } from '../src/lib/utils';
 
 describe('Frontend Utils (src/lib/utils.ts)', () => {
   describe('cn (Tailwind class merger)', () => {
@@ -40,6 +40,10 @@ describe('Frontend Utils (src/lib/utils.ts)', () => {
   });
 
   describe('isItemReady', () => {
+    test('deve retornar false quando item não for informado', () => {
+      expect(isItemReady(null as any)).toBe(false);
+    });
+
     test('deve verificar prontidão padrão 1080p', () => {
       expect(isItemReady({ has1080pPlus: true })).toBe(true);
       expect(isItemReady({ has1080pPlus: false })).toBe(false);
@@ -68,6 +72,39 @@ describe('Frontend Utils (src/lib/utils.ts)', () => {
     test('deve retornar false para lançamentos com mais de 48 horas', () => {
       const threeDaysAgo = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
       expect(isItemNewRelease({ readyAt: threeDaysAgo, has1080pPlus: true })).toBe(false);
+    });
+
+    test('deve capturar exceção se a data for inválida ou causar erro', () => {
+      const badItem = {
+        has1080pPlus: true,
+        readyAt: {
+          valueOf() {
+            throw new Error('Data inválida');
+          }
+        } as unknown as string
+      };
+      expect(isItemNewRelease(badItem)).toBe(false);
+    });
+  });
+
+  describe('isItemUnreleased', () => {
+    test('deve retornar false se o item já estiver pronto (has1080pPlus true)', () => {
+      expect(isItemUnreleased({ has1080pPlus: true, bestQuality: '1080p FHD' })).toBe(false);
+    });
+
+    test('deve retornar true para qualidades indicando não lançado', () => {
+      expect(isItemUnreleased({ has1080pPlus: false, bestQuality: 'Unreleased' })).toBe(true);
+      expect(isItemUnreleased({ has1080pPlus: false, bestQuality: 'não lançado' })).toBe(true);
+      expect(isItemUnreleased({ has1080pPlus: false, bestQuality: 'indisponível' })).toBe(true);
+      expect(isItemUnreleased({ has1080pPlus: false, bestQuality: 'not released' })).toBe(true);
+    });
+
+    test('deve retornar true se streamCount for 0 e não for CAM', () => {
+      expect(isItemUnreleased({ has1080pPlus: false, streamCount: 0, bestQuality: 'Pending' })).toBe(true);
+    });
+
+    test('deve retornar false se for gravação de cinema (CAM)', () => {
+      expect(isItemUnreleased({ has1080pPlus: false, streamCount: 1, bestQuality: 'CAM / Theater Rip' })).toBe(false);
     });
   });
 });

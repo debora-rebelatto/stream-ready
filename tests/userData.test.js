@@ -1,3 +1,4 @@
+const zlib = require('zlib');
 const { encodeUserData, decodeUserData } = require('../lib/userData');
 
 describe('UserData Module', () => {
@@ -62,6 +63,56 @@ describe('UserData Module', () => {
     expect(decoded.ids).toEqual(ids);
     expect(decoded.items).toHaveLength(2);
     expect(decoded.items[0].id).toBe('tt1234567');
+  });
+
+  test('deve decodificar formato legado uncompressed base64url', () => {
+    const legacyPayload = {
+      authKey: 'legacy_key',
+      items: [
+        { id: 'tt9999999', name: 'Legacy Film', year: '2020', bestQuality: '1080p FHD', has1080pPlus: true }
+      ],
+      ids: ['tt9999999']
+    };
+    const legacyParam = Buffer.from(JSON.stringify(legacyPayload)).toString('base64url');
+
+    const decoded = decodeUserData(legacyParam);
+    expect(decoded.authKey).toBe('legacy_key');
+    expect(decoded.items).toHaveLength(1);
+    expect(decoded.items[0].id).toBe('tt9999999');
+    expect(decoded.ids).toEqual(['tt9999999']);
+  });
+
+  test('deve decodificar formato legado alternativo usando chaves compactas (k e v)', () => {
+    const legacyPayload = {
+      k: 'key_kv',
+      v: [
+        { i: 'tt1111111', n: 'Movie KV', y: '2021', q: '4K UHD', r: 1, s: 5 }
+      ]
+    };
+    const legacyParam = Buffer.from(JSON.stringify(legacyPayload)).toString('base64url');
+
+    const decoded = decodeUserData(legacyParam);
+    expect(decoded.authKey).toBe('key_kv');
+    expect(decoded.items).toHaveLength(1);
+    expect(decoded.items[0].id).toBe('tt1111111');
+    expect(decoded.items[0].has1080pPlus).toBe(true);
+    expect(decoded.ids).toEqual(['tt1111111']);
+  });
+
+  test('deve cair no fallback de encodeUserData quando deflateRawSync lançar erro', () => {
+    const spy = jest.spyOn(zlib, 'deflateRawSync').mockImplementationOnce(() => {
+      throw new Error('Falha simulada no zlib');
+    });
+
+    const items = [{ id: 'tt1234567' }, 'tt7654321'];
+    const fallbackEncoded = encodeUserData('fallback_key', items);
+    expect(fallbackEncoded.startsWith('z_')).toBe(false);
+
+    const decoded = decodeUserData(fallbackEncoded);
+    expect(decoded.authKey).toBe('fallback_key');
+    expect(decoded.ids).toEqual(['tt1234567', 'tt7654321']);
+
+    spy.mockRestore();
   });
 
   test('deve retornar objeto vazio quando parâmetro for nulo ou indefinido', () => {

@@ -41,6 +41,7 @@ export const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<'all' | 'movie' | 'series'>('all');
   const [selectedQuality, setSelectedQuality] = useState<string>('all');
+  const [includeWatchedInAll, setIncludeWatchedInAll] = useState(true);
   const [sortBy, setSortBy] = useState<
     'added_desc' | 'added_asc' | 'year_desc' | 'year_asc' | 'title_asc' | 'title_desc' | 'streams_desc'
   >('added_desc');
@@ -56,8 +57,11 @@ export const App: React.FC = () => {
 
     if (currentTab === 'watched') {
       if (!item.isWatched) return false;
+    } else if (currentTab === 'all') {
+      // In 'All' tab, show all items (including watched by default unless user toggles them off)
+      if (!includeWatchedInAll && item.isWatched) return false;
     } else {
-      // Never show watched movies in other active tabs
+      // Specific status tabs (ready, unreleased, pending) only show unwatched
       if (item.isWatched) return false;
 
       const ready = isItemReady(item, globalMinQuality);
@@ -120,6 +124,10 @@ export const App: React.FC = () => {
           if (yb === 0) return -1;
           return yb - ya;
         }
+        // Secondary sort for identical release year: newest added first, then title
+        const da = a.addedAt ? new Date(a.addedAt).getTime() : 0;
+        const db = b.addedAt ? new Date(b.addedAt).getTime() : 0;
+        if (da !== db) return db - da;
         return (a.name || '').localeCompare(b.name || '');
       }
       case 'year_asc': {
@@ -130,7 +138,11 @@ export const App: React.FC = () => {
           if (yb === 0) return -1;
           return ya - yb;
         }
-        return (a.name || '').localeCompare(b.name || '');
+        // Secondary sort for identical release year: oldest added first, then reverse title
+        const da = a.addedAt ? new Date(a.addedAt).getTime() : 0;
+        const db = b.addedAt ? new Date(b.addedAt).getTime() : 0;
+        if (da !== db) return da - db;
+        return (b.name || '').localeCompare(a.name || '');
       }
       case 'title_asc': {
         return (a.name || '').localeCompare(b.name || '');
@@ -153,14 +165,21 @@ export const App: React.FC = () => {
   // Reset to first page when changing tabs, lists, or itemsPerPage
   useEffect(() => {
     setCurrentPage(1);
-  }, [currentTab, activeCustomListId, selectedType, selectedQuality, searchQuery, sortBy, itemsPerPage]);
+  }, [currentTab, activeCustomListId, selectedType, selectedQuality, searchQuery, sortBy, itemsPerPage, includeWatchedInAll]);
 
-  const hasActiveFilters = searchQuery !== '' || selectedType !== 'all' || selectedQuality !== 'all' || sortBy !== 'added_desc';
+  const hasActiveFilters =
+    searchQuery !== '' ||
+    selectedType !== 'all' ||
+    selectedQuality !== 'all' ||
+    sortBy !== 'added_desc' ||
+    (currentTab === 'all' && !includeWatchedInAll);
+
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedType('all');
     setSelectedQuality('all');
     setSortBy('added_desc');
+    setIncludeWatchedInAll(true);
   };
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / itemsPerPage));
@@ -393,6 +412,27 @@ export const App: React.FC = () => {
                       <option value="pending">⏳ Aguardando / Pendente</option>
                     </select>
                   </div>
+
+                  {/* Include Watched toggle (only shown in 'All' tab) */}
+                  {currentTab === 'all' && (
+                    <button
+                      type="button"
+                      onClick={() => setIncludeWatchedInAll(!includeWatchedInAll)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                        includeWatchedInAll
+                          ? 'bg-purple-600/20 text-purple-300 border-purple-500/40 hover:bg-purple-600/30'
+                          : 'bg-[#1e2235] text-gray-400 border-white/10 hover:text-gray-200'
+                      }`}
+                      title={
+                        includeWatchedInAll
+                          ? 'Ocultar filmes assistidos na visualização Geral'
+                          : 'Incluir filmes assistidos na visualização Geral'
+                      }
+                    >
+                      <Eye size={13} className={includeWatchedInAll ? 'text-purple-400' : 'text-gray-400'} />
+                      <span>{includeWatchedInAll ? 'Com Assistidos' : 'Sem Assistidos'}</span>
+                    </button>
+                  )}
 
                   {/* Sort By */}
                   <div className="relative flex items-center">
