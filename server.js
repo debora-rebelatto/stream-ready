@@ -618,6 +618,29 @@ app.post('/api/items/:id/min-quality', async (req, res) => {
   }
 });
 
+// Sync watched movies from Stremio library
+app.post('/api/items/sync-watched', async (req, res) => {
+  try {
+    const { authKey, userId } = await getRequestUser(req);
+    if (!authKey || !userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const result = await db.syncWatchedWithStremio(authKey, userId);
+
+    const baseUrl = getBaseUrl(req);
+    syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
+
+    res.json({
+      success: true,
+      result,
+      items: db.getItems(userId),
+      stats: db.getStats(userId)
+    });
+  } catch (err) {
+    console.error('[Sync Watched Error]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Batch sync items
 app.post('/api/items/sync-batch', async (req, res) => {
   try {

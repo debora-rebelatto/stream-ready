@@ -9,7 +9,7 @@ import { LoginModal } from './components/LoginModal';
 import { SettingsModal } from './components/SettingsModal';
 import { LandingPage } from './components/LandingPage';
 import { ToastContainer } from './components/ToastContainer';
-import { RotateCw, Film } from 'lucide-react';
+import { RotateCw, Film, Eye } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -21,6 +21,8 @@ export const App: React.FC = () => {
     globalMinQuality,
     isLoading: isWatchlistLoading,
     isCheckingAll,
+    isSyncingWatched,
+    syncWatchedFromStremio,
     removeItem,
     recheckAll,
   } = useWatchlist();
@@ -125,15 +127,27 @@ export const App: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <button
-                onClick={recheckAll}
-                disabled={isCheckingAll}
-                className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-medium rounded-lg bg-transparent hover:bg-white/5 text-gray-300 hover:text-white border border-white/15 transition-all cursor-pointer disabled:opacity-50"
-                title="Recheck streams for all pending movies"
-              >
-                <RotateCw size={13} className={isCheckingAll ? 'animate-spin text-purple-400' : ''} />
-                {isCheckingAll ? 'Checking...' : 'Recheck Pending'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={syncWatchedFromStremio}
+                  disabled={isSyncingWatched}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-white border border-purple-500/30 transition-all cursor-pointer disabled:opacity-50"
+                  title="Sync watched movies from your official Stremio history"
+                >
+                  <Eye size={13} className={isSyncingWatched ? 'animate-pulse text-purple-400' : ''} />
+                  {isSyncingWatched ? 'Syncing...' : 'Sync Stremio Watched'}
+                </button>
+
+                <button
+                  onClick={recheckAll}
+                  disabled={isCheckingAll}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-transparent hover:bg-white/5 text-gray-300 hover:text-white border border-white/15 transition-all cursor-pointer disabled:opacity-50"
+                  title="Recheck streams for all pending movies"
+                >
+                  <RotateCw size={13} className={isCheckingAll ? 'animate-spin text-purple-400' : ''} />
+                  {isCheckingAll ? 'Checking...' : 'Recheck Pending'}
+                </button>
+              </div>
             </div>
 
             {/* Watchlist Grid */}

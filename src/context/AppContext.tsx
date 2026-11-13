@@ -43,6 +43,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [globalMinQuality, setGlobalMinQualityState] = useState<'1080p' | '4k'>('1080p');
   const [isLoadingList, setIsLoadingList] = useState(false);
   const [isCheckingAll, setIsCheckingAll] = useState(false);
+  const [isSyncingWatched, setIsSyncingWatched] = useState(false);
 
   const checkAuth = useCallback(async () => {
     setIsLoadingAuth(true);
@@ -289,6 +290,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const syncWatchedFromStremio = async () => {
+    setIsSyncingWatched(true);
+    showToast('Syncing watched history from Stremio...', 'info');
+    try {
+      const res = await watchlistService.syncWatchedFromStremio();
+      if (res.success) {
+        if (res.items) setItems(res.items);
+        if (res.stats) setStats(res.stats);
+        const { newlyAdded, newlyMarked, totalWatched } = res.result || {};
+        const count = (newlyAdded || 0) + (newlyMarked || 0);
+        if (count > 0) {
+          showToast(`🎉 Synced ${count} watched movies from your Stremio account!`, 'success');
+        } else {
+          showToast(`Watched history is already up to date (${totalWatched || 0} movies).`, 'info');
+        }
+      } else {
+        showToast('Failed to sync watched history.', 'error');
+      }
+    } catch {
+      showToast('Error communicating with server.', 'error');
+    } finally {
+      setIsSyncingWatched(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -310,7 +336,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setGlobalMinQuality,
           isLoading: isLoadingList,
           isCheckingAll,
+          isSyncingWatched,
           refreshWatchlist,
+          syncWatchedFromStremio,
           addItem,
           removeItem,
           markWatched,

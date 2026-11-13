@@ -143,6 +143,19 @@ export const api = {
     return res.json();
   },
 
+  async syncWatchedFromStremio(): Promise<{
+    success: boolean;
+    result: { count: number; newlyMarked: number; newlyAdded: number; totalWatched: number };
+    items: WatchlistItem[];
+    stats: WatchlistStats;
+  }> {
+    const res = await fetch('/api/items/sync-watched', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return res.json();
+  },
+
   async recheckSingle(id: string): Promise<{
     success: boolean;
     item: WatchlistItem;

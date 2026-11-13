@@ -36,28 +36,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-lg bg-[#151824] border border-white/10 rounded-2xl shadow-2xl p-6 z-10 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-[#151824] border border-white/10 rounded-2xl shadow-2xl z-10 my-auto max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-white/10">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/10 bg-[#151824] shrink-0">
           <div className="flex items-center gap-2">
             <Sliders size={18} className="text-purple-400" />
-            <h3 className="text-base font-bold text-white">Settings & Guide</h3>
+            <h3 className="text-sm sm:text-base font-bold text-white">Settings & Guide</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer touch-manipulation min-w-[32px] min-h-[32px] flex items-center justify-center"
+            aria-label="Close dialog"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="space-y-5 my-5 text-xs text-gray-300">
+        <div className="p-4 sm:p-6 overflow-y-auto overscroll-contain flex-1 space-y-5 text-xs text-gray-300">
           {/* Minimum Desired Quality Setting */}
           <div className="p-4 rounded-xl bg-[#1f2438] border border-white/10 space-y-3">
             <div className="flex items-center justify-between">

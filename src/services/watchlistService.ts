@@ -58,6 +58,13 @@ export const watchlistService = {
   },
 
   /**
+   * Sync playback & watch history directly from official Stremio account
+   */
+  async syncWatchedFromStremio() {
+    return api.syncWatchedFromStremio();
+  },
+
+  /**
    * Recheck quality for a single item
    */
   async recheckItem(id: string) {

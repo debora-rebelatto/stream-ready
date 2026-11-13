@@ -1162,6 +1162,41 @@ body {
   .stats-grid {
     grid-template-columns: 1fr;
   }
+
+  /* Mobile Modal Enhancements */
+  .modal {
+    padding: 0.75rem;
+    align-items: center;
+  }
+
+  .modal-content {
+    max-height: calc(100dvh - 1.5rem);
+    border-radius: var(--radius-md);
+  }
+
+  .modal-header {
+    padding: 0.85rem 1rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .login-tabs {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .login-tab-btn {
+    width: 100%;
+    text-align: center;
+    padding: 0.6rem;
+  }
+
+  .form-group input {
+    font-size: 16px;
+    padding: 0.7rem 0.85rem;
+  }
 }
 
 @keyframes slide-nav {
