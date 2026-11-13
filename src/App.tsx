@@ -11,7 +11,7 @@ import { ManageListsModal } from './components/ManageListsModal';
 import { LandingPage } from './components/LandingPage';
 import { ToastContainer } from './components/ToastContainer';
 import { Pagination } from './components/Pagination';
-import { RotateCw, Film, Eye, Folder, FolderPlus } from 'lucide-react';
+import { RotateCw, Film, Eye, Folder, FolderPlus, Search, ArrowUpDown, Filter, X } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -37,6 +37,14 @@ export const App: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const listTopRef = useRef<HTMLDivElement>(null);
 
+  // New Filters & Sort states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedType, setSelectedType] = useState<'all' | 'movie' | 'series'>('all');
+  const [selectedQuality, setSelectedQuality] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<
+    'added_desc' | 'added_asc' | 'year_desc' | 'year_asc' | 'title_asc' | 'title_desc' | 'streams_desc'
+  >('added_desc');
+
   // Filter items
   const filtered = items.filter((item) => {
     // If a custom list is selected, filter by that list
@@ -47,28 +55,100 @@ export const App: React.FC = () => {
     }
 
     if (currentTab === 'watched') {
-      return Boolean(item.isWatched);
-    }
-    // Never show watched movies in other active tabs
-    if (item.isWatched) {
-      return false;
+      if (!item.isWatched) return false;
+    } else {
+      // Never show watched movies in other active tabs
+      if (item.isWatched) return false;
+
+      const ready = isItemReady(item, globalMinQuality);
+      if (currentTab === 'ready' && !ready) return false;
+      if (currentTab === 'unreleased' && !isItemUnreleased(item)) return false;
+      if (currentTab === 'pending' && (ready || isItemUnreleased(item))) return false;
     }
 
-    if (currentTab === 'all') return true;
-    if (currentTab === 'ready') return isItemReady(item, globalMinQuality);
-    if (currentTab === 'unreleased') return isItemUnreleased(item);
-    if (currentTab === 'pending') return !isItemReady(item, globalMinQuality) && !isItemUnreleased(item);
+    // Media type filter
+    if (selectedType !== 'all') {
+      const itType = item.type || 'movie';
+      if (itType !== selectedType) return false;
+    }
+
+    // Quality filter
+    if (selectedQuality !== 'all') {
+      const q = (item.bestQuality || '').toLowerCase();
+      if (selectedQuality === '4k') {
+        if (!q.includes('4k') && !q.includes('2160p')) return false;
+      } else if (selectedQuality === '1080p') {
+        if (!q.includes('1080p')) return false;
+      } else if (selectedQuality === '720p') {
+        if (!q.includes('720p')) return false;
+      } else if (selectedQuality === 'pending') {
+        if (q.includes('1080p') || q.includes('4k') || q.includes('2160p') || q.includes('720p')) return false;
+      }
+    }
+
+    // Search query filter (instant search within list)
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchName = (item.name || '').toLowerCase().includes(q);
+      const matchYear = String(item.year || '').includes(q);
+      if (!matchName && !matchYear) return false;
+    }
+
     return true;
+  });
+
+  // Sort items
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sortBy) {
+      case 'added_asc': {
+        const da = a.addedAt ? new Date(a.addedAt).getTime() : 0;
+        const db = b.addedAt ? new Date(b.addedAt).getTime() : 0;
+        return da - db;
+      }
+      case 'year_desc': {
+        const ya = parseInt(String(a.year), 10) || 0;
+        const yb = parseInt(String(b.year), 10) || 0;
+        return yb - ya;
+      }
+      case 'year_asc': {
+        const ya = parseInt(String(a.year), 10) || 9999;
+        const yb = parseInt(String(b.year), 10) || 9999;
+        return ya - yb;
+      }
+      case 'title_asc': {
+        return (a.name || '').localeCompare(b.name || '');
+      }
+      case 'title_desc': {
+        return (b.name || '').localeCompare(a.name || '');
+      }
+      case 'streams_desc': {
+        return (b.streamCount || 0) - (a.streamCount || 0);
+      }
+      case 'added_desc':
+      default: {
+        const da = a.addedAt ? new Date(a.addedAt).getTime() : 0;
+        const db = b.addedAt ? new Date(b.addedAt).getTime() : 0;
+        return db - da;
+      }
+    }
   });
 
   // Reset to first page when changing tabs, lists, or itemsPerPage
   useEffect(() => {
     setCurrentPage(1);
-  }, [currentTab, activeCustomListId, itemsPerPage]);
+  }, [currentTab, activeCustomListId, selectedType, selectedQuality, searchQuery, sortBy, itemsPerPage]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const hasActiveFilters = searchQuery !== '' || selectedType !== 'all' || selectedQuality !== 'all' || sortBy !== 'added_desc';
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedType('all');
+    setSelectedQuality('all');
+    setSortBy('added_desc');
+  };
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / itemsPerPage));
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedItems = filtered.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedItems = sorted.slice(startIndex, startIndex + itemsPerPage);
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -175,8 +255,18 @@ export const App: React.FC = () => {
             )}
 
             {/* Filter Tabs & Header */}
-            <div ref={listTopRef} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div ref={listTopRef} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
               <div className="flex items-center gap-1 bg-[#151824] p-1 rounded-xl border border-white/5 overflow-x-auto">
+                <button
+                  onClick={() => setCurrentTab('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                    currentTab === 'all'
+                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 shadow-sm'
+                      : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  📋 All ({stats.total})
+                </button>
                 <button
                   onClick={() => setCurrentTab('ready')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
@@ -217,16 +307,6 @@ export const App: React.FC = () => {
                 >
                   👁️ Watched ({stats.watched})
                 </button>
-                <button
-                  onClick={() => setCurrentTab('all')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                    currentTab === 'all'
-                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 shadow-sm'
-                      : 'text-gray-400 hover:text-gray-200'
-                  }`}
-                >
-                  📋 All ({stats.total})
-                </button>
               </div>
 
               {/* Action Buttons */}
@@ -243,16 +323,117 @@ export const App: React.FC = () => {
               </div>
             </div>
 
+            {/* Filters & Sorting Toolbar */}
+            <div className="bg-[#151824] border border-white/5 rounded-2xl p-3 sm:p-4 mb-6 shadow-sm">
+              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                {/* Search within Watchlist */}
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Filtrar por título ou ano na sua lista..."
+                    className="w-full bg-[#1e2235] border border-white/10 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/60 transition-colors"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-0.5 rounded transition-colors"
+                      title="Limpar busca"
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Dropdowns group */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Media Type Filter */}
+                  <div className="relative">
+                    <select
+                      value={selectedType}
+                      onChange={(e) => setSelectedType(e.target.value as any)}
+                      className="bg-[#1e2235] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-purple-500/60 cursor-pointer hover:border-white/20 transition-colors"
+                    >
+                      <option value="all">🎬 Todos os Tipos</option>
+                      <option value="movie">🎥 Filmes</option>
+                      <option value="series">📺 Séries</option>
+                    </select>
+                  </div>
+
+                  {/* Quality Filter */}
+                  <div className="relative">
+                    <select
+                      value={selectedQuality}
+                      onChange={(e) => setSelectedQuality(e.target.value)}
+                      className="bg-[#1e2235] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-purple-500/60 cursor-pointer hover:border-white/20 transition-colors"
+                    >
+                      <option value="all">🎯 Todas as Qualidades</option>
+                      <option value="4k">✨ 4K / 2160p</option>
+                      <option value="1080p">💎 1080p Full HD</option>
+                      <option value="720p">📺 720p HD</option>
+                      <option value="pending">⏳ Aguardando / Pendente</option>
+                    </select>
+                  </div>
+
+                  {/* Sort By */}
+                  <div className="relative flex items-center">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as any)}
+                      className="bg-[#1e2235] border border-white/10 rounded-xl px-3 py-2 text-xs text-purple-300 font-medium focus:outline-none focus:border-purple-500/60 cursor-pointer hover:border-white/20 transition-colors"
+                    >
+                      <option value="added_desc">↕️ Adicionados: Mais Recentes</option>
+                      <option value="added_asc">↕️ Adicionados: Mais Antigos</option>
+                      <option value="year_desc">📅 Ano: Mais Novos</option>
+                      <option value="year_asc">📅 Ano: Mais Antigos</option>
+                      <option value="title_asc">🔤 Título: A → Z</option>
+                      <option value="title_desc">🔤 Título: Z → A</option>
+                      <option value="streams_desc">📡 Mais Fontes Disponíveis</option>
+                    </select>
+                  </div>
+
+                  {/* Clear Filters Button */}
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearFilters}
+                      className="px-2.5 py-2 rounded-xl text-xs font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-colors flex items-center gap-1 cursor-pointer"
+                      title="Resetar todos os filtros"
+                    >
+                      <X size={12} />
+                      <span>Limpar</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Status & Results counter */}
+              <div className="flex items-center justify-between text-[11px] text-gray-400 pt-2.5 mt-2.5 border-t border-white/5">
+                <span>
+                  Mostrando <strong className="text-white">{sorted.length}</strong> {sorted.length === 1 ? 'título' : 'títulos'}
+                  {hasActiveFilters && ' (com filtros ativos)'}
+                </span>
+                {hasActiveFilters && (
+                  <span className="text-purple-400 text-[10px]">
+                    Filtros aplicados
+                  </span>
+                )}
+              </div>
+            </div>
+
             {/* Movie List Content */}
             {isWatchlistLoading ? (
               <div className="py-20 text-center flex flex-col items-center justify-center">
                 <div className="w-8 h-8 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mb-3" />
                 <p className="text-xs text-gray-400">Loading your watchlist...</p>
               </div>
-            ) : filtered.length === 0 ? (
+            ) : sorted.length === 0 ? (
               <div className="py-20 text-center rounded-2xl border border-white/5 bg-white/[0.01]">
                 <div className="text-4xl mb-3">
-                  {currentTab === 'ready'
+                  {hasActiveFilters
+                    ? '🔍'
+                    : currentTab === 'ready'
                     ? '🎬'
                     : currentTab === 'pending'
                     ? '⏳'
@@ -263,7 +444,9 @@ export const App: React.FC = () => {
                     : '📋'}
                 </div>
                 <h4 className="text-base font-bold text-white mb-1">
-                  {currentTab === 'ready'
+                  {hasActiveFilters
+                    ? 'Nenhum título encontrado com os filtros atuais'
+                    : currentTab === 'ready'
                     ? 'No movies ready in good quality yet'
                     : currentTab === 'pending'
                     ? 'No movies waiting for good quality!'
@@ -273,13 +456,24 @@ export const App: React.FC = () => {
                     ? 'No movies in your watched history'
                     : 'Your watchlist is empty'}
                 </h4>
-                <p className="text-xs text-gray-400 max-w-sm">
-                  {currentTab === 'watched'
+                <p className="text-xs text-gray-400 max-w-sm mx-auto mb-3">
+                  {hasActiveFilters
+                    ? 'Tente pesquisar por outro nome ou resetar os filtros selecionados.'
+                    : currentTab === 'watched'
                     ? 'Click the eye icon on any movie card to mark it as watched and archive it.'
                     : items.length === 0
                     ? 'Use the search bar above to start tracking movies.'
                     : 'Switch tabs or add more items to monitor.'}
                 </p>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <X size={12} />
+                    <span>Limpar todos os filtros</span>
+                  </button>
+                )}
               </div>
             ) : (
               <>
@@ -292,7 +486,7 @@ export const App: React.FC = () => {
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  totalItems={filtered.length}
+                  totalItems={sorted.length}
                   itemsPerPage={itemsPerPage}
                   onPageChange={handlePageChange}
                   onItemsPerPageChange={setItemsPerPage}

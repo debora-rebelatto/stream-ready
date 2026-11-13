@@ -219,11 +219,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             </ol>
           </div>
 
-          {/* Info note */}
-          <div className="p-3 rounded-lg bg-black/25 border border-white/5 text-[11px] text-gray-400 leading-relaxed">
-            ⚡ <strong>Automated 24/7 Monitoring:</strong> The server automatically checks sources for all pending movies every 30 minutes in the background without requiring manual intervention.
-          </div>
-
           {/* Backup Actions */}
           <div className="pt-2 border-t border-white/10 flex gap-3">
             <button
