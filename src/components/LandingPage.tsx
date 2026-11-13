@@ -500,25 +500,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             </p>
           </div>
 
-          {/* Card 4: Anti-CAM Gatekeeper */}
+          {/* Card 4: Debrid & Scraper compatibility */}
           <div className="p-6 rounded-2xl bg-[#141624] border border-white/10 hover:border-purple-500/40 transition-all hover:-translate-y-1 group">
             <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4 group-hover:scale-110 transition-transform">
-              <ShieldCheck size={24} />
+              <Zap size={24} />
             </div>
-            <h3 className="text-base font-bold text-white mb-2">Anti-CAM Protection</h3>
+            <h3 className="text-base font-bold text-white mb-2">Debrid & P2P Compatible</h3>
             <p className="text-xs text-gray-400 leading-relaxed">
-              Filters out Telesync, HDCAM, and Telecine releases. Only verified clean digital copies (WEB-DL, WEBRip, BluRay) trigger the "Ready" state.
+              Works seamlessly with Torrentio, Real-Debrid, AllDebrid, Premiumize, Torbox, and standard community scrapers without extra plugins.
             </p>
           </div>
 
-          {/* Card 5: Smart TV cloud sync */}
+          {/* Card 5: Instant IMDb & Cinemeta search */}
           <div className="p-6 rounded-2xl bg-[#141624] border border-white/10 hover:border-purple-500/40 transition-all hover:-translate-y-1 group">
             <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-4 group-hover:scale-110 transition-transform">
-              <Tv size={24} />
+              <Film size={24} />
             </div>
-            <h3 className="text-base font-bold text-white mb-2">Universal Stremio Sync</h3>
+            <h3 className="text-base font-bold text-white mb-2">Direct IMDb & URL Search</h3>
             <p className="text-xs text-gray-400 leading-relaxed">
-              Syncs with your official Stremio cloud account. Your custom rows appear on Samsung, LG, Android TV, Fire TV, Mac, Windows, and mobile.
+              Search by title with instant Cinemeta auto-complete, or paste full IMDb links (e.g. imdb.com/title/tt1234567) to track with 1 click.
             </p>
           </div>
 
@@ -582,87 +582,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
         </div>
       </section>
 
-      {/* 6. COMMUNITY TESTIMONIALS */}
-      <section className="max-w-5xl mx-auto px-4">
-        <div className="text-center max-w-md mx-auto mb-10">
-          <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-2">
-            Loved by Stremio Users
-          </h2>
-          <p className="text-xs text-gray-400">
-            Real feedback from community streamers and home theater enthusiasts.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl bg-[#141624] border border-white/10 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="flex gap-1 text-amber-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={13} fill="currentColor" />
-                ))}
-              </div>
-              <p className="text-xs text-gray-300 italic leading-relaxed">
-                "I used to click 5 different streams every Friday night just to find out every single one was a shaky phone recording. This completely solved my Friday nights."
-              </p>
-            </div>
-            <div className="mt-5 pt-3 border-t border-white/5 flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-purple-500/20 text-purple-300 font-bold text-xs flex items-center justify-center">
-                M
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white">Mateo R.</p>
-                <p className="text-[10px] text-gray-400">Samsung Tizen User</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-[#141624] border border-white/10 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="flex gap-1 text-amber-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={13} fill="currentColor" />
-                ))}
-              </div>
-              <p className="text-xs text-gray-300 italic leading-relaxed">
-                "The 4K OLED filter is incredible. I only watch films when genuine 2160p releases drop, and having it pop up automatically on my LG TV is pure luxury."
-              </p>
-            </div>
-            <div className="mt-5 pt-3 border-t border-white/5 flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-indigo-500/20 text-indigo-300 font-bold text-xs flex items-center justify-center">
-                L
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white">Lucas B.</p>
-                <p className="text-[10px] text-gray-400">LG OLED C3 Streamer</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-[#141624] border border-white/10 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="flex gap-1 text-amber-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={13} fill="currentColor" />
-                ))}
-              </div>
-              <p className="text-xs text-gray-300 italic leading-relaxed">
-                "Super lightweight and works seamlessly with Torrentio & Real-Debrid. The 'Mark as Watched' button keeps my Stremio rows super clean."
-              </p>
-            </div>
-            <div className="mt-5 pt-3 border-t border-white/5 flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-xs flex items-center justify-center">
-                A
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white">Alexandre T.</p>
-                <p className="text-[10px] text-gray-400">Fire TV Stick 4K</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 7. FAQ SECTION */}
+      {/* 6. FAQ SECTION */}
       <section className="max-w-3xl mx-auto px-4">
         <div className="text-center max-w-md mx-auto mb-10">
           <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-2">

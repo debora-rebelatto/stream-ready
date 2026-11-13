@@ -771,7 +771,21 @@ async function runBackgroundCheck() {
   }
 }
 
-setInterval(runBackgroundCheck, 30 * 60 * 1000);
+// Endpoint for Vercel Cron or external scheduled check triggers
+app.get('/api/cron', async (req, res) => {
+  try {
+    // Initiate background check asynchronously so serverless function responds without timeout
+    runBackgroundCheck().catch(err => console.error('[Cron Error]', err.message));
+    res.json({ success: true, message: 'Automated background check triggered' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Periodic background checks for stateful Node environments (local, VPS, Docker)
+if (!process.env.VERCEL) {
+  setInterval(runBackgroundCheck, 30 * 60 * 1000);
+}
 
 // SPA fallback for frontend client routing
 app.get('*', (req, res) => {
@@ -786,15 +800,19 @@ app.get('*', (req, res) => {
   res.status(404).send('Not found');
 });
 
-// Start server
-app.listen(PORT, '0.0.0.0', async () => {
-  await db.ensureLoaded(true);
-  console.log(`=======================================================`);
-  console.log(`🚀 STREMIO WATCHLIST (GOOD QUALITY TRACKER) RUNNING`);
-  console.log(`👉 Port: ${PORT}`);
-  console.log(`👉 Web Dashboard: http://localhost:${PORT}`);
-  console.log(`👉 Addon Manifest: http://localhost:${PORT}/manifest.json`);
-  console.log(`👉 Client Source: ${fs.existsSync(distPath) ? '⚛️ REACT BUILD (dist)' : '📁 STATIC (public)'}`);
-  console.log(`👉 Database: ${db.isSupabaseConfigured() ? '🟢 SUPABASE CLOUD ACTIVE (MULTI-USER)' : '🟡 LOCAL JSON'}`);
-  console.log(`=======================================================`);
-});
+module.exports = app;
+
+// Start server locally or in stateful containers (Vercel invokes exported app serverlessly)
+if (!process.env.VERCEL) {
+  app.listen(PORT, '0.0.0.0', async () => {
+    await db.ensureLoaded(true);
+    console.log(`=======================================================`);
+    console.log(`🚀 STREMIO WATCHLIST (GOOD QUALITY TRACKER) RUNNING`);
+    console.log(`👉 Port: ${PORT}`);
+    console.log(`👉 Web Dashboard: http://localhost:${PORT}`);
+    console.log(`👉 Addon Manifest: http://localhost:${PORT}/manifest.json`);
+    console.log(`👉 Client Source: ${fs.existsSync(distPath) ? '⚛️ REACT BUILD (dist)' : '📁 STATIC (public)'}`);
+    console.log(`👉 Database: ${db.isSupabaseConfigured() ? '🟢 SUPABASE CLOUD ACTIVE (MULTI-USER)' : '🟡 LOCAL JSON'}`);
+    console.log(`=======================================================`);
+  });
+}
