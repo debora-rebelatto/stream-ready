@@ -245,6 +245,7 @@ app.post('/api/auth/login', async (req, res) => {
 
       const baseUrl = getBaseUrl(req);
       syncAddonUrlWithAccount(authKey, baseUrl, user.id).catch(() => {});
+      db.syncWatchedWithStremio(authKey, user.id).catch(() => {});
 
       return res.json({ success: true, authKey, user });
     }
@@ -275,6 +276,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     const baseUrl = getBaseUrl(req);
     syncAddonUrlWithAccount(authResult.authKey, baseUrl, userId).catch(() => {});
+    db.syncWatchedWithStremio(authResult.authKey, userId).catch(() => {});
 
     res.json({ success: true, authKey: authResult.authKey, user });
   } catch (err) {
@@ -768,7 +770,25 @@ async function runBackgroundCheck() {
 
   try {
     await db.ensureLoaded();
-    const allPending = db.getAllUsersItems().filter(entry => !entry.item.has1080pPlus);
+
+    // 1. Sincroniza filmes assistidos do Stremio para TODOS os usuários com conta conectada
+    const users = db.getAllUsers().filter(u => Boolean(u.authKey));
+    if (users.length > 0) {
+      console.log(`[AutoChecker] Sincronizando histórico assistido do Stremio para ${users.length} usuário(s)...`);
+      for (const u of users) {
+        try {
+          const syncRes = await db.syncWatchedWithStremio(u.authKey, u.id);
+          if (syncRes.count > 0) {
+            console.log(`[AutoChecker:${u.email}] Sincronizados ${syncRes.count} filme(s) assistidos.`);
+          }
+        } catch (syncErr) {
+          console.warn(`[AutoChecker] Erro ao sincronizar assistidos para ${u.email}:`, syncErr.message);
+        }
+      }
+    }
+
+    // 2. Checa qualidade de streaming para filmes pendentes (não assistidos)
+    const allPending = db.getAllUsersItems().filter(entry => !entry.item.has1080pPlus && !entry.item.isWatched);
     if (allPending.length > 0) {
       console.log(`[AutoChecker] Checking ${allPending.length} items waiting for good quality...`);
       for (const { userId, item } of allPending) {
