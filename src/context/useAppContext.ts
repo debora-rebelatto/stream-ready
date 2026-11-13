@@ -26,6 +26,8 @@ export interface WatchlistContextType {
   isListsLoading: boolean;
   globalMinQuality: '1080p' | '4k';
   setGlobalMinQuality: (quality: '1080p' | '4k') => Promise<void>;
+  autoSyncWatched: boolean;
+  setAutoSyncWatched: (enabled: boolean) => Promise<void>;
   isLoading: boolean;
   isCheckingAll: boolean;
   refreshWatchlist: () => Promise<void>;

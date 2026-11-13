@@ -117,8 +117,11 @@ function triggerUserOnDemandSync(authKey, userId) {
   // Executa em segundo plano de forma assíncrona (não atrasa a resposta da requisição)
   (async () => {
     try {
-      // 1. Sincroniza filmes assistidos no Stremio
-      await db.syncWatchedWithStremio(authKey, userId);
+      // 1. Sincroniza filmes assistidos no Stremio apenas se habilitado nas configurações
+      const userSettings = db.getSettings(userId);
+      if (userSettings && userSettings.autoSyncWatched) {
+        await db.syncWatchedWithStremio(authKey, userId);
+      }
 
       // 2. Confere qualidade dos filmes pendentes deste usuário
       const pendingItems = db.getItems(userId).filter(i => !i.has1080pPlus && !i.isWatched);
@@ -287,7 +290,10 @@ app.post('/api/auth/login', async (req, res) => {
 
       const baseUrl = getBaseUrl(req);
       syncAddonUrlWithAccount(authKey, baseUrl, user.id).catch(() => {});
-      db.syncWatchedWithStremio(authKey, user.id).catch(() => {});
+      const userSettings = db.getSettings(user.id);
+      if (userSettings && userSettings.autoSyncWatched) {
+        db.syncWatchedWithStremio(authKey, user.id).catch(() => {});
+      }
 
       return res.json({ success: true, authKey, user });
     }
@@ -318,7 +324,10 @@ app.post('/api/auth/login', async (req, res) => {
 
     const baseUrl = getBaseUrl(req);
     syncAddonUrlWithAccount(authResult.authKey, baseUrl, userId).catch(() => {});
-    db.syncWatchedWithStremio(authResult.authKey, userId).catch(() => {});
+    const loginUserSettings = db.getSettings(userId);
+    if (loginUserSettings && loginUserSettings.autoSyncWatched) {
+      db.syncWatchedWithStremio(authResult.authKey, userId).catch(() => {});
+    }
 
     res.json({ success: true, authKey: authResult.authKey, user });
   } catch (err) {
@@ -863,7 +872,7 @@ app.post('/api/settings', async (req, res) => {
     const { authKey, userId } = await getRequestUser(req);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const updated = db.updateSettings(req.body, userId);
+    const updated = await db.updateSettings(req.body, userId);
 
     if (authKey) {
       const baseUrl = getBaseUrl(req);
@@ -944,10 +953,10 @@ async function runBackgroundCheck() {
   try {
     await db.ensureLoaded();
 
-    // 1. Sincroniza filmes assistidos do Stremio para TODOS os usuários com conta conectada
-    const users = db.getAllUsers().filter(u => Boolean(u.authKey));
+    // 1. Sincroniza filmes assistidos do Stremio apenas para usuários com autoSyncWatched ativado
+    const users = db.getAllUsers().filter(u => Boolean(u.authKey) && Boolean(u.settings?.autoSyncWatched));
     if (users.length > 0) {
-      console.log(`[AutoChecker] Sincronizando histórico assistido do Stremio para ${users.length} usuário(s)...`);
+      console.log(`[AutoChecker] Sincronizando histórico assistido do Stremio para ${users.length} usuário(s) com autoSync ativo...`);
       for (const u of users) {
         try {
           const syncRes = await db.syncWatchedWithStremio(u.authKey, u.id);

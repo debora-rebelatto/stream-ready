@@ -48,6 +48,7 @@ export interface StremioUser {
 export interface AppSettings {
   stremioAuthKey?: string | null;
   minQuality?: '1080p' | '4k';
+  autoSyncWatched?: boolean;
 }
 
 export interface ServerInfo {

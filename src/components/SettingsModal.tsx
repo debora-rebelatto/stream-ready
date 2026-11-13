@@ -1,7 +1,7 @@
 import React from 'react';
-import { useWatchlist, useToast } from '../context/useAppContext';
+import { useWatchlist, useToast, useAuth } from '../context/useAppContext';
 import { watchlistService } from '../services/watchlistService';
-import { X, BookOpen, Download, Upload, Sliders, Tv, Film } from 'lucide-react';
+import { X, BookOpen, Download, Upload, Sliders, Tv, Eye, RefreshCw } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -9,7 +9,17 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const { refreshWatchlist, globalMinQuality, setGlobalMinQuality } = useWatchlist();
+  const {
+    refreshWatchlist,
+    globalMinQuality,
+    setGlobalMinQuality,
+    stats,
+    autoSyncWatched,
+    setAutoSyncWatched,
+    syncWatchedFromStremio,
+    isSyncingWatched,
+  } = useWatchlist();
+  const { user } = useAuth();
   const { showToast } = useToast();
 
   if (!isOpen) return null;
@@ -110,6 +120,71 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   For OLED & Home Theater. Only marks ready when 2160p / 4K UHD is found.
                 </span>
               </button>
+            </div>
+          </div>
+
+          {/* Stremio Watched Synchronization */}
+          <div className="p-4 rounded-xl bg-[#1f2438] border border-white/10 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-white flex items-center gap-2">
+                <Eye size={16} className="text-purple-400" />
+                Sincronizar Filmes Vistos (Stremio)
+              </span>
+              {stats && (
+                <span className="text-[11px] font-semibold text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded">
+                  {stats.watched} {stats.watched === 1 ? 'visto' : 'vistos'}
+                </span>
+              )}
+            </div>
+
+            <p className="text-[11px] text-gray-400 leading-relaxed">
+              Sincronize o histórico de filmes assistidos na sua conta do Stremio. Os filmes já vistos são organizados na aba <strong>Vistos</strong>, mantendo sua lista ativa sempre limpa e focada em novidades.
+            </p>
+
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={async () => {
+                  await syncWatchedFromStremio();
+                }}
+                disabled={isSyncingWatched || !user}
+                className={`w-full py-2.5 px-4 rounded-lg font-semibold text-xs transition-all flex items-center justify-center gap-2 border cursor-pointer ${
+                  isSyncingWatched
+                    ? 'bg-purple-600/30 border-purple-500/50 text-purple-200 cursor-wait'
+                    : !user
+                    ? 'bg-[#151824] border-white/10 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white border-purple-500/30 shadow-md shadow-purple-900/20 active:scale-[0.99]'
+                }`}
+              >
+                <RefreshCw size={14} className={isSyncingWatched ? 'animate-spin text-purple-300' : ''} />
+                {isSyncingWatched ? 'Sincronizando Histórico do Stremio...' : 'Sincronizar Filmes Vistos Agora'}
+              </button>
+              {!user && (
+                <p className="text-[10px] text-amber-400/90 mt-1.5 flex items-center gap-1">
+                  ⚠️ Conecte sua conta do Stremio para sincronizar os filmes assistidos.
+                </p>
+              )}
+            </div>
+
+            {/* Opção de sincronização automática */}
+            <div className="pt-2 border-t border-white/5">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none group">
+                <input
+                  type="checkbox"
+                  checked={autoSyncWatched}
+                  onChange={(e) => setAutoSyncWatched(e.target.checked)}
+                  disabled={!user}
+                  className="mt-0.5 w-4 h-4 rounded border-white/20 bg-[#151824] text-purple-600 focus:ring-purple-500/30 focus:ring-offset-0 cursor-pointer disabled:opacity-50"
+                />
+                <div className="flex-1">
+                  <span className="text-xs font-semibold text-gray-200 group-hover:text-white transition-colors">
+                    Sincronizar vistos automaticamente em segundo plano
+                  </span>
+                  <span className="text-[10px] text-gray-400 leading-normal block mt-0.5">
+                    Desativado por padrão para novos usuários. Quando ativado, monitora e sincroniza periodicamente no servidor os filmes que você assistir no Stremio.
+                  </span>
+                </div>
+              </label>
             </div>
           </div>
 

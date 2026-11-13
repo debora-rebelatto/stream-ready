@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS public.watchlist_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(), -- ID Único (UUID) do usuário
   email TEXT UNIQUE NOT NULL,                   -- E-mail da conta Stremio (em minúsculas)
   stremio_auth_key TEXT,                         -- Chave de autenticação criptografada
+  min_quality TEXT DEFAULT '1080p',              -- Qualidade mínima desejada ('1080p' ou '4k')
+  auto_sync_watched BOOLEAN DEFAULT FALSE,       -- Sincronização automática de vistos (desativada por padrão)
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { WatchlistItem } from '../types';
 import { formatQualityLabel, isItemReady, isItemNewRelease, isItemUnreleased } from '../lib/utils';
 import { useWatchlist } from '../context/useAppContext';
@@ -12,6 +12,14 @@ interface MovieCardProps {
 export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
   const { markWatched, setItemMinQuality, globalMinQuality, customLists, toggleItemCustomList } = useWatchlist();
   const [isListMenuOpen, setIsListMenuOpen] = useState(false);
+
+  // Fecha menu ao clicar fora
+  useEffect(() => {
+    if (!isListMenuOpen) return;
+    const handleOutsideClick = () => setIsListMenuOpen(false);
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, [isListMenuOpen]);
 
   const isWatched = Boolean(item.isWatched);
   const ready = isItemReady(item, globalMinQuality);
@@ -58,7 +66,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
   return (
     <div
       onClick={handleClick}
-      className={`group relative flex flex-col bg-[#151824] border rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
+      className={`group relative flex flex-col bg-[#151824] border rounded-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
         isWatched
           ? 'border-white/5 opacity-75 hover:opacity-100 hover:border-purple-500/30'
           : isNew
@@ -68,7 +76,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
       title="Click to open in Stremio"
     >
       {/* Poster */}
-      <div className="relative aspect-[2/3] w-full bg-[#1e2235] overflow-hidden">
+      <div className="relative aspect-[2/3] w-full bg-[#1e2235] overflow-hidden rounded-t-xl">
         <img
           src={
             item.poster ||
@@ -228,14 +236,14 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
             {isListMenuOpen && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute bottom-full mb-1 right-0 z-30 w-48 bg-[#161826] border border-white/15 rounded-xl p-2 shadow-2xl backdrop-blur-xl animate-in fade-in duration-150"
+                className="absolute bottom-full mb-1.5 -left-2 -right-2 z-40 bg-[#161826]/95 border border-purple-500/30 rounded-xl p-2.5 shadow-2xl backdrop-blur-xl animate-in fade-in duration-150"
               >
-                <div className="text-[11px] font-semibold text-gray-400 px-2 py-1 border-b border-white/5 mb-1 flex items-center justify-between">
-                  <span>Adicionar à lista</span>
+                <div className="text-[11px] font-semibold text-gray-300 px-1 py-1 border-b border-white/10 mb-2 flex items-center justify-between">
+                  <span className="truncate font-medium">Adicionar à lista</span>
                   <button
                     type="button"
                     onClick={() => setIsListMenuOpen(false)}
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white p-0.5 rounded hover:bg-white/10 transition-colors"
                   >
                     ✕
                   </button>
@@ -246,7 +254,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
                     Nenhuma lista criada ainda. Crie uma lista no topo da página!
                   </div>
                 ) : (
-                  <div className="max-h-40 overflow-y-auto space-y-1">
+                  <div className="max-h-44 overflow-y-auto space-y-1 custom-scrollbar">
                     {customLists.map((l) => {
                       const inList = (item.customLists || []).includes(l.id);
                       return (
@@ -254,17 +262,17 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
                           key={l.id}
                           type="button"
                           onClick={() => toggleItemCustomList(item.id, l.id)}
-                          className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-xs transition-colors text-left ${
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors text-left ${
                             inList
-                              ? 'bg-purple-500/20 text-purple-200 font-medium'
+                              ? 'bg-purple-500/25 text-purple-200 font-semibold'
                               : 'text-gray-300 hover:bg-white/5'
                           }`}
                         >
                           <span className="flex items-center gap-1.5 truncate">
-                            <span>{l.emoji || '🎬'}</span>
+                            <span className="text-sm shrink-0">{l.emoji || '🎬'}</span>
                             <span className="truncate">{l.name}</span>
                           </span>
-                          {inList && <Check size={12} className="text-purple-400 shrink-0" />}
+                          {inList && <Check size={13} className="text-purple-400 shrink-0 ml-1" />}
                         </button>
                       );
                     })}

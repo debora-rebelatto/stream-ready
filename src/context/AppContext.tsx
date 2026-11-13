@@ -44,6 +44,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeCustomListId, setActiveCustomListId] = useState<string | null>(null);
   const [isListsLoading, setIsListsLoading] = useState(false);
   const [globalMinQuality, setGlobalMinQualityState] = useState<'1080p' | '4k'>('1080p');
+  const [autoSyncWatched, setAutoSyncWatchedState] = useState<boolean>(false);
   const [isLoadingList, setIsLoadingList] = useState(false);
   const [isCheckingAll, setIsCheckingAll] = useState(false);
   const [isSyncingWatched, setIsSyncingWatched] = useState(false);
@@ -76,6 +77,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const settings = await api.getSettings();
           if (settings?.minQuality === '4k' || settings?.minQuality === '1080p') {
             setGlobalMinQualityState(settings.minQuality);
+          }
+          if (typeof settings?.autoSyncWatched === 'boolean') {
+            setAutoSyncWatchedState(settings.autoSyncWatched);
           }
         } catch {}
       } else if (res.isUnauthorized) {
@@ -279,6 +283,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const setAutoSyncWatched = async (enabled: boolean) => {
+    setAutoSyncWatchedState(enabled);
+    try {
+      await api.saveSettings({ autoSyncWatched: enabled });
+      showToast(
+        enabled
+          ? 'Sincronização automática de vistos ativada.'
+          : 'Sincronização automática de vistos desativada.',
+        'success'
+      );
+    } catch {
+      showToast('Falha ao salvar preferência de sincronização.', 'error');
+    }
+  };
+
   const markWatched = async (id: string, watched: boolean) => {
     try {
       const res = await watchlistService.setWatched(id, watched);
@@ -456,6 +475,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           isListsLoading,
           globalMinQuality,
           setGlobalMinQuality,
+          autoSyncWatched,
+          setAutoSyncWatched,
           isLoading: isLoadingList,
           isCheckingAll,
           isSyncingWatched,
