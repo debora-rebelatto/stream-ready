@@ -52,8 +52,6 @@ export const App: React.FC = () => {
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <Hero onOpenSettings={() => setIsSettingsOpen(true)} />
-
         {isAuthLoading ? (
           /* Loading State while checking authentication */
           <div className="py-24 text-center flex flex-col items-center justify-center">
@@ -63,6 +61,7 @@ export const App: React.FC = () => {
           </div>
         ) : user ? (
           <>
+            <Hero onOpenSettings={() => setIsSettingsOpen(true)} />
             <SearchSection />
 
             {/* List Header & Controls */}
