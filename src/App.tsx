@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { isItemReady, isItemUnreleased } from './lib/utils';
 import { useAuth, useWatchlist } from './context/useAppContext';
 import { Navbar } from './components/Navbar';
@@ -9,6 +9,7 @@ import { LoginModal } from './components/LoginModal';
 import { SettingsModal } from './components/SettingsModal';
 import { LandingPage } from './components/LandingPage';
 import { ToastContainer } from './components/ToastContainer';
+import { Pagination } from './components/Pagination';
 import { RotateCw, Film, Eye } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -29,6 +30,9 @@ export const App: React.FC = () => {
 
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const listTopRef = useRef<HTMLDivElement>(null);
 
   // Filter items
   const filtered = items.filter((item) => {
@@ -45,6 +49,30 @@ export const App: React.FC = () => {
     if (currentTab === 'pending') return !ready && !isItemUnreleased(item);
     return true;
   });
+
+  // Reset page when switching tabs or changing items per page
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [currentTab, itemsPerPage]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+
+  // Keep currentPage within bounds if items are removed
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedItems = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    if (listTopRef.current) {
+      listTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0c0d14]">
@@ -67,7 +95,7 @@ export const App: React.FC = () => {
             <SearchSection />
 
             {/* List Header & Controls */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-white/10">
+            <div ref={listTopRef} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-white/10 scroll-mt-24">
               {/* Tabs */}
               <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
                 <button
@@ -186,11 +214,22 @@ export const App: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-                {filtered.map((item) => (
-                  <MovieCard key={item.id} item={item} onDelete={removeItem} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+                  {paginatedItems.map((item) => (
+                    <MovieCard key={item.id} item={item} onDelete={removeItem} />
+                  ))}
+                </div>
+
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={filtered.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={handlePageChange}
+                  onItemsPerPageChange={setItemsPerPage}
+                />
+              </>
             )}
           </>
         ) : (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, useToast } from '../context/useAppContext';
 import { api } from '../lib/api';
-import { Settings, Copy, ExternalLink, LogIn, LogOut, Menu, X, Play } from 'lucide-react';
+import { Settings, Copy, ExternalLink, LogIn, LogOut, Menu, X, Play, MessageSquare } from 'lucide-react';
 
 interface NavbarProps {
   onOpenSettings: () => void;
@@ -123,6 +123,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin }) =
             <Settings size={13} />
             Guide & Backup
           </button>
+
+          <a
+            href="https://tally.so/r/dbazxA"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-white border border-purple-500/30 transition-all"
+            title="Send suggestions & feedback"
+          >
+            <MessageSquare size={13} />
+            Feedback
+          </a>
         </div>
       </div>
 
@@ -188,6 +199,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin }) =
             <Settings size={13} />
             Guide & Backup
           </button>
+
+          <a
+            href="https://tally.so/r/dbazxA"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMobileMenuOpen(false)}
+            className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/30"
+          >
+            <MessageSquare size={13} />
+            Give Feedback
+          </a>
         </div>
       )}
     </header>
