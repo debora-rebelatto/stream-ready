@@ -128,30 +128,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold text-white flex items-center gap-2">
                 <Eye size={16} className="text-purple-400" />
-                Sincronizar Filmes Assistidos (Stremio)
+                Sync Watched Movies (Stremio)
               </span>
               {stats.watched > 0 && (
                 <span className="text-[10px] font-semibold text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded">
-                  {stats.watched} vistos
+                  {stats.watched} watched
                 </span>
               )}
             </div>
 
-            {/* Como funciona */}
+            {/* How it works */}
             <div className="space-y-2 text-[11px] bg-[#151824]/70 p-3 rounded-xl border border-white/5 leading-relaxed">
               <div className="font-semibold text-purple-300 flex items-center gap-1.5">
                 <Info size={13} className="text-purple-400" />
-                Como funciona a sincronização?
+                How does synchronization work?
               </div>
               <ul className="space-y-1.5 list-disc list-inside text-gray-400 text-[10.5px]">
                 <li>
-                  <strong className="text-gray-200">Limpeza da lista ativa:</strong> Filmes da sua watchlist que você já assistiu no Stremio são automaticamente movidos para a aba <strong className="text-purple-300">Vistos</strong>, mantendo sua lista principal sempre limpa e focada em novidades.
+                  <strong className="text-gray-200">Active list cleanup:</strong> Movies from your watchlist that you already watched on Stremio are automatically moved to the <strong className="text-purple-300">Watched</strong> tab, keeping your main list clean and focused on new releases.
                 </li>
                 <li>
-                  <strong className="text-gray-200">Importação do histórico:</strong> Busca diretamente na biblioteca oficial da sua conta do Stremio todos os filmes marcados como assistidos ou com progresso assistido superior a 80%.
+                  <strong className="text-gray-200">History import:</strong> Fetches movies directly from your official Stremio library that are marked as watched or have watched progress greater than 80%.
                 </li>
                 <li>
-                  <strong className="text-gray-200">Controle total:</strong> Por padrão, a sincronização não acontece automaticamente para novos usuários, para não sobrecarregar sua lista. Você decide exatamente quando sincronizar!
+                  <strong className="text-gray-200">Full control:</strong> Automatic background synchronization is optional so your list is never overloaded. You decide exactly when to sync!
                 </li>
               </ul>
             </div>
@@ -166,16 +166,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 className="w-full inline-flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs transition-all shadow cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <RefreshCw size={13} className={isSyncingWatched ? 'animate-spin' : ''} />
-                {isSyncingWatched ? 'Sincronizando Histórico do Stremio...' : 'Sincronizar Filmes Vistos Agora'}
+                {isSyncingWatched ? 'Syncing Stremio History...' : 'Sync Watched Movies Now'}
               </button>
               {!user && (
                 <p className="text-[10px] text-amber-400/90 mt-1.5 flex items-center gap-1">
-                  ⚠️ Conecte sua conta do Stremio (no botão de Login) para sincronizar os filmes assistidos.
+                  ⚠️ Connect your Stremio account (via the Sign In button) to sync watched movies.
                 </p>
               )}
             </div>
 
-            {/* Opção de sincronização automática */}
+            {/* Automatic background sync option */}
             <div className="pt-2 border-t border-white/5">
               <label className="flex items-start gap-2.5 cursor-pointer select-none group">
                 <input
@@ -187,10 +187,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 />
                 <div className="flex-1">
                   <span className="text-xs font-semibold text-gray-200 group-hover:text-white transition-colors">
-                    Sincronizar vistos automaticamente em segundo plano
+                    Automatically sync watched movies in the background
                   </span>
                   <span className="text-[10px] text-gray-400 leading-normal block mt-0.5">
-                    Desativado por padrão para novos usuários. Quando ativado, monitora e sincroniza periodicamente no servidor os filmes que você assistir no Stremio.
+                    Disabled by default. When enabled, periodically checks and moves movies you watch on Stremio to your Watched tab.
                   </span>
                 </div>
               </label>

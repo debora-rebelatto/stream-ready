@@ -18,12 +18,12 @@ export const cinemetaService = {
 
     const url = `${CINEMETA_URL}/catalog/movie/top/search=${encodeURIComponent(trimmed)}.json`;
 
+    let timeout: any;
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
+      timeout = setTimeout(() => controller.abort(), 8000);
 
       const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeout);
 
       if (!res.ok) return [];
 
@@ -42,6 +42,8 @@ export const cinemetaService = {
     } catch (err: any) {
       console.warn('[CinemetaService] Direct search error, falling back to proxy if needed:', err.message);
       return [];
+    } finally {
+      if (timeout) clearTimeout(timeout);
     }
   },
 
@@ -51,12 +53,12 @@ export const cinemetaService = {
   async getMeta(type: string = 'movie', id: string): Promise<SearchMovieResult | null> {
     const url = `${CINEMETA_URL}/meta/${type}/${id}.json`;
 
+    let timeout: any;
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
+      timeout = setTimeout(() => controller.abort(), 8000);
 
       const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeout);
 
       if (!res.ok) return null;
 
@@ -77,6 +79,8 @@ export const cinemetaService = {
       };
     } catch {
       return null;
+    } finally {
+      if (timeout) clearTimeout(timeout);
     }
   },
 };

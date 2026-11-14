@@ -42,7 +42,7 @@ export function isItemNewRelease(item: { readyAt?: string | null; has1080pPlus?:
   if (!item || !item.readyAt || !item.has1080pPlus) return false;
   try {
     const ageMs = Date.now() - new Date(item.readyAt).getTime();
-    // Dentro das últimas 48 horas
+    // Within the last 48 hours
     return ageMs >= 0 && ageMs <= 48 * 60 * 60 * 1000;
   } catch {
     return false;

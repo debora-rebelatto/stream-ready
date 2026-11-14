@@ -3,11 +3,11 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const db = require('./lib/db');
-const { checkMovieQuality } = require('./lib/qualityChecker');
-const { searchMovies, getMeta } = require('./lib/cinemeta');
-const { getManifest, handleCatalog, handleMeta } = require('./lib/stremioAddon');
-const { loginStremio, getUserInfo, getAccountWatchlist, saveAccountWatchlist } = require('./lib/stremioAuth');
-const { encodeUserData, decodeUserData } = require('./lib/userData');
+const { checkMovieQuality } = require('./server/services/qualityCheckerService.ts');
+const { searchMovies, getMeta } = require('./server/services/cinemetaService.ts');
+const { getManifest, handleCatalog, handleMeta } = require('./server/services/stremioAddonService.ts');
+const { loginStremio, getUserInfo, getAccountWatchlist, saveAccountWatchlist } = require('./server/services/stremioAuthService.ts');
+const { encodeUserData, decodeUserData } = require('./server/services/userDataService.ts');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
@@ -777,7 +777,7 @@ app.post('/api/lists', async (req, res) => {
 
     const { name, emoji } = req.body;
     if (!name || !name.trim()) {
-      return res.status(400).json({ error: 'Nome da lista é obrigatório' });
+      return res.status(400).json({ error: 'List name is required' });
     }
 
     const newList = await db.createCustomList(userId, { name, emoji });

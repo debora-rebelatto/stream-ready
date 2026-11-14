@@ -369,14 +369,14 @@ export const App: React.FC = () => {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Filtrar por título ou ano na sua lista..."
+                    placeholder="Filter by title or year in your list..."
                     className="w-full bg-[#1e2235] border border-white/10 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/60 transition-colors"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-0.5 rounded transition-colors"
-                      title="Limpar busca"
+                      title="Clear search"
                     >
                       <X size={13} />
                     </button>
@@ -392,9 +392,9 @@ export const App: React.FC = () => {
                       onChange={(e) => setSelectedType(e.target.value as any)}
                       className="bg-[#1e2235] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-purple-500/60 cursor-pointer hover:border-white/20 transition-colors"
                     >
-                      <option value="all">🎬 Todos os Tipos</option>
-                      <option value="movie">🎥 Filmes</option>
-                      <option value="series">📺 Séries</option>
+                      <option value="all">🎬 All Types</option>
+                      <option value="movie">🎥 Movies</option>
+                      <option value="series">📺 Series</option>
                     </select>
                   </div>
 
@@ -405,11 +405,11 @@ export const App: React.FC = () => {
                       onChange={(e) => setSelectedQuality(e.target.value)}
                       className="bg-[#1e2235] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-purple-500/60 cursor-pointer hover:border-white/20 transition-colors"
                     >
-                      <option value="all">🎯 Todas as Qualidades</option>
+                      <option value="all">🎯 All Qualities</option>
                       <option value="4k">✨ 4K / 2160p</option>
                       <option value="1080p">💎 1080p Full HD</option>
                       <option value="720p">📺 720p HD</option>
-                      <option value="pending">⏳ Aguardando / Pendente</option>
+                      <option value="pending">⏳ Waiting / Pending</option>
                     </select>
                   </div>
 
@@ -425,12 +425,12 @@ export const App: React.FC = () => {
                       }`}
                       title={
                         includeWatchedInAll
-                          ? 'Ocultar filmes assistidos na visualização Geral'
-                          : 'Incluir filmes assistidos na visualização Geral'
+                          ? 'Hide watched movies in All view'
+                          : 'Include watched movies in All view'
                       }
                     >
                       <Eye size={13} className={includeWatchedInAll ? 'text-purple-400' : 'text-gray-400'} />
-                      <span>{includeWatchedInAll ? 'Com Assistidos' : 'Sem Assistidos'}</span>
+                      <span>{includeWatchedInAll ? 'With Watched' : 'Hide Watched'}</span>
                     </button>
                   )}
 
@@ -441,13 +441,13 @@ export const App: React.FC = () => {
                       onChange={(e) => setSortBy(e.target.value as any)}
                       className="bg-[#1e2235] border border-white/10 rounded-xl px-3 py-2 text-xs text-purple-300 font-medium focus:outline-none focus:border-purple-500/60 cursor-pointer hover:border-white/20 transition-colors"
                     >
-                      <option value="added_desc">↕️ Adicionados: Mais Recentes</option>
-                      <option value="added_asc">↕️ Adicionados: Mais Antigos</option>
-                      <option value="year_desc">📅 Ano: Mais Novos</option>
-                      <option value="year_asc">📅 Ano: Mais Antigos</option>
-                      <option value="title_asc">🔤 Título: A → Z</option>
-                      <option value="title_desc">🔤 Título: Z → A</option>
-                      <option value="streams_desc">📡 Mais Fontes Disponíveis</option>
+                      <option value="added_desc">↕️ Added: Newest First</option>
+                      <option value="added_asc">↕️ Added: Oldest First</option>
+                      <option value="year_desc">📅 Year: Newest First</option>
+                      <option value="year_asc">📅 Year: Oldest First</option>
+                      <option value="title_asc">🔤 Title: A → Z</option>
+                      <option value="title_desc">🔤 Title: Z → A</option>
+                      <option value="streams_desc">📡 Most Sources Available</option>
                     </select>
                   </div>
 
@@ -456,10 +456,10 @@ export const App: React.FC = () => {
                     <button
                       onClick={clearFilters}
                       className="px-2.5 py-2 rounded-xl text-xs font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-colors flex items-center gap-1 cursor-pointer"
-                      title="Resetar todos os filtros"
+                      title="Reset all filters"
                     >
                       <X size={12} />
-                      <span>Limpar</span>
+                      <span>Clear</span>
                     </button>
                   )}
                 </div>
@@ -468,12 +468,12 @@ export const App: React.FC = () => {
               {/* Status & Results counter */}
               <div className="flex items-center justify-between text-[11px] text-gray-400 pt-2.5 mt-2.5 border-t border-white/5">
                 <span>
-                  Mostrando <strong className="text-white">{sorted.length}</strong> {sorted.length === 1 ? 'título' : 'títulos'}
-                  {hasActiveFilters && ' (com filtros ativos)'}
+                  Showing <strong className="text-white">{sorted.length}</strong> {sorted.length === 1 ? 'title' : 'titles'}
+                  {hasActiveFilters && ' (filtered)'}
                 </span>
                 {hasActiveFilters && (
                   <span className="text-purple-400 text-[10px]">
-                    Filtros aplicados
+                    Filters applied
                   </span>
                 )}
               </div>
@@ -502,7 +502,7 @@ export const App: React.FC = () => {
                 </div>
                 <h4 className="text-base font-bold text-white mb-1">
                   {hasActiveFilters
-                    ? 'Nenhum título encontrado com os filtros atuais'
+                    ? 'No titles found with active filters'
                     : currentTab === 'ready'
                     ? 'No movies ready in good quality yet'
                     : currentTab === 'pending'
@@ -515,7 +515,7 @@ export const App: React.FC = () => {
                 </h4>
                 <p className="text-xs text-gray-400 max-w-sm mx-auto mb-3">
                   {hasActiveFilters
-                    ? 'Tente pesquisar por outro nome ou resetar os filtros selecionados.'
+                    ? 'Try searching for another title or clearing the selected filters.'
                     : currentTab === 'watched'
                     ? 'Click the eye icon on any movie card to mark it as watched and archive it.'
                     : items.length === 0
@@ -528,7 +528,7 @@ export const App: React.FC = () => {
                     className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white transition-colors cursor-pointer inline-flex items-center gap-1.5"
                   >
                     <X size={12} />
-                    <span>Limpar todos os filtros</span>
+                    <span>Clear all filters</span>
                   </button>
                 )}
               </div>

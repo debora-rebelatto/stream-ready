@@ -1,6 +1,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
   testEnvironment: 'node',
+  setupFiles: ['<rootDir>/tests/setup.ts'],
   transform: {
     '^.+\\.(t|j)sx?$': [
       '@swc/jest',
@@ -26,6 +27,14 @@ module.exports = {
   testMatch: [
     '<rootDir>/tests/**/*.test.[jt]s?(x)',
     '<rootDir>/tests/**/*.spec.[jt]s?(x)'
+  ],
+  collectCoverageFrom: [
+    'server/services/**/*.{ts,tsx}',
+    'src/services/**/*.{ts,tsx}',
+    'src/lib/**/*.{ts,tsx}',
+    'lib/**/*.js',
+    '!lib/db.js',
+    '!**/node_modules/**'
   ],
   moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json', 'node']
 };
