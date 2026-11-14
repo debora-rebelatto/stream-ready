@@ -174,32 +174,42 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
           {/* Detected Quality Pill */}
           <div
             className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded border self-start ${
-              ready
+              isWatched
+                ? 'bg-purple-900/20 text-purple-300 border-purple-500/30'
+                : ready
                 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                 : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
             }`}
           >
-            <span>{qualityText}</span>
-            <span className="text-gray-500">•</span>
-            <span>{streamsText}</span>
+            {isWatched ? (
+              <span>Watched</span>
+            ) : (
+              <>
+                <span>{qualityText}</span>
+                <span className="text-gray-500">•</span>
+                <span>{streamsText}</span>
+              </>
+            )}
           </div>
 
-          {/* Target Quality Override Pill */}
-          <button
-            type="button"
-            onClick={handleCycleTargetQuality}
-            className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md border font-medium transition-colors cursor-pointer self-start ${
-              item.minQuality === '4k'
-                ? 'bg-purple-900/30 text-purple-300 border-purple-500/40 hover:bg-purple-900/50'
-                : item.minQuality === '1080p'
-                ? 'bg-blue-900/30 text-blue-300 border-blue-500/40 hover:bg-blue-900/50'
-                : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-gray-200'
-            }`}
-            title="Click to toggle minimum quality target (Auto / 1080p / 4K)"
-          >
-            <SlidersHorizontal size={9} />
-            <span>Target: {item.minQuality ? item.minQuality.toUpperCase() : `Auto (${activeTargetQuality.toUpperCase()})`}</span>
-          </button>
+          {/* Target Quality Override Pill - only for active watchlist items */}
+          {!isWatched && (
+            <button
+              type="button"
+              onClick={handleCycleTargetQuality}
+              className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md border font-medium transition-colors cursor-pointer self-start ${
+                item.minQuality === '4k'
+                  ? 'bg-purple-900/30 text-purple-300 border-purple-500/40 hover:bg-purple-900/50'
+                  : item.minQuality === '1080p'
+                  ? 'bg-blue-900/30 text-blue-300 border-blue-500/40 hover:bg-blue-900/50'
+                  : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-gray-200'
+              }`}
+              title="Click to toggle minimum quality target (Auto / 1080p / 4K)"
+            >
+              <SlidersHorizontal size={9} />
+              <span>Target: {item.minQuality ? item.minQuality.toUpperCase() : `Auto (${activeTargetQuality.toUpperCase()})`}</span>
+            </button>
+          )}
 
           {/* Custom Lists Tags & Menu */}
           <div className="relative pt-1 border-t border-white/5">

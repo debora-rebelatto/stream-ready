@@ -29,7 +29,7 @@ export function isItemReady(
 ): boolean {
   if (!item) return false;
   const target = item.minQuality || globalMinQuality || '1080p';
-  const rawQuality = (item.bestQuality || '').toLowerCase();
+  const rawQuality = String(item.bestQuality || '').toLowerCase();
 
   if (target === '4k') {
     return rawQuality.includes('4k') || rawQuality.includes('2160p') || rawQuality.includes('uhd');
@@ -49,8 +49,8 @@ export function isItemNewRelease(item: { readyAt?: string | null; has1080pPlus?:
   }
 }
 
-export function isItemUnreleased(item: { has1080pPlus?: boolean; bestQuality?: string; streamCount?: number }): boolean {
-  if (item.has1080pPlus) return false;
+export function isItemUnreleased(item: { has1080pPlus?: boolean; bestQuality?: string; streamCount?: number; isWatched?: boolean }): boolean {
+  if (item.has1080pPlus || item.isWatched) return false;
   const rawQuality = formatQualityLabel(item.bestQuality);
   return (
     /unreleased|not released|unavailable|não lançado|indisponível/i.test(rawQuality) ||

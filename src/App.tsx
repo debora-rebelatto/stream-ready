@@ -69,9 +69,9 @@ export const App: React.FC = () => {
       if (currentTab === 'pending' && (ready || isItemUnreleased(item))) return false;
     }
 
-    // Quality filter
-    if (selectedQuality !== 'all') {
-      const q = (item.bestQuality || '').toLowerCase();
+    // Quality filter (only applies to active tracking views; watched items are archived history)
+    if (currentTab !== 'watched' && selectedQuality !== 'all') {
+      const q = String(item.bestQuality || '').toLowerCase();
       if (selectedQuality === '4k') {
         if (!q.includes('4k') && !q.includes('2160p')) return false;
       } else if (selectedQuality === '1080p') {
@@ -194,7 +194,7 @@ export const App: React.FC = () => {
 
   const hasActiveFilters =
     searchQuery !== '' ||
-    selectedQuality !== 'all' ||
+    (currentTab !== 'watched' && selectedQuality !== 'all') ||
     sortBy !== 'added_desc' ||
     (currentTab === 'all' && !includeWatchedInAll);
 
@@ -408,20 +408,22 @@ export const App: React.FC = () => {
 
                 {/* Dropdowns group */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  {/* Quality Filter */}
-                  <div className="relative">
-                    <select
-                      value={selectedQuality}
-                      onChange={(e) => setSelectedQuality(e.target.value)}
-                      className="bg-[#1e2235] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-purple-500/60 cursor-pointer hover:border-white/20 transition-colors"
-                    >
-                      <option value="all">🎯 All Qualities</option>
-                      <option value="4k">✨ 4K / 2160p</option>
-                      <option value="1080p">💎 1080p Full HD</option>
-                      <option value="720p">📺 720p HD</option>
-                      <option value="pending">⏳ Waiting / Pending</option>
-                    </select>
-                  </div>
+                  {/* Quality Filter (only for active tracking views; watched items are archived) */}
+                  {currentTab !== 'watched' && (
+                    <div className="relative">
+                      <select
+                        value={selectedQuality}
+                        onChange={(e) => setSelectedQuality(e.target.value)}
+                        className="bg-[#1e2235] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-purple-500/60 cursor-pointer hover:border-white/20 transition-colors"
+                      >
+                        <option value="all">🎯 All Qualities</option>
+                        <option value="4k">✨ 4K / 2160p</option>
+                        <option value="1080p">💎 1080p Full HD</option>
+                        <option value="720p">📺 720p HD</option>
+                        <option value="pending">⏳ Waiting / Pending</option>
+                      </select>
+                    </div>
+                  )}
 
                   {/* Include Watched toggle (only shown in 'All' tab) */}
                   {currentTab === 'all' && (

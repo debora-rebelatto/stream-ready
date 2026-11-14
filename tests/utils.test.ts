@@ -103,6 +103,11 @@ describe('Frontend Utils (src/lib/utils.ts)', () => {
       expect(isItemUnreleased({ has1080pPlus: false, streamCount: 0, bestQuality: 'Pending' })).toBe(true);
     });
 
+    test('deve retornar false se o item já foi assistido (isWatched: true)', () => {
+      expect(isItemUnreleased({ has1080pPlus: false, streamCount: 0, bestQuality: 'Watched', isWatched: true })).toBe(false);
+      expect(isItemUnreleased({ has1080pPlus: false, streamCount: 0, bestQuality: 'Pending', isWatched: true })).toBe(false);
+    });
+
     test('deve retornar false se for gravação de cinema (CAM)', () => {
       expect(isItemUnreleased({ has1080pPlus: false, streamCount: 1, bestQuality: 'CAM / Theater Rip' })).toBe(false);
     });
