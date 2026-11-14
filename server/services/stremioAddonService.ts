@@ -90,7 +90,7 @@ export function getManifest(hostUrl: string = '', userId: string = ''): AddonMan
     logo: hostUrl ? `${hostUrl}/icon.png` : 'https://stremiowatchlist.vercel.app/icon.png',
     background: hostUrl ? `${hostUrl}/background.jpg` : 'https://stremiowatchlist.vercel.app/background.jpg',
     resources: ['catalog', 'meta'],
-    types: ['movie', 'series'],
+    types: ['movie'],
     catalogs: allCatalogs,
     idPrefixes: ['tt', 'guide_'],
     behaviorHints: {

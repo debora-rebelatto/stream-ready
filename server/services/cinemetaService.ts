@@ -27,17 +27,19 @@ export async function searchMovies(query: string): Promise<CinemetaItem[]> {
     if (!res.ok) return [];
 
     const data: any = await res.json();
-    return (data.metas || []).map((item: any) => ({
-      id: item.id,
-      type: item.type || 'movie',
-      name: item.name,
-      year: item.year || item.releaseInfo || '',
-      poster: item.poster || '',
-      banner: item.banner || item.background || '',
-      genres: item.genres || [],
-      description: item.description || '',
-      imdbRating: item.imdbRating || ''
-    }));
+    return (data.metas || [])
+      .filter((item: any) => !item.type || item.type === 'movie')
+      .map((item: any) => ({
+        id: item.id,
+        type: 'movie',
+        name: item.name,
+        year: item.year || item.releaseInfo || '',
+        poster: item.poster || '',
+        banner: item.banner || item.background || '',
+        genres: item.genres || [],
+        description: item.description || '',
+        imdbRating: item.imdbRating || ''
+      }));
   } catch (err: any) {
     console.error('[Cinemeta] Erro ao buscar filmes:', err.message);
     return [];
@@ -63,9 +65,12 @@ export async function getMeta(type: string = 'movie', id: string): Promise<Cinem
     if (!data.meta) return null;
 
     const m = data.meta;
+    if (m.type && m.type !== 'movie') {
+      return null;
+    }
     return {
       id: m.id,
-      type: m.type || type,
+      type: 'movie',
       name: m.name,
       year: m.year || m.releaseInfo || '',
       poster: m.poster || '',

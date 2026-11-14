@@ -20,7 +20,6 @@ CREATE TABLE IF NOT EXISTS public.watchlist_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),  -- ID Único da linha (UUID)
   user_id UUID NOT NULL REFERENCES public.watchlist_users(id) ON DELETE CASCADE, -- Relação com a tabela de usuários
   imdb_id TEXT NOT NULL,                          -- ID único do IMDb (ex: tt1234567)
-  type TEXT DEFAULT 'movie',                      -- 'movie' ou 'series'
   name TEXT NOT NULL,                             -- Nome do filme
   year TEXT DEFAULT '',                           -- Ano de lançamento
   poster TEXT DEFAULT '',                         -- URL do poster

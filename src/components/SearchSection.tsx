@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useWatchlist } from '../context/useAppContext';
+import { useWatchlist, useToast } from '../context/useAppContext';
 import { watchlistService } from '../services/watchlistService';
+import { cinemetaService } from '../services/cinemetaService';
 import type { SearchMovieResult } from '../types';
 import { Search, X, Plus, Check } from 'lucide-react';
 
 export const SearchSection: React.FC = () => {
   const { items, addItem } = useWatchlist();
+  const { showToast } = useToast();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchMovieResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +25,8 @@ export const SearchSection: React.FC = () => {
       setIsLoading(true);
       try {
         const data = await watchlistService.searchMovies(query);
-        setResults(data || []);
+        const moviesOnly = (data || []).filter((m) => !m.type || m.type === 'movie');
+        setResults(moviesOnly);
         setIsOpen(true);
       } catch {
         setResults([]);
@@ -49,6 +52,15 @@ export const SearchSection: React.FC = () => {
   const handleAdd = async (id: string) => {
     setIsOpen(false);
     setQuery('');
+    try {
+      const meta = await cinemetaService.getMeta('movie', id);
+      if (meta && meta.type && meta.type !== 'movie') {
+        showToast('Only movies are supported. Series cannot be added.', 'error');
+        return;
+      }
+    } catch {
+      // proceed to add
+    }
     await addItem(id);
   };
 

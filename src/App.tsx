@@ -39,7 +39,6 @@ export const App: React.FC = () => {
 
   // New Filters & Sort states
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<'all' | 'movie' | 'series'>('all');
   const [selectedQuality, setSelectedQuality] = useState<string>('all');
   const [includeWatchedInAll, setIncludeWatchedInAll] = useState(true);
   const [sortBy, setSortBy] = useState<
@@ -68,12 +67,6 @@ export const App: React.FC = () => {
       if (currentTab === 'ready' && !ready) return false;
       if (currentTab === 'unreleased' && !isItemUnreleased(item)) return false;
       if (currentTab === 'pending' && (ready || isItemUnreleased(item))) return false;
-    }
-
-    // Media type filter
-    if (selectedType !== 'all') {
-      const itType = item.type || 'movie';
-      if (itType !== selectedType) return false;
     }
 
     // Quality filter
@@ -197,18 +190,16 @@ export const App: React.FC = () => {
   // Reset to first page when changing tabs, lists, or itemsPerPage
   useEffect(() => {
     setCurrentPage(1);
-  }, [currentTab, activeCustomListId, selectedType, selectedQuality, searchQuery, sortBy, itemsPerPage, includeWatchedInAll]);
+  }, [currentTab, activeCustomListId, selectedQuality, searchQuery, sortBy, itemsPerPage, includeWatchedInAll]);
 
   const hasActiveFilters =
     searchQuery !== '' ||
-    selectedType !== 'all' ||
     selectedQuality !== 'all' ||
     sortBy !== 'added_desc' ||
     (currentTab === 'all' && !includeWatchedInAll);
 
   const clearFilters = () => {
     setSearchQuery('');
-    setSelectedType('all');
     setSelectedQuality('all');
     setSortBy('added_desc');
     setIncludeWatchedInAll(true);
@@ -417,19 +408,6 @@ export const App: React.FC = () => {
 
                 {/* Dropdowns group */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  {/* Media Type Filter */}
-                  <div className="relative">
-                    <select
-                      value={selectedType}
-                      onChange={(e) => setSelectedType(e.target.value as any)}
-                      className="bg-[#1e2235] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-purple-500/60 cursor-pointer hover:border-white/20 transition-colors"
-                    >
-                      <option value="all">🎬 All Types</option>
-                      <option value="movie">🎥 Movies</option>
-                      <option value="series">📺 Series</option>
-                    </select>
-                  </div>
-
                   {/* Quality Filter */}
                   <div className="relative">
                     <select

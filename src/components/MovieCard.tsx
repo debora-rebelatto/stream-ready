@@ -35,10 +35,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
     // If click is on an interactive button or select, do not navigate
     if ((e.target as HTMLElement).closest('button, select, input, label')) return;
 
-    const stremioDeepLink =
-      item.type === 'series'
-        ? `stremio:///detail/series/${item.id}`
-        : `stremio:///detail/movie/${item.id}/${item.id}`;
+    const stremioDeepLink = `stremio:///detail/movie/${item.id}/${item.id}`;
     window.location.href = stremioDeepLink;
   };
 

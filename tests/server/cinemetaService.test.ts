@@ -50,6 +50,23 @@ describe('Backend CinemetaService (server/services/cinemetaService.ts)', () => {
       expect(res[0].genres).toContain('Sci-Fi');
     });
 
+    test('deve filtrar e não retornar séries no resultado de busca', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          metas: [
+            { id: 'tt0903747', name: 'Breaking Bad', type: 'series' },
+            { id: 'tt0816692', name: 'Interstellar', type: 'movie' }
+          ]
+        })
+      });
+
+      const res = await searchMovies('Breaking');
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe('tt0816692');
+      expect(res[0].name).toBe('Interstellar');
+    });
+
     test('deve retornar vazio se a API retornar erro HTTP', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: false,
@@ -98,6 +115,22 @@ describe('Backend CinemetaService (server/services/cinemetaService.ts)', () => {
       });
 
       const meta = await getMeta('movie', 'tt0000000');
+      expect(meta).toBeNull();
+    });
+
+    test('deve retornar null se o item for uma série', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          meta: {
+            id: 'tt0903747',
+            name: 'Breaking Bad',
+            type: 'series'
+          }
+        })
+      });
+
+      const meta = await getMeta('series', 'tt0903747');
       expect(meta).toBeNull();
     });
 

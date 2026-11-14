@@ -489,7 +489,8 @@ app.get('/api/search', async (req, res) => {
     const query = req.query.q || '';
     if (!query.trim()) return res.json([]);
     const results = await searchMovies(query);
-    res.json(results);
+    const movieOnlyResults = (results || []).filter(item => !item.type || item.type === 'movie');
+    res.json(movieOnlyResults);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -504,6 +505,9 @@ app.post('/api/items', async (req, res) => {
     }
 
     let { id, type = 'movie' } = req.body;
+    if (type === 'series') {
+      return res.status(400).json({ error: 'Only movies are supported. Series cannot be added.' });
+    }
     if (!id) return res.status(400).json({ error: 'Movie ID is required (e.g. tt1234567)' });
 
     // Handle full IMDb URLs (e.g. https://www.imdb.com/title/tt1234567/)
@@ -519,17 +523,17 @@ app.post('/api/items', async (req, res) => {
     }
 
     // Fetch Cinemeta metadata
-    const meta = await getMeta(type, id);
-    if (!meta) {
-      return res.status(404).json({ error: `Could not find metadata for ${id}` });
+    const meta = await getMeta('movie', id);
+    if (!meta || (meta.type && meta.type !== 'movie')) {
+      return res.status(400).json({ error: 'Only movies are supported. Series cannot be added.' });
     }
 
     // Immediately check stream quality
-    const quality = await checkMovieQuality(id, type);
+    const quality = await checkMovieQuality(id, 'movie');
 
     const saved = await db.addItem({
       id: meta.id,
-      type: meta.type || type,
+      type: 'movie',
       name: meta.name,
       year: meta.year,
       poster: meta.poster,
