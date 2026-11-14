@@ -4,24 +4,31 @@ import crypto from 'crypto';
 
 // Garante que o .env esteja carregado antes de derivar as chaves
 const currentDir = typeof __dirname !== 'undefined' ? __dirname : (import.meta.dirname || process.cwd());
-const ENV_FILE = path.join(currentDir, '..', '..', '.env');
-if (fs.existsSync(ENV_FILE)) {
-  try {
-    const envLines = fs.readFileSync(ENV_FILE, 'utf-8').split(/\r?\n/);
-    for (const line of envLines) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) continue;
-      const eqIdx = trimmed.indexOf('=');
-      if (eqIdx > 0) {
-        const key = trimmed.slice(0, eqIdx).trim();
-        const val = trimmed.slice(eqIdx + 1).trim().replace(/^['"]|['"]$/g, '');
-        if (!process.env[key]) {
-          process.env[key] = val;
+const envCandidates = [
+  path.join(process.cwd(), '.env'),
+  path.join(currentDir, '..', '.env'),
+  path.join(currentDir, '..', '..', '.env')
+];
+for (const ENV_FILE of envCandidates) {
+  if (fs.existsSync(ENV_FILE)) {
+    try {
+      const envLines = fs.readFileSync(ENV_FILE, 'utf-8').split(/\r?\n/);
+      for (const line of envLines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx > 0) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          const val = trimmed.slice(eqIdx + 1).trim().replace(/^['"]|['"]$/g, '');
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
         }
       }
+      break;
+    } catch (e) {
+      // Ignora erro se não conseguir ler .env
     }
-  } catch (e) {
-    // Ignora erro se não conseguir ler .env
   }
 }
 

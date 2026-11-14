@@ -3,11 +3,11 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const db = require('./lib/db');
-const { checkMovieQuality } = require('./server/services/qualityCheckerService.ts');
-const { searchMovies, getMeta } = require('./server/services/cinemetaService.ts');
-const { getManifest, handleCatalog, handleMeta } = require('./server/services/stremioAddonService.ts');
-const { loginStremio, getUserInfo, getAccountWatchlist, saveAccountWatchlist } = require('./server/services/stremioAuthService.ts');
-const { encodeUserData, decodeUserData } = require('./server/services/userDataService.ts');
+const { checkMovieQuality } = require('./lib/qualityChecker');
+const { searchMovies, getMeta } = require('./lib/cinemeta');
+const { getManifest, handleCatalog, handleMeta } = require('./lib/stremioAddon');
+const { loginStremio, getUserInfo, getAccountWatchlist, saveAccountWatchlist } = require('./lib/stremioAuth');
+const { encodeUserData, decodeUserData } = require('./lib/userData');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
