@@ -43,7 +43,7 @@ export const App: React.FC = () => {
   const [selectedQuality, setSelectedQuality] = useState<string>('all');
   const [includeWatchedInAll, setIncludeWatchedInAll] = useState(true);
   const [sortBy, setSortBy] = useState<
-    'added_desc' | 'added_asc' | 'year_desc' | 'year_asc' | 'title_asc' | 'title_desc' | 'streams_desc'
+    'added_desc' | 'added_asc' | 'rating_desc' | 'rating_asc' | 'year_desc' | 'year_asc' | 'title_asc' | 'title_desc' | 'streams_desc'
   >('added_desc');
 
   // Filter items
@@ -115,6 +115,38 @@ export const App: React.FC = () => {
         const da = a.addedAt ? new Date(a.addedAt).getTime() : 0;
         const db = b.addedAt ? new Date(b.addedAt).getTime() : 0;
         return da - db;
+      }
+      case 'rating_desc': {
+        const ra = parseFloat(String(a.imdbRating || '0')) || 0;
+        const rb = parseFloat(String(b.imdbRating || '0')) || 0;
+        if (ra !== rb) {
+          if (ra === 0) return 1;
+          if (rb === 0) return -1;
+          return rb - ra;
+        }
+        const ya = getYearNum(a.year);
+        const yb = getYearNum(b.year);
+        if (ya !== yb) return yb - ya;
+        const da = a.addedAt ? new Date(a.addedAt).getTime() : 0;
+        const db = b.addedAt ? new Date(b.addedAt).getTime() : 0;
+        if (da !== db) return db - da;
+        return (a.name || '').localeCompare(b.name || '');
+      }
+      case 'rating_asc': {
+        const ra = parseFloat(String(a.imdbRating || '0')) || 0;
+        const rb = parseFloat(String(b.imdbRating || '0')) || 0;
+        if (ra !== rb) {
+          if (ra === 0) return 1;
+          if (rb === 0) return -1;
+          return ra - rb;
+        }
+        const ya = getYearNum(a.year);
+        const yb = getYearNum(b.year);
+        if (ya !== yb) return ya - yb;
+        const da = a.addedAt ? new Date(a.addedAt).getTime() : 0;
+        const db = b.addedAt ? new Date(b.addedAt).getTime() : 0;
+        if (da !== db) return da - db;
+        return (b.name || '').localeCompare(a.name || '');
       }
       case 'year_desc': {
         const ya = getYearNum(a.year);
@@ -443,6 +475,8 @@ export const App: React.FC = () => {
                     >
                       <option value="added_desc">↕️ Added: Newest First</option>
                       <option value="added_asc">↕️ Added: Oldest First</option>
+                      <option value="rating_desc">⭐ Rating: Highest First</option>
+                      <option value="rating_asc">⭐ Rating: Lowest First</option>
                       <option value="year_desc">📅 Year: Newest First</option>
                       <option value="year_asc">📅 Year: Oldest First</option>
                       <option value="title_asc">🔤 Title: A → Z</option>

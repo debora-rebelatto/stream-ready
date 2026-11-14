@@ -533,6 +533,7 @@ app.post('/api/items', async (req, res) => {
       name: meta.name,
       year: meta.year,
       poster: meta.poster,
+      imdbRating: meta.imdbRating ? String(meta.imdbRating) : '',
       has1080pPlus: quality.has1080pPlus,
       bestQuality: quality.bestQuality,
       streamCount: quality.streamCount,

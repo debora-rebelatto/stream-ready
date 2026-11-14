@@ -79,20 +79,23 @@ export function getManifest(hostUrl: string = '', userId: string = ''): AddonMan
     } catch (e) {}
   }
 
+  const isConfigured = Boolean(userId);
+  const websiteUrl = hostUrl || 'https://stremiowatchlist.vercel.app';
+
   return {
     id: 'community.watchlist.quality.tracker',
-    version: '1.4.0',
+    version: '1.4.1',
     name: 'Watchlist (Good Quality Tracker)',
-    description: 'Personal watchlist that automatically tracks when movies become available in good quality (HD, Full HD, 4K).',
-    logo: hostUrl ? `${hostUrl}/icon.png` : undefined,
-    background: hostUrl ? `${hostUrl}/background.jpg` : undefined,
+    description: 'Tracks when your movies release in good quality (HD, 1080p, 4K). ⚠️ IMPORTANT: Add movies to your watchlist via the website: ' + websiteUrl,
+    logo: hostUrl ? `${hostUrl}/icon.png` : 'https://stremiowatchlist.vercel.app/icon.png',
+    background: hostUrl ? `${hostUrl}/background.jpg` : 'https://stremiowatchlist.vercel.app/background.jpg',
     resources: ['catalog', 'meta'],
     types: ['movie', 'series'],
     catalogs: allCatalogs,
-    idPrefixes: ['tt'],
+    idPrefixes: ['tt', 'guide_'],
     behaviorHints: {
       configurable: true,
-      configurationRequired: false
+      configurationRequired: !isConfigured
     }
   };
 }
@@ -150,8 +153,24 @@ export async function handleCatalog(
 ): Promise<CatalogResponse> {
   await db.ensureLoaded();
 
-  // Without an authenticated user, return empty catalog
+  // Without an authenticated user, return an informative guide item for main catalogs
   if (!userId) {
+    if (catalogId === 'watchlist_ready' || catalogId === 'watchlist_all') {
+      return {
+        metas: [
+          {
+            id: 'guide_configure',
+            type: 'movie',
+            name: '👉 Setup Required: Visit stremiowatchlist.vercel.app',
+            poster: 'https://stremiowatchlist.vercel.app/icon.png',
+            posterShape: 'regular',
+            banner: 'https://stremiowatchlist.vercel.app/background.jpg',
+            genres: ['⚠️ Notice', 'Setup Required'],
+            description: 'To manage your Watchlist and track good quality releases, connect your account and add movies on the website:\n\n🌐 https://stremiowatchlist.vercel.app/\n\n1. Open the website in your browser\n2. Connect your Stremio account\n3. Search and add any movies you want to track!'
+          }
+        ]
+      };
+    }
     return { metas: [] };
   }
 
@@ -164,6 +183,24 @@ export async function handleCatalog(
   const settings = db.getSettings(userId);
   const minQuality = settings?.minQuality || '1080p';
   const allItems = db.getItems(userId);
+
+  // If user has no movies added yet, show a friendly guide item
+  if (allItems.length === 0 && (catalogId === 'watchlist_ready' || catalogId === 'watchlist_all')) {
+    return {
+      metas: [
+        {
+          id: 'guide_empty_watchlist',
+          type: 'movie',
+          name: '👉 Empty Watchlist: Add movies via stremiowatchlist.vercel.app',
+          poster: 'https://stremiowatchlist.vercel.app/icon.png',
+          posterShape: 'regular',
+          banner: 'https://stremiowatchlist.vercel.app/background.jpg',
+          genres: ['ℹ️ Tip', 'Add on Website'],
+          description: 'Your watchlist is empty! Movies must be added through the website:\n\n🌐 https://stremiowatchlist.vercel.app/\n\nSearch and add any movie on the website. The addon will monitor releases 24/7 and notify you in Stremio when good quality (1080p / 4K) arrives!'
+        }
+      ]
+    };
+  }
 
   let filtered = allItems;
 
@@ -198,6 +235,34 @@ export async function handleCatalog(
 }
 
 export async function handleMeta(type: string, id: string, userId: string = ''): Promise<MetaResponse> {
+  if (id === 'guide_configure') {
+    return {
+      meta: {
+        id: 'guide_configure',
+        type: 'movie',
+        name: '👉 Setup Required: Visit stremiowatchlist.vercel.app',
+        poster: 'https://stremiowatchlist.vercel.app/icon.png',
+        banner: 'https://stremiowatchlist.vercel.app/background.jpg',
+        genres: ['⚠️ Notice', 'Setup Required'],
+        description: 'To use your Watchlist and track releases in good quality:\n\n1. Open the website in your browser: https://stremiowatchlist.vercel.app/\n2. Connect your Stremio account\n3. Search and add movies using the search bar!\n\nOnce added on the website, they will automatically appear here in Stremio!'
+      }
+    };
+  }
+
+  if (id === 'guide_empty_watchlist') {
+    return {
+      meta: {
+        id: 'guide_empty_watchlist',
+        type: 'movie',
+        name: '👉 Empty Watchlist: Add movies via stremiowatchlist.vercel.app',
+        poster: 'https://stremiowatchlist.vercel.app/icon.png',
+        banner: 'https://stremiowatchlist.vercel.app/background.jpg',
+        genres: ['ℹ️ Tip', 'Add on Website'],
+        description: 'Your watchlist currently has no movies added.\n\n⚠️ Movies must be added directly through the website:\n🌐 https://stremiowatchlist.vercel.app/\n\nOpen the website, search for any movie and click "+ Add to Watchlist". The addon will monitor quality automatically and notify you once it releases in 1080p or 4K!'
+      }
+    };
+  }
+
   await db.ensureLoaded();
   const watchlistItem = userId ? db.getItem(id, userId) : null;
   const cinemetaMeta = await fetchCinemetaMeta(type, id);

@@ -155,10 +155,18 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
             <span className="font-semibold text-gray-300 bg-white/5 px-1.5 py-0.5 rounded text-[11px] border border-white/5">
               {item.year || 'No year'}
             </span>
-            {item.imdbRating && (
-              <span className="flex items-center gap-1 text-amber-400 font-semibold">
-                <Star size={11} fill="currentColor" />
-                {item.imdbRating}
+            {item.imdbRating && String(item.imdbRating) !== 'N/A' && String(item.imdbRating).trim() !== '' ? (
+              <span
+                className="inline-flex items-center gap-1 text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded text-[11px] border border-amber-500/20 shadow-xs"
+                title={`IMDb Rating: ${item.imdbRating}/10`}
+              >
+                <Star size={11} className="fill-amber-400 text-amber-400" />
+                <span>{item.imdbRating}</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-gray-500 text-[11px]" title="No rating yet">
+                <Star size={11} className="text-gray-500" />
+                <span>N/A</span>
               </span>
             )}
           </div>

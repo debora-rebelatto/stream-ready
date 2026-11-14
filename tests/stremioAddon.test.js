@@ -39,9 +39,23 @@ describe('Stremio Addon Module (lib/stremioAddon.js)', () => {
   });
 
   describe('handleCatalog', () => {
-    test('deve retornar metas vazio se userId não for informado', async () => {
+    test('deve retornar card de guia se userId não for informado em catálogo principal', async () => {
       const result = await handleCatalog('movie', 'watchlist_ready');
-      expect(result).toEqual({ metas: [] });
+      expect(result.metas).toHaveLength(1);
+      expect(result.metas[0].id).toBe('guide_configure');
+    });
+
+    test('deve retornar vazio se userId não for informado em catálogo secundário', async () => {
+      const result = await handleCatalog('movie', 'watchlist_pending');
+      expect(result.metas).toEqual([]);
+    });
+
+    test('deve retornar card explicativo quando watchlist do usuário estiver vazia', async () => {
+      db.getItems.mockReturnValue([]);
+      const result = await handleCatalog('movie', 'watchlist_ready', {}, 'user123');
+      expect(result.metas).toHaveLength(1);
+      expect(result.metas[0].id).toBe('guide_empty_watchlist');
+      expect(result.metas[0].name).toContain('Empty Watchlist');
     });
 
     test('deve retornar metas filtrados de watchlist_ready', async () => {

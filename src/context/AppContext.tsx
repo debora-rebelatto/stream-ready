@@ -2,9 +2,29 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { WatchlistItem, WatchlistStats, StremioUser, ToastMessage, CustomList } from '../types';
 import { authService } from '../services/authService';
 import { watchlistService } from '../services/watchlistService';
+import { cinemetaService } from '../services/cinemetaService';
 import { api } from '../lib/api';
 import { isItemReady, isItemUnreleased } from '../lib/utils';
 import { AuthContext, WatchlistContext, ToastContext, useToast } from './useAppContext';
+
+const RATINGS_CACHE_KEY = 'stremio_ratings_cache';
+
+function getStoredRatings(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(RATINGS_CACHE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveStoredRatings(ratings: Record<string, string>) {
+  try {
+    localStorage.setItem(RATINGS_CACHE_KEY, JSON.stringify(ratings));
+  } catch {
+    // ignore
+  }
+}
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -116,20 +136,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return;
       }
       const loadedItems = res.items || [];
-      const unwatched = loadedItems.filter((i) => !i.isWatched);
+      const storedRatings = getStoredRatings();
+      let updatedRatings = false;
+
+      const itemsWithRatings = loadedItems.map((item) => {
+        const rating = (item.imdbRating && String(item.imdbRating) !== 'N/A') ? String(item.imdbRating) : (storedRatings[item.id] || '');
+        if (item.imdbRating && !storedRatings[item.id]) {
+          storedRatings[item.id] = String(item.imdbRating);
+          updatedRatings = true;
+        }
+        return rating ? { ...item, imdbRating: rating } : item;
+      });
+
+      if (updatedRatings) {
+        saveStoredRatings(storedRatings);
+      }
+
+      const unwatched = itemsWithRatings.filter((i) => !i.isWatched);
       const ready = unwatched.filter((i) => isItemReady(i, globalMinQuality)).length;
       const unreleased = unwatched.filter((i) => !isItemReady(i, globalMinQuality) && isItemUnreleased(i)).length;
       const pending = unwatched.filter((i) => !isItemReady(i, globalMinQuality) && !isItemUnreleased(i)).length;
-      const watched = loadedItems.filter((i) => Boolean(i.isWatched)).length;
+      const watched = itemsWithRatings.filter((i) => Boolean(i.isWatched)).length;
 
-      setItems(loadedItems);
+      setItems(itemsWithRatings);
       setStats({
-        total: loadedItems.length,
+        total: itemsWithRatings.length,
         ready,
         pending,
         unreleased,
         watched,
       });
+
+      // Background rating enrichment for any items missing ratings
+      const missingRatings = itemsWithRatings.filter((i) => !i.imdbRating && i.id);
+      if (missingRatings.length > 0) {
+        (async () => {
+          let hasNew = false;
+          const currentStored = getStoredRatings();
+          for (const item of missingRatings) {
+            try {
+              const meta = await cinemetaService.getMeta(item.type || 'movie', item.id);
+              if (meta?.imdbRating) {
+                currentStored[item.id] = String(meta.imdbRating);
+                hasNew = true;
+              }
+            } catch {
+              // ignore
+            }
+          }
+          if (hasNew) {
+            saveStoredRatings(currentStored);
+            setItems((prev) =>
+              prev.map((i) => (currentStored[i.id] ? { ...i, imdbRating: currentStored[i.id] } : i))
+            );
+          }
+        })();
+      }
     } catch {
       showToast('Error loading watchlist items.', 'error');
     } finally {
@@ -191,7 +253,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await authService.installToAccount();
       if (res.success) {
-        showToast('🎉 Success! The addon was installed directly on your Stremio account!', 'success');
+        showToast('🎉 Addon installed to Stremio! Remember to search and add your movies here on the website.', 'success');
         return { success: true };
       }
       showToast(res.error || 'Failed to install to account.', 'error');

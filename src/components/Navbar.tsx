@@ -40,6 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
   const handleInstallClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (installUrl) {
+      showToast('🎬 Reminder: After installing in Stremio, use the search bar on this site to add movies!', 'info');
       window.location.href = installUrl;
     }
   };
