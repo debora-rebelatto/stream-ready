@@ -35,8 +35,9 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
     // If click is on an interactive button or select, do not navigate
     if ((e.target as HTMLElement).closest('button, select, input, label')) return;
 
-    const stremioDeepLink = `stremio:///detail/movie/${item.id}/${item.id}`;
-    window.location.href = stremioDeepLink;
+    // Opens directly in Stremio Web in a new tab (guaranteed to work across all browsers, mobile and desktop)
+    const stremioWebLink = `https://web.stremio.com/#/detail/movie/${item.id}/${item.id}`;
+    window.open(stremioWebLink, '_blank', 'noopener,noreferrer');
   };
 
   const handleToggleWatched = (e: React.MouseEvent) => {
@@ -70,7 +71,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
           ? 'border-amber-500/50 hover:border-amber-400 shadow-amber-500/10'
           : 'border-white/10 hover:border-white/25'
       }`}
-      title="Click to open in Stremio"
+      title="Click to open in Stremio Web"
     >
       {/* Poster */}
       <div className="relative aspect-[2/3] w-full bg-[#1e2235] overflow-hidden rounded-t-xl">
