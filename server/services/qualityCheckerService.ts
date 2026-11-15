@@ -1,11 +1,12 @@
 import type { StreamItem, ParsedStreams, QualityCheckResult } from '../types';
+import { getMeta } from './cinemetaService.ts';
 
 /**
  * 1. Theater rip / camcorder video and audio patterns (CAM / TS / Screener)
  */
 export function isCamStream(text: string): boolean {
   // Theater video patterns (CAM, Telesync, Telecine, Screener, Workprint)
-  const camVideo = /\b(cam|camrip|cam-rip|hdcam|hd-cam|telesync|ts|hdts|hd-ts|tsrip|telecine|tc|hdtc|screener|scr|dvdscr|dvd-scr|bdscr|workprint|wp|predvd|pdvd)\b/i;
+  const camVideo = /\b(cam|camrip|cam-rip|hdcam|hd-cam|telesync|ts|hdts|hd-ts|tsrip|telecine|tc|hdtc|screener|scr|dvdscr|dvd-scr|bdscr|workprint|wp|predvd|pdvd|cinema|theater|theatre|gravacao|gravado|gravada)\b/i;
   // Theater / mic audio patterns (e.g. AUDIONEW, NEW AUDIO, LINE AUDIO, HQMIC)
   const camAudio = /\b(audionew|audio-new|audio\.new|newaudio|new-audio|new\.audio|cleanaudio|clean-audio|clean\.audio|lineaudio|line-audio|line\.audio|linesound|line-sound|hqmic|hq-mic|mic-audio|mic\.audio)\b/i;
   // Hardcoded CAM subtitles
@@ -31,10 +32,56 @@ export function hasCleanSource(text: string): boolean {
 }
 
 /**
+ * Verifies if a stream filename or title actually corresponds to the movie name.
+ * Prevents completely unrelated / poisoned torrents from triggering false positive "Ready" statuses.
+ */
+export function isStreamMatchingTitle(streamText: string, movieName?: string): boolean {
+  if (!movieName || movieName.trim().length === 0) return true;
+
+  const cleanName = movieName.toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const stopWords = new Set([
+    'the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'at', 'to', 'for', 'with', 'by', 'from',
+    'o', 'a', 'os', 'as', 'de', 'do', 'da', 'em', 'um', 'uma', 'e', 'ou'
+  ]);
+
+  const words = cleanName.split(' ')
+    .filter(w => w.length >= 2 && !stopWords.has(w));
+
+  if (words.length === 0) {
+    const rawClean = movieName.toLowerCase().replace(/[^\w]/g, '');
+    const targetClean = streamText.toLowerCase().replace(/[^\w]/g, '');
+    return targetClean.includes(rawClean);
+  }
+
+  const cleanStream = streamText.toLowerCase().replace(/[^\w\s]/g, ' ');
+  let matchedWords = 0;
+  for (const word of words) {
+    if (cleanStream.includes(word)) {
+      matchedWords++;
+    }
+  }
+
+  const requiredMatches = words.length <= 2 ? 1 : Math.ceil(words.length * 0.4);
+  return matchedWords >= requiredMatches;
+}
+
+/**
+ * Helper to extract seed count from Torrentio stream title if present
+ */
+function getStreamSeedCount(title: string): number | null {
+  const match = title.match(/👤\s*(\d+)/);
+  return match ? parseInt(match[1], 10) : null;
+}
+
+/**
  * Analyzes streams returned by the provider (e.g. Torrentio)
  * to identify whether the movie already has a confirmed good quality release.
  */
-export function parseStreams(streams: StreamItem[]): ParsedStreams {
+export function parseStreams(streams: StreamItem[], movieName?: string): ParsedStreams {
   if (!streams || !Array.isArray(streams) || streams.length === 0) {
     return {
       has1080pPlus: false,
@@ -55,6 +102,7 @@ export function parseStreams(streams: StreamItem[]): ParsedStreams {
   let hasCleanOther = false;
   let hasCam = false;
   let cleanStreamCount = 0;
+  let maxCleanSeeds: number | null = null;
 
   for (const stream of streams) {
     const streamName = stream.name || '';
@@ -63,6 +111,11 @@ export function parseStreams(streams: StreamItem[]): ParsedStreams {
     const filename = stream.behaviorHints?.filename || '';
 
     const fullText = `${streamName} ${streamTitle} ${bingeGroup} ${filename}`.toLowerCase();
+
+    // 1. Verify stream corresponds to this movie if movieName is known
+    if (movieName && !isStreamMatchingTitle(fullText, movieName)) {
+      continue;
+    }
 
     const isCam = isCamStream(fullText);
     const isClean = !isCam && hasCleanSource(fullText);
@@ -73,6 +126,12 @@ export function parseStreams(streams: StreamItem[]): ParsedStreams {
     }
 
     if (isClean) {
+      const seeds = getStreamSeedCount(streamTitle);
+      if (seeds !== null) {
+        if (maxCleanSeeds === null || seeds > maxCleanSeeds) {
+          maxCleanSeeds = seeds;
+        }
+      }
       cleanStreamCount++;
 
       if (/2160p|4k\b|uhd/i.test(fullText)) {
@@ -87,6 +146,15 @@ export function parseStreams(streams: StreamItem[]): ParsedStreams {
     } else {
       hasCam = true;
     }
+  }
+
+  // If CAM dominates and there is only 1 isolated clean stream with explicitly <= 1 seed, treat as unconfirmed / poisoned
+  if (hasCam && cleanStreamCount === 1 && maxCleanSeeds !== null && maxCleanSeeds <= 1) {
+    cleanStreamCount = 0;
+    has4k = false;
+    has1080 = false;
+    has720 = false;
+    hasCleanOther = false;
   }
 
   // Movie is READY when it has at least one confirmed good quality source
@@ -120,9 +188,22 @@ export function parseStreams(streams: StreamItem[]): ParsedStreams {
 /**
  * Queries Torrentio to check streams for a movie by IMDb ID.
  */
-export async function checkMovieQuality(imdbId: string, type: string = 'movie'): Promise<QualityCheckResult> {
+export async function checkMovieQuality(
+  imdbId: string,
+  type: string = 'movie',
+  movieName?: string
+): Promise<QualityCheckResult> {
   const baseUrl = (process.env.TORRENTIO_URL || 'https://torrentio.strem.fun').replace(/\/+$/, '');
   
+  if (!movieName) {
+    try {
+      const meta = await getMeta(type, imdbId);
+      if (meta && meta.name) {
+        movieName = meta.name;
+      }
+    } catch {}
+  }
+
   // Stremio stream URL format: {baseUrl}/stream/{type}/{id}.json
   const url = `${baseUrl}/stream/${type}/${imdbId}.json`;
 
@@ -157,7 +238,7 @@ export async function checkMovieQuality(imdbId: string, type: string = 'movie'):
     }
 
     const data: any = await res.json();
-    return parseStreams(data.streams || []);
+    return parseStreams(data.streams || [], movieName);
   } catch (err: any) {
     console.warn(`[QualityChecker] Warning checking ${imdbId}:`, err.message);
     return {

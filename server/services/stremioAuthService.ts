@@ -187,12 +187,18 @@ export async function saveAccountWatchlist(
   authKey: string,
   baseUrl: string,
   items: any[],
-  baseManifest: any
+  baseManifest: any,
+  userId?: string
 ): Promise<boolean> {
   if (!authKey) return false;
   try {
-    const encoded = encodeUserData(authKey, items);
-    const manifestUrl = `${baseUrl}/${encoded}/manifest.json`;
+    const effectiveBaseUrl = (baseUrl && !baseUrl.includes('localhost'))
+      ? baseUrl.replace(/\/+$/, '')
+      : (process.env.PUBLIC_URL || 'https://stremiowatchlist.vercel.app');
+
+    const manifestUrl = userId
+      ? `${effectiveBaseUrl}/${userId}/manifest.json`
+      : `${effectiveBaseUrl}/${encodeUserData(authKey, items)}/manifest.json`;
 
     const getRes = await fetch(`${STREMIO_API}/addonCollectionGet`, {
       method: 'POST',

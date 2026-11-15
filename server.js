@@ -93,9 +93,12 @@ async function getRequestUser(req) {
 async function syncAddonUrlWithAccount(authKey, baseUrl, userId) {
   if (!authKey || !userId) return;
   try {
+    const effectiveBaseUrl = (baseUrl && !baseUrl.includes('localhost'))
+      ? baseUrl.replace(/\/+$/, '')
+      : (process.env.PUBLIC_URL || 'https://stremiowatchlist.vercel.app');
     const items = db.getItems(userId);
-    const manifest = getManifest(baseUrl, userId);
-    await saveAccountWatchlist(authKey, baseUrl, items, manifest);
+    const manifest = getManifest(effectiveBaseUrl, userId);
+    await saveAccountWatchlist(authKey, effectiveBaseUrl, items, manifest, userId);
   } catch (err) {
     console.warn('[AddonSync] Aviso ao sincronizar URL do addon:', err.message);
   }
@@ -126,7 +129,7 @@ function triggerUserOnDemandSync(authKey, userId) {
       // 2. Confere qualidade dos filmes pendentes deste usuário
       const pendingItems = db.getItems(userId).filter(i => !i.has1080pPlus && !i.isWatched);
       for (const item of pendingItems.slice(0, 5)) {
-        const q = await checkMovieQuality(item.id, item.type || 'movie');
+        const q = await checkMovieQuality(item.id, item.type || 'movie', item.name);
         if (q && q.has1080pPlus) {
           await db.updateItem(item.id, {
             has1080pPlus: q.has1080pPlus,
@@ -529,7 +532,7 @@ app.post('/api/items', async (req, res) => {
     }
 
     // Immediately check stream quality
-    const quality = await checkMovieQuality(id, 'movie');
+    const quality = await checkMovieQuality(id, 'movie', meta.name);
 
     const saved = await db.addItem({
       id: meta.id,
@@ -567,7 +570,7 @@ app.post('/api/check/:id', async (req, res) => {
     const item = db.getItem(id, userId);
     if (!item) return res.status(404).json({ error: 'Item not found in watchlist' });
 
-    const quality = await checkMovieQuality(id, item.type || 'movie');
+    const quality = await checkMovieQuality(id, item.type || 'movie', item.name);
     const wasReady = item.has1080pPlus;
 
     const updated = await db.updateItem(id, {
@@ -603,7 +606,7 @@ app.post('/api/check-all', async (req, res) => {
     const results = [];
 
     for (const item of items) {
-      const quality = await checkMovieQuality(item.id, item.type || 'movie');
+      const quality = await checkMovieQuality(item.id, item.type || 'movie', item.name);
       const wasReady = item.has1080pPlus;
 
       const updated = await db.updateItem(item.id, {
@@ -727,7 +730,7 @@ app.post('/api/items/sync-batch', async (req, res) => {
         db.addItem(item, userId);
         added++;
         if (!item.bestQuality || item.bestQuality === 'Pending' || item.bestQuality === 'Pendente' || item.bestQuality === 'Checking...' || item.bestQuality === 'Verificando...') {
-          checkMovieQuality(item.id, item.type || 'movie').then(q => {
+          checkMovieQuality(item.id, item.type || 'movie', item.name).then(q => {
             if (q) db.updateItem(item.id, { has1080pPlus: q.has1080pPlus, bestQuality: q.bestQuality, streamCount: q.streamCount }, userId);
           }).catch(() => {});
         }
@@ -979,7 +982,7 @@ async function runBackgroundCheck() {
     if (allPending.length > 0) {
       console.log(`[AutoChecker] Checking ${allPending.length} items waiting for good quality...`);
       for (const { userId, item } of allPending) {
-        const quality = await checkMovieQuality(item.id, item.type || 'movie');
+        const quality = await checkMovieQuality(item.id, item.type || 'movie', item.name);
         if (quality.has1080pPlus) {
           console.log(`🎉 [NEW:${userId}] "${item.name}" is now available in ${quality.bestQuality}!`);
         }

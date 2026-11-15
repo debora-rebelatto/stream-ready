@@ -102,6 +102,18 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
       expect(res.isUnreleased).toBe(true);
       expect(res.isReady).toBe(false);
     });
+
+    test('deve desconsiderar torrents de outros filmes que não batem com o título do filme', () => {
+      const streams = [
+        { name: 'Torrentio', title: 'You.Can.See.Everything.2026.AUDIONEW.1080P\n👤 174' },
+        { name: 'Torrentio', title: 'Porrada 2026 WEB-DL 1080p x264 DUAL 5.1\n👤 1' },
+        { name: 'Torrentio', title: 'You.Can.See.Everything.2026.CAM.720p.EN-OnlyFlix\n👤 1027' }
+      ];
+      const res = parseStreams(streams, 'You Can See Everything');
+      expect(res.isReady).toBe(false);
+      expect(res.isCamOnly).toBe(true);
+      expect(res.bestQuality).toBe('CAM / Theater Rip');
+    });
   });
 
   test('objeto qualityCheckerService deve exportar as funções', () => {
