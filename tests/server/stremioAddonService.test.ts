@@ -9,6 +9,21 @@ import {
 } from '../../server/services/stremioAddonService.ts';
 
 describe('Backend StremioAddonService (server/services/stremioAddonService.ts)', () => {
+  const originalFetch = global.fetch;
+
+  beforeEach(() => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        meta: { id: 'tt9999999', name: 'Mock Movie', type: 'movie' }
+      })
+    });
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    jest.restoreAllMocks();
+  });
   describe('formatQualityLabel', () => {
     test('deve formatar labels de qualidade corretamente', () => {
       expect(formatQualityLabel(null)).toBe('Pending');

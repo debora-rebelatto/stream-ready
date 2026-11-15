@@ -93,12 +93,9 @@ async function getRequestUser(req) {
 async function syncAddonUrlWithAccount(authKey, baseUrl, userId) {
   if (!authKey || !userId) return;
   try {
-    const effectiveBaseUrl = (baseUrl && !baseUrl.includes('localhost'))
-      ? baseUrl.replace(/\/+$/, '')
-      : (process.env.PUBLIC_URL || 'https://stremiowatchlist.vercel.app');
     const items = db.getItems(userId);
-    const manifest = getManifest(effectiveBaseUrl, userId);
-    await saveAccountWatchlist(authKey, effectiveBaseUrl, items, manifest, userId);
+    const manifest = getManifest(baseUrl, userId);
+    await saveAccountWatchlist(authKey, baseUrl, items, manifest);
   } catch (err) {
     console.warn('[AddonSync] Aviso ao sincronizar URL do addon:', err.message);
   }
