@@ -242,7 +242,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         </div>
 
         {/* Footer */}
-        <div className="pt-4 border-t border-white/10 flex justify-end">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-white/10 bg-[#151824] flex justify-end shrink-0">
           <button
             onClick={onClose}
             className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#7b42f6] hover:bg-[#6a34e0] text-white text-xs font-bold transition-all shadow cursor-pointer"
