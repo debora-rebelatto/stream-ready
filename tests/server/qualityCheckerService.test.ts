@@ -20,6 +20,8 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
       expect(isCamStream('Avatar 2 HDTS x264 Clean Audio')).toBe(true);
       expect(isCamStream('Gladiator II 2024 TELESYNC NEW AUDIO')).toBe(true);
       expect(isCamStream('Wicked 2024 HQMIC 720p')).toBe(true);
+      expect(isCamStream('Clayface.(2026).(HQ-NoADS-NoLogo).1080p.10bit.x265.LD-AAC5.1.ITA.LD-AAC2.0.ENG.MTRx')).toBe(true);
+      expect(isCamStream('Movie 2026 HDCINE 1080p MD-AAC')).toBe(true);
     });
 
     test('deve retornar falso para releases digitais limpos', () => {
@@ -73,6 +75,36 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
       const res = parseStreams(streams);
       expect(res.isReady).toBe(true);
       expect(res.bestQuality).toBe('1080p FHD');
+    });
+
+    test('deve rejeitar stream falso com tamanho suspeito e/ou isolado com baixa contagem de seeds entre vários CAMs', () => {
+      const streams = [
+        {
+          name: 'Torrentio\n1080p',
+          title: 'Clayface.(2026).(HQ-NoADS-NoLogo).1080p.10bit.x265.LD-AAC5.1.ITA.LD-AAC2.0.ENG.MTRx\n👤 64 💾 1.61 GB'
+        },
+        {
+          name: 'Torrentio\n1080p',
+          title: 'Clayface (2026) 1080p AMZN WEB-DL DDP5 1 H 264-FLUX\n👤 5 💾 1 GB ⚙️ 1337x'
+        },
+        {
+          name: 'Torrentio\nCAM',
+          title: 'Clayface.2026.CAM .1080p.FR.EN-OnlyFlix\n👤 349 💾 4.59 GB'
+        },
+        {
+          name: 'Torrentio\nTeleSync',
+          title: 'Clayface.2026.1080p.TELESYNC.DL.x264-CLEANUP\n👤 247 💾 5.2 GB'
+        },
+        {
+          name: 'Torrentio\nCAM',
+          title: 'Clayface 2026 1080p CAM x264-OnlyFlix\n👤 38 💾 437.92 MB'
+        }
+      ];
+      const res = parseStreams(streams, 'Clayface');
+      expect(res.isReady).toBe(false);
+      expect(res.isCamOnly).toBe(true);
+      expect(res.bestQuality).toBe('CAM / Theater Rip');
+      expect(res.cleanStreamCount).toBe(0);
     });
   });
 
