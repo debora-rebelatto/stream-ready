@@ -316,19 +316,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const recheckAll = async () => {
     setIsCheckingAll(true);
-    showToast('Rechecking sources for all pending movies...', 'info');
+    showToast('Rechecking sources for all watchlist movies...', 'info');
     try {
-      const res = await watchlistService.recheckAll(false);
+      const res = await watchlistService.recheckAll(true);
       if (res.success) {
         if (res.newlyReady > 0) {
           showToast(`🎉 ${res.newlyReady} movie(s) are now ready in good quality!`, 'success');
         } else {
-          showToast('Check completed. No new good quality releases found yet.', 'info');
+          showToast('Check completed. Watchlist status updated.', 'info');
         }
         await refreshWatchlist();
       }
     } catch {
-      showToast('Error checking pending movies.', 'error');
+      showToast('Error checking movies.', 'error');
     } finally {
       setIsCheckingAll(false);
     }

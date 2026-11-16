@@ -593,9 +593,9 @@ app.post('/api/check-all', async (req, res) => {
     const { userId } = await getRequestUser(req);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { forceAll } = req.body;
-    let items = db.getItems(userId);
-    if (!forceAll) {
+    const { forceAll = true } = req.body || {};
+    let items = db.getItems(userId).filter(i => !i.isWatched);
+    if (forceAll === false) {
       items = items.filter(i => !i.has1080pPlus);
     }
 
@@ -610,7 +610,9 @@ app.post('/api/check-all', async (req, res) => {
         has1080pPlus: quality.has1080pPlus,
         bestQuality: quality.bestQuality,
         streamCount: quality.streamCount,
-        lastChecked: quality.checkedAt
+        count1080pPlus: quality.count1080pPlus,
+        lastChecked: quality.checkedAt,
+        checkError: quality.error || null
       }, userId);
 
       if (!wasReady && quality.has1080pPlus) {
