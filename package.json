@@ -28,11 +28,15 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@opentelemetry/exporter-logs-otlp-http": "^0.301.2",
+    "@opentelemetry/resources": "^3.1.1",
+    "@opentelemetry/sdk-logs": "^3.1.1",
     "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "lucide-react": "^1.72.0",
+    "posthog-js": "^1.450.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "tailwind-merge": "^3.7.0"

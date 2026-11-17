@@ -9,6 +9,7 @@ const { getManifest, handleCatalog, handleMeta } = require('./lib/stremioAddon')
 const { loginStremio, getUserInfo, getAccountWatchlist, saveAccountWatchlist } = require('./lib/stremioAuth');
 const { encodeUserData, decodeUserData } = require('./lib/userData');
 const { getCuratedLists, getCuratedListById, addCuratedListToUser } = require('./lib/curatedLists');
+const { logPostHog } = require('./lib/posthogLogs');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
@@ -1080,6 +1081,7 @@ async function runBackgroundCheck() {
 app.get('/api/cron', async (req, res) => {
   try {
     // Initiate background check asynchronously so serverless function responds without timeout
+    logPostHog('info', 'background_check_triggered', { trigger: 'cron_endpoint' });
     runBackgroundCheck().catch(err => console.error('[Cron Error]', err.message));
     res.json({ success: true, message: 'Automated background check triggered' });
   } catch (err) {
@@ -1111,6 +1113,7 @@ module.exports = app;
 if (!process.env.VERCEL) {
   app.listen(PORT, '0.0.0.0', async () => {
     await db.ensureLoaded(true);
+    logPostHog('info', 'server_started', { runtime: 'stateful_node' });
     console.log(`=======================================================`);
     console.log(`🚀 STREMIO WATCHLIST (GOOD QUALITY TRACKER) RUNNING`);
     console.log(`👉 Port: ${PORT}`);
