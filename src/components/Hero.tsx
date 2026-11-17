@@ -12,7 +12,7 @@ import {
   Send,
 } from 'lucide-react';
 import { pollService } from '../services';
-import { trackEvent } from '../lib/analytics';
+import { trackEvent } from '../utils';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
 import {
   FEATURE_OPTIONS,

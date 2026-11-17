@@ -1,4 +1,4 @@
-import type { SearchMovieResult } from '../types';
+import type { SearchMovieResult } from '../models';
 
 const CINEMETA_URL = 'https://v3-cinemeta.strem.io';
 

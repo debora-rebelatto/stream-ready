@@ -10,7 +10,7 @@ import { CustomListPills } from '../components/CustomListPills';
 import { DashboardFilterToolbar } from '../components/DashboardFilterToolbar';
 import { WatchlistGrid } from '../components/WatchlistGrid';
 import { Footer } from '../components/Footer';
-import { SettingsPage } from '../components/SettingsPage';
+import { SettingsPageView } from './SettingsPageView';
 import { ManageListsModal } from '../components/ManageListsModal';
 import { DeleteMovieModal } from '../components/DeleteMovieModal';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
@@ -77,7 +77,7 @@ export const UserDashboardView: React.FC = () => {
   if (currentView === 'settings') {
     return (
       <>
-        <SettingsPage
+        <SettingsPageView
           onBack={handleBackFromSettings}
           onOpenDeleteAccount={() => setIsDeleteAccountOpen(true)}
           onOpenInstallGuide={() => setIsInstallGuideOpen(true)}

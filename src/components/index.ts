@@ -4,6 +4,9 @@ export type { ButtonProps, ButtonVariant, ButtonSize, TabTheme } from './Button'
 export { Badge } from './Badge';
 export type { BadgeProps, BadgeVariant, BadgeSize } from './Badge';
 
+export { ModalShell } from './ModalShell';
+export type { ModalShellProps } from './ModalShell';
+
 export { Navbar } from './Navbar';
 export { Hero } from './Hero';
 export { MovieCard } from './MovieCard';
@@ -21,6 +24,15 @@ export { LoginModal } from './LoginModal';
 export { InstallGuideModal } from './InstallGuideModal';
 export { SettingsModal } from './SettingsModal';
 export { SettingsPage } from './SettingsPage';
+export { QualitySettingsCard } from './QualitySettingsCard';
+export { SyncSettingsCard } from './SyncSettingsCard';
+export { BackupSettingsCard } from './BackupSettingsCard';
+export { AccountDangerCard } from './AccountDangerCard';
+export { LandingHeroSection } from './LandingHeroSection';
+export { QualityComparisonSection } from './QualityComparisonSection';
+export { FeaturesGridSection } from './FeaturesGridSection';
+export { HowItWorksSection } from './HowItWorksSection';
+export { LandingFaqSection } from './LandingFaqSection';
 export { ManageListsModal } from './ManageListsModal';
 export { CuratedListsTab } from './CuratedListsTab';
 export { CustomListsTab } from './CustomListsTab';

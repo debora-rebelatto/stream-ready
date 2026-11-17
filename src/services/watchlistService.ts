@@ -1,7 +1,7 @@
-import { api } from '../lib/api';
+import { api } from '../utils';
 import { cinemetaService } from './cinemetaService';
 import { customListService } from './customListService';
-import type { WatchlistItem, WatchlistStats, SearchMovieResult } from '../types';
+import type { WatchlistItem, WatchlistStats, SearchMovieResult } from '../models';
 
 export const watchlistService = {
   /**

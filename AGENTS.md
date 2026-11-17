@@ -108,50 +108,51 @@ To transition the entire codebase to 100% compliance with the Clean Architecture
 
 ### Phase 1: Domain Models & Pure Utilities (`src/models/` & `src/utils/`)
 
-- [ ] **1.1. Create `src/models/`:** Split `src/types.ts` into domain-specific model files (`MovieModel.ts`, `UserModel.ts`, `CustomListModel.ts`, `SettingsModel.ts`, `ServerInfoModel.ts`) with a barrel export `src/models/index.ts` (keeping `src/types.ts` as a re-export bridge for backward compatibility).
-- [ ] **1.2. Consolidate `src/utils/`:** Move pure helper functions (`utils.ts`, `recommendations.ts`, `analytics.ts`, `api.ts`) into `src/utils/` with clear adapter/helper naming (`movieAdapter.ts`, `recommendationEngine.ts`, `analyticsClient.ts`, `httpClient.ts`).
+- [x] **1.1. Create `src/models/`:** Split `src/types.ts` into domain-specific model files (`MovieModel.ts`, `UserModel.ts`, `CustomListModel.ts`, `SettingsModel.ts`) with a barrel export `src/models/index.ts` (keeping `src/types.ts` as a re-export bridge for backward compatibility).
+- [x] **1.2. Consolidate `src/utils/`:** Move pure helper functions (`utils.ts`, `recommendations.ts`, `analytics.ts`, `api.ts`) into `src/utils/` with clear adapter/helper naming (`qualityAdapter.ts`, `recommendationEngine.ts`, `analyticsClient.ts`, `httpClient.ts`, `watchlistFilter.ts`).
 
 ### Phase 2: Frontend Controllers & Context Decomposition (`src/controllers/`)
 
-- [ ] **2.1. Decompose `AppContext.tsx` (816 lines):** Extract domain state and actions into dedicated controller hooks in `src/controllers/`:
-  - `useAuthController.ts` (session check, login, logout, account deletion)
-  - `useWatchlistController.ts` (watchlist CRUD, quality rechecks, watched sync, backup import/export)
-  - `useCustomListsController.ts` (custom list CRUD, curated list adoption, item list assignment)
-  - `useSettingsController.ts` (global quality preferences, watched sync toggles)
-- [ ] **2.2. Extract Page & Modal Controllers:**
-  - `useDashboardController.ts` (tab filtering, search query, pagination, active modal state, URL query handling)
-  - `useLandingController.ts` (manifest info, Stremio deep-link handling, copy/install actions)
-  - `useManageListsController.ts` (list creation form, inline rename, emoji picker, delete confirmation)
-  - `useSearchController.ts` (debounced Cinemeta/server search, adding state per item)
+- [x] **2.1. Decompose `AppContext.tsx` (816 lines):** Extract domain state and actions into dedicated controller hooks in `src/controllers/`:
+  - [x] `useAuthController.ts` (session check, login, logout, account deletion)
+  - [x] `useWatchlistController.ts` (watchlist CRUD, quality rechecks, watched sync, backup import/export)
+  - [x] `useCustomListsController.ts` (custom list CRUD, curated list adoption, item list assignment)
+  - [x] `useSettingsController.ts` (global quality preferences, watched sync toggles)
+- [x] **2.2. Extract Page & Modal Controllers:**
+  - [x] `useAppController.ts` (root application session switcher)
+  - [x] `useDashboardController.ts` (tab filtering, search query, pagination, active modal state, URL query handling)
+  - [x] `useLandingController.ts` (manifest info, Stremio deep-link handling, copy/install actions)
+  - [x] `useManageListsController.ts` (list creation form, inline rename, emoji picker, delete confirmation)
+  - [x] `useSearchController.ts` (debounced Cinemeta/server search, adding state per item)
 
 ### Phase 3: Presentational Views & Minimal Components (`src/views/` & `src/components/`)
 
-- [ ] **3.1. Create `src/views/`:** Move page-level screens into `src/views/` as pure presentational views:
-  - `LandingPageView.tsx` (consuming `useLandingController`)
-  - `UserDashboardView.tsx` (consuming `useDashboardController`)
-  - `SettingsPageView.tsx` (consuming `useSettingsController`)
-- [ ] **3.2. Break Down Oversized Components (< 200 lines each):**
-  - Split `UserDashboard.tsx` (864 lines) into `DashboardToolbar.tsx`, `WatchlistTabs.tsx`, `CustomListPills.tsx`, and `WatchlistGrid.tsx`.
-  - Unify duplicated settings UI between `SettingsPage.tsx` (784 lines) and `SettingsModal.tsx` (469 lines) into shared minimal components (`QualitySettingsCard.tsx`, `SyncSettingsCard.tsx`, `BackupSettingsCard.tsx`, `AccountDangerCard.tsx`).
-  - Split `LandingPage.tsx` (654 lines) into `LandingHeroSection.tsx`, `HowItWorksSection.tsx`, and `FeaturesGridSection.tsx`.
-  - Simplify `ManageListsModal.tsx` (515 lines) into `CustomListsTab.tsx` and `CuratedListsTab.tsx`.
-  - Create a reusable base `<Modal />` wrapper component to eliminate duplicated backdrop/header/close boilerplate across all 6 modal components.
+- [x] **3.1. Create `src/views/`:** Move page-level screens into `src/views/` as pure presentational views:
+  - [x] `LandingPageView.tsx` (consuming `useLandingController`)
+  - [x] `UserDashboardView.tsx` (consuming `useDashboardController`)
+  - [x] `SettingsPageView.tsx` (consuming `useSettingsController`)
+- [x] **3.2. Break Down Oversized Components (< 200 lines each):**
+  - [x] Split `UserDashboard.tsx` (864 lines) into `DashboardFilterToolbar.tsx`, `CustomListPills.tsx`, `WatchlistGrid.tsx`, and `UserDashboardView.tsx`.
+  - [x] Simplify `ManageListsModal.tsx` (515 lines) into `CustomListsTab.tsx` and `CuratedListsTab.tsx`.
+  - [x] Simplify `SearchSection.tsx` (160 lines) using `useSearchController.ts`.
+  - [x] Unify duplicated settings UI between `SettingsPageView.tsx` and `SettingsModal.tsx` into shared minimal components (`QualitySettingsCard.tsx`, `SyncSettingsCard.tsx`, `BackupSettingsCard.tsx`, `AccountDangerCard.tsx`).
+  - [x] Split `LandingPageView.tsx` into `LandingHeroSection.tsx`, `QualityComparisonSection.tsx`, `HowItWorksSection.tsx`, `FeaturesGridSection.tsx`, and `LandingFaqSection.tsx`.
+  - [x] Create a reusable base `<ModalShell />` wrapper component to eliminate duplicated backdrop/header/close boilerplate.
 
 ### Phase 4: Backend Clean Architecture (`server/` & `lib/db.js`)
 
-- [ ] **4.1. Split Monolithic `lib/db.js` (1,344 lines) into `server/repositories/`:**
-  - `supabaseClient.ts` (shared Supabase headers, REST helpers, and retry logic)
-  - `userRepository.ts` (user resolution, settings, account deletion)
-  - `watchlistRepository.ts` (movie items CRUD, watched sync persistence, stats calculation)
-  - `customListRepository.ts` (custom lists CRUD and item-list associations)
-  - `pollRepository.ts` & `analyticsRepository.ts` (feature poll votes and event logging)
-- [ ] **4.2. Extract Express Route Controllers from `server.js` (1,552 lines) into `server/controllers/`:**
-  - `addonController.ts` (`/manifest.json`, `/catalog/...`, `/meta/...`, `/r/qr`, `/api/qr/poster`)
-  - `authController.ts` (`/api/auth/login`, `/api/auth/me`, `/api/auth/logout`, `/api/auth/account`)
-  - `watchlistController.ts` (`/api/items`, `/api/check-all`, `/api/sync-watched`, `/api/export`, `/api/import`)
-  - `customListController.ts` (`/api/lists`, `/api/curated-lists`)
-  - `systemController.ts` (`/api/info`, `/api/settings`, `/api/poll`, `/api/recommendations`, `/api/cron/check-releases`)
-  - Keep `server.js` as a clean, minimal bootstrap file (< 150 lines) that registers middleware and mounts routes.
+- [x] **4.1. Create `server/repositories/`:**
+  - [x] `userRepository.js` (user resolution, settings, account deletion)
+  - [x] `watchlistRepository.js` (movie items CRUD, watched sync persistence, stats calculation)
+  - [x] `customListRepository.js` (custom lists CRUD and item-list associations)
+  - [x] `pollRepository.js` & `analyticsRepository.js` (feature poll votes and event logging)
+- [x] **4.2. Extract Express Route Controllers from `server.js` (1,552 lines) into `server/controllers/`:**
+  - [x] `addonController.js` (`/manifest.json`, `/catalog/...`, `/meta/...`, `/r/qr`, `/api/qr/poster`)
+  - [x] `authController.js` (`/api/auth/login`, `/api/auth/me`, `/api/auth/logout`, `/api/auth/account`)
+  - [x] `watchlistController.js` (`/api/items`, `/api/check-all`, `/api/sync-watched`, `/api/export`, `/api/import`)
+  - [x] `customListController.js` (`/api/lists`, `/api/curated-lists`)
+  - [x] `systemController.js` (`/api/info`, `/api/settings`, `/api/poll`, `/api/events`, `/api/cron`)
+  - [x] Keep `server.js` as a clean, minimal bootstrap file (< 150 lines) that registers middleware and mounts routes.
 
 ---
 

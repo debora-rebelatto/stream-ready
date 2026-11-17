@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import type { WatchlistItem } from '../types';
-import { formatQualityLabel, isItemReady, isItemNewRelease, isItemUnreleased } from '../lib/utils';
+import type { WatchlistItem } from '../models';
+import { formatQualityLabel, isItemReady, isItemNewRelease, isItemUnreleased } from '../utils';
 import { useWatchlist } from '../context/useAppContext';
 import { Badge } from './Badge';
 import {

@@ -4,9 +4,9 @@ import {
   buildRecommendedList,
   fetchTrendingMovies,
   type RecommendedMovie,
-} from '../lib/recommendations';
+} from '../utils';
 import { useWatchlist, useToast } from '../context/useAppContext';
-import { cinemetaService } from '../services/cinemetaService';
+import { cinemetaService } from '../services';
 import { WatchInStremioButton } from './WatchInStremioButton';
 import { WatchlistActionButton } from './WatchlistActionButton';
 
