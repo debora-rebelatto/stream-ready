@@ -42,17 +42,23 @@ async function restore() {
     const batchRes = await fetch(`${SERVER_URL}/api/items/sync-batch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items: movies })
+      body: JSON.stringify({ items: movies }),
     });
     const batchData = await batchRes.json();
     if (batchData.success) {
-      console.log(`✅ Sucesso! ${batchData.added || movies.length} filmes sincronizados no servidor.`);
-      console.log(`📊 Estatísticas atuais: Total: ${batchData.stats?.total} | Prontos: ${batchData.stats?.ready} | Aguardando: ${batchData.stats?.pending}`);
+      console.log(
+        `✅ Sucesso! ${batchData.added || movies.length} filmes sincronizados no servidor.`
+      );
+      console.log(
+        `📊 Estatísticas atuais: Total: ${batchData.stats?.total} | Prontos: ${batchData.stats?.ready} | Aguardando: ${batchData.stats?.pending}`
+      );
       console.log('\n🎉 Todos os seus filmes foram restaurados com sucesso!');
       return;
     }
   } catch (err) {
-    console.log('⚠️ Restauração em lote falhou ou o servidor está acordando. Tentando item a item...');
+    console.log(
+      '⚠️ Restauração em lote falhou ou o servidor está acordando. Tentando item a item...'
+    );
   }
 
   // 2. Restauração individual item a item (fallback)
@@ -66,11 +72,13 @@ async function restore() {
       const addRes = await fetch(`${SERVER_URL}/api/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, type: 'movie' })
+        body: JSON.stringify({ id, type: 'movie' }),
       });
       const data = await addRes.json();
       if (data.success && data.item) {
-        console.log(`   ✅ Sucesso! Qualidade: ${data.item.bestQuality} | Pronto: ${data.item.has1080pPlus ? 'SIM' : 'NÃO'}`);
+        console.log(
+          `   ✅ Sucesso! Qualidade: ${data.item.bestQuality} | Pronto: ${data.item.has1080pPlus ? 'SIM' : 'NÃO'}`
+        );
         successCount++;
       } else {
         console.warn(`   ❌ Erro ao adicionar:`, data.error || 'Erro');

@@ -130,4 +130,3 @@ export interface CatalogResponse {
 export interface MetaResponse {
   meta: any;
 }
-

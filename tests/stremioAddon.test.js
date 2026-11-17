@@ -10,7 +10,7 @@ jest.mock('../lib/db', () => ({
       return [{ id: 'fav1', name: 'Favoritos', emoji: '⭐' }];
     }
     return [];
-  })
+  }),
 }));
 
 const db = require('../lib/db');
@@ -60,8 +60,20 @@ describe('Stremio Addon Module (lib/stremioAddon.js)', () => {
 
     test('deve retornar metas filtrados de watchlist_ready', async () => {
       const items = [
-        { id: 'tt1', name: 'Ready Movie', has1080pPlus: true, bestQuality: '1080p FHD', streamCount: 5 },
-        { id: 'tt2', name: 'Pending Movie', has1080pPlus: false, bestQuality: 'Pending', streamCount: 0 },
+        {
+          id: 'tt1',
+          name: 'Ready Movie',
+          has1080pPlus: true,
+          bestQuality: '1080p FHD',
+          streamCount: 5,
+        },
+        {
+          id: 'tt2',
+          name: 'Pending Movie',
+          has1080pPlus: false,
+          bestQuality: 'Pending',
+          streamCount: 0,
+        },
       ];
       db.getItems.mockReturnValue(items);
 

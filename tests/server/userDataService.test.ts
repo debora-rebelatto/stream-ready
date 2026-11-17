@@ -1,4 +1,8 @@
-import { encodeUserData, decodeUserData, userDataService } from '../../server/services/userDataService.ts';
+import {
+  encodeUserData,
+  decodeUserData,
+  userDataService,
+} from '../../server/services/userDataService.ts';
 
 describe('Backend UserDataService (server/services/userDataService.ts)', () => {
   const mockItems = [
@@ -8,7 +12,7 @@ describe('Backend UserDataService (server/services/userDataService.ts)', () => {
       poster: 'https://image.tmdb.org/t/p/w500/edv5CZvWj09upOsy2Y6IwDhK8bt.jpg',
       year: '2010',
       bestQuality: '1080p FHD',
-      has1080pPlus: true
+      has1080pPlus: true,
     },
     {
       id: 'tt0816692',
@@ -16,8 +20,8 @@ describe('Backend UserDataService (server/services/userDataService.ts)', () => {
       poster: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
       year: '2014',
       bestQuality: '4K UHD',
-      has1080pPlus: true
-    }
+      has1080pPlus: true,
+    },
   ];
 
   test('deve codificar e decodificar dados do usuário com formato compactado z_', () => {
@@ -48,7 +52,7 @@ describe('Backend UserDataService (server/services/userDataService.ts)', () => {
     const legacyPayload = {
       authKey: 'legacy_key',
       ids: ['tt9999999'],
-      items: [{ id: 'tt9999999', name: 'Legacy Movie', has1080pPlus: true }]
+      items: [{ id: 'tt9999999', name: 'Legacy Movie', has1080pPlus: true }],
     };
     const base64Param = Buffer.from(JSON.stringify(legacyPayload)).toString('base64url');
 
@@ -72,4 +76,3 @@ describe('Backend UserDataService (server/services/userDataService.ts)', () => {
     expect(typeof userDataService.decodeUserData).toBe('function');
   });
 });
-

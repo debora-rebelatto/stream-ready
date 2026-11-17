@@ -21,9 +21,9 @@ describe('Cinemeta Module (lib/cinemeta.js)', () => {
           meta: {
             id: 'tt1375666',
             name: 'Inception',
-            year: '2010'
-          }
-        })
+            year: '2010',
+          },
+        }),
       });
 
       const res = await searchMovies('tt1375666');
@@ -35,10 +35,8 @@ describe('Cinemeta Module (lib/cinemeta.js)', () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          metas: [
-            { id: 'tt0816692', name: 'Interstellar', year: '2014' }
-          ]
-        })
+          metas: [{ id: 'tt0816692', name: 'Interstellar', year: '2014' }],
+        }),
       });
 
       const res = await searchMovies('Interstellar');
@@ -49,7 +47,7 @@ describe('Cinemeta Module (lib/cinemeta.js)', () => {
     test('deve retornar array vazio se a resposta for 500 ou de erro', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: false,
-        status: 500
+        status: 500,
       });
 
       const res = await searchMovies('Failed Query');
@@ -76,9 +74,9 @@ describe('Cinemeta Module (lib/cinemeta.js)', () => {
             name: 'Inception',
             year: '2010',
             poster: 'poster.jpg',
-            genres: ['Sci-Fi']
-          }
-        })
+            genres: ['Sci-Fi'],
+          },
+        }),
       });
 
       const meta = await getMeta('movie', 'tt1375666');
@@ -86,14 +84,14 @@ describe('Cinemeta Module (lib/cinemeta.js)', () => {
         id: 'tt1375666',
         name: 'Inception',
         year: '2010',
-        genres: ['Sci-Fi']
+        genres: ['Sci-Fi'],
       });
     });
 
     test('deve retornar null se status não for ok', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: false,
-        status: 404
+        status: 404,
       });
 
       const meta = await getMeta('movie', 'tt0000000');
@@ -103,7 +101,7 @@ describe('Cinemeta Module (lib/cinemeta.js)', () => {
     test('deve retornar null se response json não tiver meta', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({})
+        json: async () => ({}),
       });
 
       const meta = await getMeta('movie', 'tt0000000');

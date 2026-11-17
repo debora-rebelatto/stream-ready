@@ -11,7 +11,7 @@ describe('UserData Module', () => {
         poster: 'https://image.tmdb.org/t/p/w500/inception.jpg',
         year: '2010',
         bestQuality: '1080p FHD',
-        has1080pPlus: true
+        has1080pPlus: true,
       },
       {
         id: 'tt0816692',
@@ -19,8 +19,8 @@ describe('UserData Module', () => {
         poster: 'https://image.tmdb.org/t/p/w500/interstellar.jpg',
         year: '2014',
         bestQuality: '4K UHD',
-        has1080pPlus: true
-      }
+        has1080pPlus: true,
+      },
     ];
 
     const encoded = encodeUserData(authKey, items);
@@ -39,7 +39,7 @@ describe('UserData Module', () => {
       poster: 'https://image.tmdb.org/t/p/w500/inception.jpg',
       year: '2010',
       bestQuality: '1080p FHD',
-      has1080pPlus: true
+      has1080pPlus: true,
     });
   });
 
@@ -69,9 +69,15 @@ describe('UserData Module', () => {
     const legacyPayload = {
       authKey: 'legacy_key',
       items: [
-        { id: 'tt9999999', name: 'Legacy Film', year: '2020', bestQuality: '1080p FHD', has1080pPlus: true }
+        {
+          id: 'tt9999999',
+          name: 'Legacy Film',
+          year: '2020',
+          bestQuality: '1080p FHD',
+          has1080pPlus: true,
+        },
       ],
-      ids: ['tt9999999']
+      ids: ['tt9999999'],
     };
     const legacyParam = Buffer.from(JSON.stringify(legacyPayload)).toString('base64url');
 
@@ -85,9 +91,7 @@ describe('UserData Module', () => {
   test('deve decodificar formato legado alternativo usando chaves compactas (k e v)', () => {
     const legacyPayload = {
       k: 'key_kv',
-      v: [
-        { i: 'tt1111111', n: 'Movie KV', y: '2021', q: '4K UHD', r: 1, s: 5 }
-      ]
+      v: [{ i: 'tt1111111', n: 'Movie KV', y: '2021', q: '4K UHD', r: 1, s: 5 }],
     };
     const legacyParam = Buffer.from(JSON.stringify(legacyPayload)).toString('base64url');
 

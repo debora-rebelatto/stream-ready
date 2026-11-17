@@ -2,7 +2,7 @@ const {
   loginStremio,
   getUserInfo,
   installAddonToAccount,
-  getStremioWatchedMovies
+  getStremioWatchedMovies,
 } = require('../lib/stremioAuth');
 
 describe('StremioAuth Module (lib/stremioAuth.js)', () => {
@@ -19,9 +19,9 @@ describe('StremioAuth Module (lib/stremioAuth.js)', () => {
         json: async () => ({
           result: {
             authKey: 'auth_key_123',
-            user: { _id: 'u_123', email: 'test@example.com' }
-          }
-        })
+            user: { _id: 'u_123', email: 'test@example.com' },
+          },
+        }),
       });
 
       const res = await loginStremio('test@example.com', 'password123');
@@ -33,8 +33,8 @@ describe('StremioAuth Module (lib/stremioAuth.js)', () => {
     test('deve retornar erro se Stremio responder com erro de autenticação', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         json: async () => ({
-          error: { message: 'Invalid credentials' }
-        })
+          error: { message: 'Invalid credentials' },
+        }),
       });
 
       const res = await loginStremio('wrong@mail.com', 'wrong');
@@ -57,8 +57,8 @@ describe('StremioAuth Module (lib/stremioAuth.js)', () => {
     test('deve retornar id e email do usuário se authKey for válido', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         json: async () => ({
-          result: { _id: 'u_789', email: 'valid@example.com' }
-        })
+          result: { _id: 'u_789', email: 'valid@example.com' },
+        }),
       });
 
       const user = await getUserInfo('valid_auth_key');
@@ -67,7 +67,7 @@ describe('StremioAuth Module (lib/stremioAuth.js)', () => {
 
     test('deve retornar null se resposta contiver erro ou não contiver result', async () => {
       global.fetch = jest.fn().mockResolvedValue({
-        json: async () => ({ error: { message: 'Expired' } })
+        json: async () => ({ error: { message: 'Expired' } }),
       });
 
       const user = await getUserInfo('expired_key');
@@ -86,22 +86,31 @@ describe('StremioAuth Module (lib/stremioAuth.js)', () => {
 
   describe('installAddonToAccount', () => {
     test('deve adicionar addon à conta e salvar na coleção', async () => {
-      global.fetch = jest.fn()
+      global.fetch = jest
+        .fn()
         // 1. addonCollectionGet
         .mockResolvedValueOnce({
           json: async () => ({
-            result: { addons: [] }
-          })
+            result: { addons: [] },
+          }),
         })
         // 2. addonCollectionSet
         .mockResolvedValueOnce({
           json: async () => ({
-            result: { success: true }
-          })
+            result: { success: true },
+          }),
         });
 
-      const passedManifest = { id: 'community.watchlist', name: 'Watchlist Addon', version: '1.0.0' };
-      const res = await installAddonToAccount('auth_123', 'https://domain.com/manifest.json', passedManifest);
+      const passedManifest = {
+        id: 'community.watchlist',
+        name: 'Watchlist Addon',
+        version: '1.0.0',
+      };
+      const res = await installAddonToAccount(
+        'auth_123',
+        'https://domain.com/manifest.json',
+        passedManifest
+      );
       expect(res.success).toBe(true);
       expect(res.message).toContain('installed');
     });
@@ -116,28 +125,28 @@ describe('StremioAuth Module (lib/stremioAuth.js)', () => {
               _id: 'tt100',
               name: 'Movie Watched Flag',
               type: 'movie',
-              state: { flaggedWatched: 1 }
+              state: { flaggedWatched: 1 },
             },
             {
               _id: 'tt200',
               name: 'Movie Watched Ratio',
               type: 'movie',
-              state: { timeOffset: 9500, duration: 10000 } // ratio = 0.95 (> 0.8)
+              state: { timeOffset: 9500, duration: 10000 }, // ratio = 0.95 (> 0.8)
             },
             {
               _id: 'tt300',
               name: 'Movie Unwatched',
               type: 'movie',
-              state: { timeOffset: 500, duration: 10000 } // ratio = 0.05
+              state: { timeOffset: 500, duration: 10000 }, // ratio = 0.05
             },
             {
               _id: 'tt400',
               name: 'Series Item',
               type: 'series',
-              state: { flaggedWatched: 1 }
-            }
-          ]
-        })
+              state: { flaggedWatched: 1 },
+            },
+          ],
+        }),
       });
 
       const watched = await getStremioWatchedMovies('auth_123');

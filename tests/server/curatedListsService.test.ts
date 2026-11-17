@@ -2,7 +2,7 @@ import {
   getCuratedLists,
   getCuratedListById,
   addCuratedListToUser,
-  loadCuratedListsData
+  loadCuratedListsData,
 } from '../../server/services/curatedListsService.ts';
 
 describe('CuratedListsService (server/services/curatedListsService.ts)', () => {
@@ -27,9 +27,7 @@ describe('CuratedListsService (server/services/curatedListsService.ts)', () => {
   });
 
   test('getCuratedLists should mark isAdded based on userCustomLists', () => {
-    const userLists = [
-      { id: 'list_1', name: 'New on Netflix', emoji: '🔴' }
-    ];
+    const userLists = [{ id: 'list_1', name: 'New on Netflix', emoji: '🔴' }];
 
     const lists = getCuratedLists(userLists);
     const netflix = lists.find((l) => l.id === 'new_netflix');
@@ -49,15 +47,13 @@ describe('CuratedListsService (server/services/curatedListsService.ts)', () => {
   });
 
   test('addCuratedListToUser should throw if userId is empty', async () => {
-    await expect(
-      addCuratedListToUser('', 'new_netflix', {})
-    ).rejects.toThrow('User identifier is required');
+    await expect(addCuratedListToUser('', 'new_netflix', {})).rejects.toThrow(
+      'User identifier is required'
+    );
   });
 
   test('addCuratedListToUser should throw if listId is unknown', async () => {
-    await expect(
-      addCuratedListToUser('user123', 'invalid_id', {})
-    ).rejects.toThrow(/not found/i);
+    await expect(addCuratedListToUser('user123', 'invalid_id', {})).rejects.toThrow(/not found/i);
   });
 
   test('addCuratedListToUser should create list and add movies to mock db', async () => {
@@ -65,7 +61,7 @@ describe('CuratedListsService (server/services/curatedListsService.ts)', () => {
       id: 'custom_netflix_1',
       name: 'New on Netflix',
       emoji: '🔴',
-      itemsCount: 0
+      itemsCount: 0,
     };
 
     const mockDbItems: any[] = [];
@@ -91,14 +87,14 @@ describe('CuratedListsService (server/services/curatedListsService.ts)', () => {
           mockDbItems[idx] = { ...mockDbItems[idx], ...updates };
         }
         return Promise.resolve(mockDbItems[idx]);
-      })
+      }),
     };
 
     const mockQualityChecker = jest.fn().mockResolvedValue({
       has1080pPlus: true,
       bestQuality: '1080p Web-DL',
       streamCount: 5,
-      checkedAt: new Date().toISOString()
+      checkedAt: new Date().toISOString(),
     });
 
     const result = await addCuratedListToUser(
@@ -127,14 +123,14 @@ describe('CuratedListsService (server/services/curatedListsService.ts)', () => {
       {
         id: existingMovieId,
         name: netflixList.items[0].name,
-        customLists: ['other_list_1']
-      }
+        customLists: ['other_list_1'],
+      },
     ];
 
     const mockDb = {
-      getCustomLists: jest.fn().mockReturnValue([
-        { id: 'list_netflix_existing', name: 'New on Netflix', emoji: '🔴' }
-      ]),
+      getCustomLists: jest
+        .fn()
+        .mockReturnValue([{ id: 'list_netflix_existing', name: 'New on Netflix', emoji: '🔴' }]),
       createCustomList: jest.fn(),
       getItem: jest.fn().mockImplementation((id) => mockDbItems.find((i) => i.id === id)),
       addItem: jest.fn().mockImplementation((item) => {
@@ -145,7 +141,7 @@ describe('CuratedListsService (server/services/curatedListsService.ts)', () => {
         const item = mockDbItems.find((i) => i.id === id);
         if (item) Object.assign(item, updates);
         return Promise.resolve(item);
-      })
+      }),
     };
 
     const result = await addCuratedListToUser('user_test_2', 'new_netflix', mockDb);

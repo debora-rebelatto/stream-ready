@@ -6,20 +6,28 @@ const db = require('./lib/db');
 const { checkMovieQuality } = require('./lib/qualityChecker');
 const { searchMovies, getMeta } = require('./lib/cinemeta');
 const { getManifest, handleCatalog, handleMeta } = require('./lib/stremioAddon');
-const { loginStremio, getUserInfo, getAccountWatchlist, saveAccountWatchlist } = require('./lib/stremioAuth');
+const {
+  loginStremio,
+  getUserInfo,
+  getAccountWatchlist,
+  saveAccountWatchlist,
+} = require('./lib/stremioAuth');
 const { encodeUserData, decodeUserData } = require('./lib/userData');
 const { getCuratedLists, getCuratedListById, addCuratedListToUser } = require('./lib/curatedLists');
+const tmdb = require('./lib/tmdb');
 const { logPostHog } = require('./lib/posthogLogs');
 const QRCode = require('qrcode');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
 
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS', 'DELETE'],
-  allowedHeaders: ['*']
-}));
+app.use(
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS', 'DELETE'],
+    allowedHeaders: ['*'],
+  })
+);
 app.use(express.json());
 
 // Log incoming requests for debugging
@@ -34,7 +42,7 @@ app.get('/health', (req, res) => {
     status: 'ok',
     uptime: Math.round(process.uptime()),
     timestamp: new Date().toISOString(),
-    supabase: db.isSupabaseConfigured()
+    supabase: db.isSupabaseConfigured(),
   });
 });
 
@@ -47,20 +55,26 @@ app.get('/manifest', (req, res) => {
 const distPath = path.join(__dirname, 'dist');
 const publicPath = path.join(__dirname, 'public');
 const clientPath = fs.existsSync(distPath) ? distPath : publicPath;
-app.use(express.static(clientPath, {
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    } else if (filePath.includes(path.sep + 'assets' + path.sep) || filePath.includes('/assets/')) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    }
-  }
-}));
+app.use(
+  express.static(clientPath, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      } else if (
+        filePath.includes(path.sep + 'assets' + path.sep) ||
+        filePath.includes('/assets/')
+      ) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  })
+);
 
 // Helper to determine base URL
 function getBaseUrl(req) {
   const host = req.get('host') || `localhost:${PORT}`;
-  const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+  const protocol =
+    req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
   return `${protocol}://${host}`;
 }
 
@@ -81,7 +95,14 @@ function getRequestAuthKey(req) {
 // Resolve o usuário (id único UUID e email) estritamente a partir da authKey da requisição
 async function getRequestUser(req) {
   const rawKey = getRequestAuthKey(req);
-  if (!rawKey) return { authKey: null, userId: null, userEmail: null, user: null, userData: { authKey: '', items: [], ids: [] } };
+  if (!rawKey)
+    return {
+      authKey: null,
+      userId: null,
+      userEmail: null,
+      user: null,
+      userData: { authKey: '', items: [], ids: [] },
+    };
   const userData = decodeUserData(rawKey);
   const effectiveAuthKey = userData.authKey || rawKey;
   const user = await db.resolveUser(effectiveAuthKey, getUserInfo);
@@ -127,18 +148,22 @@ function triggerUserOnDemandSync(authKey, userId) {
       }
 
       // 2. Confere qualidade dos filmes pendentes deste usuário
-      const pendingItems = db.getItems(userId).filter(i => !i.has1080pPlus && !i.isWatched);
+      const pendingItems = db.getItems(userId).filter((i) => !i.has1080pPlus && !i.isWatched);
       for (const item of pendingItems.slice(0, 5)) {
         const q = await checkMovieQuality(item.id, item.type || 'movie', item.name, item.year);
         if (q && q.has1080pPlus) {
-          await db.updateItem(item.id, {
-            has1080pPlus: q.has1080pPlus,
-            bestQuality: q.bestQuality,
-            streamCount: q.streamCount,
-            lastChecked: q.checkedAt
-          }, userId);
+          await db.updateItem(
+            item.id,
+            {
+              has1080pPlus: q.has1080pPlus,
+              bestQuality: q.bestQuality,
+              streamCount: q.streamCount,
+              lastChecked: q.checkedAt,
+            },
+            userId
+          );
         }
-        await new Promise(r => setTimeout(r, 600));
+        await new Promise((r) => setTimeout(r, 600));
       }
     } catch (err) {
       console.warn(`[OnDemandSync:${userId}] Erro na checagem:`, err.message);
@@ -203,20 +228,41 @@ const catalogHandler = async (req, res) => {
       } else if (userData.ids && userData.ids.length > 0) {
         for (const movieId of userData.ids) {
           if (!db.getItem(movieId, userId)) {
-            db.addItem({
-              id: movieId,
-              type: 'movie',
-              name: movieId,
-              has1080pPlus: false,
-              bestQuality: 'Pending',
-              streamCount: 0
-            }, userId);
-            getMeta('movie', movieId).then(meta => {
-              if (meta) db.updateItem(movieId, { name: meta.name, poster: meta.poster, year: meta.year, genres: meta.genres }, userId);
-            }).catch(() => {});
-            checkMovieQuality(movieId, 'movie').then(q => {
-              if (q) db.updateItem(movieId, { has1080pPlus: q.has1080pPlus, bestQuality: q.bestQuality, streamCount: q.streamCount }, userId);
-            }).catch(() => {});
+            db.addItem(
+              {
+                id: movieId,
+                type: 'movie',
+                name: movieId,
+                has1080pPlus: false,
+                bestQuality: 'Pending',
+                streamCount: 0,
+              },
+              userId
+            );
+            getMeta('movie', movieId)
+              .then((meta) => {
+                if (meta)
+                  db.updateItem(
+                    movieId,
+                    { name: meta.name, poster: meta.poster, year: meta.year, genres: meta.genres },
+                    userId
+                  );
+              })
+              .catch(() => {});
+            checkMovieQuality(movieId, 'movie')
+              .then((q) => {
+                if (q)
+                  db.updateItem(
+                    movieId,
+                    {
+                      has1080pPlus: q.has1080pPlus,
+                      bestQuality: q.bestQuality,
+                      streamCount: q.streamCount,
+                    },
+                    userId
+                  );
+              })
+              .catch(() => {});
           }
         }
       } else if (authKey) {
@@ -277,7 +323,9 @@ app.post('/api/auth/login', async (req, res) => {
     if (authKey) {
       const user = await db.resolveUser(authKey, getUserInfo);
       if (!user || !user.email) {
-        return res.status(401).json({ success: false, error: 'Invalid or expired authentication key (AuthKey)' });
+        return res
+          .status(401)
+          .json({ success: false, error: 'Invalid or expired authentication key (AuthKey)' });
       }
 
       // If this user's database list is empty, restore from their Stremio cloud account
@@ -329,7 +377,10 @@ app.post('/api/auth/login', async (req, res) => {
     const baseUrl = getBaseUrl(req);
     syncAddonUrlWithAccount(authResult.authKey, baseUrl, userId).catch(() => {});
     const loginUserSettings = db.getSettings(userId);
-    if (loginUserSettings && (loginUserSettings.autoSyncWatched || loginUserSettings.trackWatchlistWatched)) {
+    if (
+      loginUserSettings &&
+      (loginUserSettings.autoSyncWatched || loginUserSettings.trackWatchlistWatched)
+    ) {
       db.syncWatchedWithStremio(authResult.authKey, userId).catch(() => {});
     }
 
@@ -364,7 +415,9 @@ app.get('/api/auth/me', async (req, res) => {
       try {
         const cloudItems = await getAccountWatchlist(authKey);
         if (Array.isArray(cloudItems) && cloudItems.length > 0) {
-          console.log(`[Persistence:auth/me] Restaurando ${cloudItems.length} filmes da nuvem do Stremio para ${user.email} (${userId})...`);
+          console.log(
+            `[Persistence:auth/me] Restaurando ${cloudItems.length} filmes da nuvem do Stremio para ${user.email} (${userId})...`
+          );
           for (const it of cloudItems) {
             if (!db.getItem(it.id, userId)) {
               await db.addItem(it, userId);
@@ -381,10 +434,10 @@ app.get('/api/auth/me', async (req, res) => {
       authKey,
       user: {
         id: user.id,
-        email: user.email
+        email: user.email,
       },
       itemsCount: db.getItems(userId).length,
-      supabaseConfigured: db.isSupabaseConfigured()
+      supabaseConfigured: db.isSupabaseConfigured(),
     });
   } catch (err) {
     res.status(500).json({ loggedIn: false, error: err.message });
@@ -403,7 +456,9 @@ app.delete(['/api/auth/account', '/api/account'], async (req, res) => {
     const { authKey, userId, userEmail } = await getRequestUser(req);
 
     if (!userId && !userEmail) {
-      return res.status(401).json({ success: false, error: 'Unauthorized: Session invalid or user not found' });
+      return res
+        .status(401)
+        .json({ success: false, error: 'Unauthorized: Session invalid or user not found' });
     }
 
     // Try to remove community watchlist addon from official Stremio account if authKey is present
@@ -414,7 +469,10 @@ app.delete(['/api/auth/account', '/api/account'], async (req, res) => {
           await removeAccountAddon(authKey);
         }
       } catch (addonErr) {
-        console.warn('[DeleteAccount] Notice when removing addon from Stremio account:', addonErr.message);
+        console.warn(
+          '[DeleteAccount] Notice when removing addon from Stremio account:',
+          addonErr.message
+        );
       }
     }
 
@@ -426,10 +484,12 @@ app.delete(['/api/auth/account', '/api/account'], async (req, res) => {
     // Bulldoze all user data in Supabase & memory cache
     await db.deleteUser(userId || userEmail);
 
-    console.log(`[DeleteAccount] Account and all related database data purged for user: ${userEmail || userId}`);
+    console.log(
+      `[DeleteAccount] Account and all related database data purged for user: ${userEmail || userId}`
+    );
     res.json({
       success: true,
-      message: 'Account and all related data have been permanently deleted.'
+      message: 'Account and all related data have been permanently deleted.',
     });
   } catch (err) {
     console.error('[DeleteAccount Error]', err);
@@ -451,10 +511,16 @@ app.post('/api/auth/install-account', async (req, res) => {
 
     const success = await saveAccountWatchlist(authKey, baseUrl, items, manifest);
     if (!success) {
-      return res.status(400).json({ error: 'Failed to save addon to your official Stremio account.' });
+      return res
+        .status(400)
+        .json({ error: 'Failed to save addon to your official Stremio account.' });
     }
 
-    res.json({ success: true, message: 'Addon activated on your official account! It will now appear on your Smart TV and all your devices.' });
+    res.json({
+      success: true,
+      message:
+        'Addon activated on your official account! It will now appear on your Smart TV and all your devices.',
+    });
   } catch (err) {
     console.error('[Install to Account Error]', err);
     res.status(500).json({ error: err.message });
@@ -475,7 +541,7 @@ app.get('/api/items', async (req, res) => {
     return res.json({
       items: [],
       stats: { total: 0, ready: 0, pending: 0 },
-      requireAuth: true
+      requireAuth: true,
     });
   }
 
@@ -487,7 +553,9 @@ app.get('/api/items', async (req, res) => {
     try {
       const cloudItems = await getAccountWatchlist(authKey);
       if (Array.isArray(cloudItems) && cloudItems.length > 0) {
-        console.log(`[Persistence:api/items] Restaurando ${cloudItems.length} filmes da nuvem para ${userId}...`);
+        console.log(
+          `[Persistence:api/items] Restaurando ${cloudItems.length} filmes da nuvem para ${userId}...`
+        );
         for (const it of cloudItems) {
           if (!db.getItem(it.id, userId)) {
             db.addItem(it, userId);
@@ -506,25 +574,27 @@ app.get('/api/items', async (req, res) => {
   const globalMinQuality = userSettings.minQuality || '1080p';
 
   if (listId) {
-    items = items.filter(i => Array.isArray(i.customLists) && i.customLists.includes(listId));
+    items = items.filter((i) => Array.isArray(i.customLists) && i.customLists.includes(listId));
   }
 
   if (effectiveFilter === 'watched') {
-    items = items.filter(i => Boolean(i.isWatched));
+    items = items.filter((i) => Boolean(i.isWatched));
   } else if (effectiveFilter === 'ready') {
-    items = items.filter(i => !i.isWatched && db.isItemReady(i, globalMinQuality));
+    items = items.filter((i) => !i.isWatched && db.isItemReady(i, globalMinQuality));
   } else if (effectiveFilter === 'pending') {
-    items = items.filter(i => !i.isWatched && !db.isItemReady(i, globalMinQuality) && !db.isItemUnreleased(i));
+    items = items.filter(
+      (i) => !i.isWatched && !db.isItemReady(i, globalMinQuality) && !db.isItemUnreleased(i)
+    );
   } else if (effectiveFilter === 'unreleased') {
-    items = items.filter(i => !i.isWatched && db.isItemUnreleased(i));
+    items = items.filter((i) => !i.isWatched && db.isItemUnreleased(i));
   } else if (effectiveFilter === 'unwatched') {
-    items = items.filter(i => !i.isWatched);
+    items = items.filter((i) => !i.isWatched);
   }
 
   res.json({
     items,
     stats: db.getStats(userId),
-    requireAuth: false
+    requireAuth: false,
   });
 });
 
@@ -534,10 +604,21 @@ app.get('/api/search', async (req, res) => {
     const query = req.query.q || '';
     if (!query.trim()) return res.json([]);
     const results = await searchMovies(query);
-    const movieOnlyResults = (results || []).filter(item => !item.type || item.type === 'movie');
+    const movieOnlyResults = (results || []).filter((item) => !item.type || item.type === 'movie');
     res.json(movieOnlyResults);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Get popular / trending movies for Hero banner (TMDB with Cinemeta fallback)
+app.get('/api/trending', async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 9, 1), 20);
+    const movies = await tmdb.getTrendingMovies(limit);
+    res.json({ success: true, movies });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -546,7 +627,9 @@ app.post('/api/items', async (req, res) => {
   try {
     const { authKey, userId } = await getRequestUser(req);
     if (!authKey || !userId) {
-      return res.status(401).json({ error: 'Please sign in with your Stremio account to add movies.' });
+      return res
+        .status(401)
+        .json({ error: 'Please sign in with your Stremio account to add movies.' });
     }
 
     let { id, type = 'movie' } = req.body;
@@ -564,7 +647,11 @@ app.post('/api/items', async (req, res) => {
     // Check if already in this user's DB
     const existing = db.getItem(id, userId);
     if (existing) {
-      return res.json({ success: true, item: existing, message: 'Item is already in your watchlist' });
+      return res.json({
+        success: true,
+        item: existing,
+        message: 'Item is already in your watchlist',
+      });
     }
 
     // Fetch Cinemeta metadata
@@ -576,20 +663,25 @@ app.post('/api/items', async (req, res) => {
     // Immediately check stream quality
     const quality = await checkMovieQuality(id, 'movie', meta.name, meta.year);
 
-    const saved = await db.addItem({
-      id: meta.id,
-      type: 'movie',
-      name: meta.name,
-      year: meta.year,
-      poster: meta.poster,
-      imdbRating: meta.imdbRating ? String(meta.imdbRating) : '',
-      has1080pPlus: quality.has1080pPlus,
-      bestQuality: quality.bestQuality,
-      streamCount: quality.streamCount,
-      lastChecked: quality.checkedAt
-    }, userId);
+    const saved = await db.addItem(
+      {
+        id: meta.id,
+        type: 'movie',
+        name: meta.name,
+        year: meta.year,
+        poster: meta.poster,
+        imdbRating: meta.imdbRating ? String(meta.imdbRating) : '',
+        has1080pPlus: quality.has1080pPlus,
+        bestQuality: quality.bestQuality,
+        streamCount: quality.streamCount,
+        lastChecked: quality.checkedAt,
+      },
+      userId
+    );
 
-    console.log(`[Watchlist:${userId}] Adicionado: ${saved.name} (${saved.id}) -> Qualidade: ${saved.bestQuality}`);
+    console.log(
+      `[Watchlist:${userId}] Adicionado: ${saved.name} (${saved.id}) -> Qualidade: ${saved.bestQuality}`
+    );
 
     // Atualiza automaticamente o URL codificado permanente na conta do Stremio
     const baseUrl = getBaseUrl(req);
@@ -615,17 +707,21 @@ app.post('/api/check/:id', async (req, res) => {
     const quality = await checkMovieQuality(id, item.type || 'movie', item.name, item.year);
     const wasReady = item.has1080pPlus;
 
-    const updated = await db.updateItem(id, {
-      has1080pPlus: quality.has1080pPlus,
-      bestQuality: quality.bestQuality,
-      streamCount: quality.streamCount,
-      lastChecked: quality.checkedAt
-    }, userId);
+    const updated = await db.updateItem(
+      id,
+      {
+        has1080pPlus: quality.has1080pPlus,
+        bestQuality: quality.bestQuality,
+        streamCount: quality.streamCount,
+        lastChecked: quality.checkedAt,
+      },
+      userId
+    );
 
     res.json({
       success: true,
       item: updated,
-      becameReady: !wasReady && quality.has1080pPlus
+      becameReady: !wasReady && quality.has1080pPlus,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -639,9 +735,9 @@ app.post('/api/check-all', async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const { forceAll = true } = req.body || {};
-    let items = db.getItems(userId).filter(i => !i.isWatched);
+    let items = db.getItems(userId).filter((i) => !i.isWatched);
     if (forceAll === false) {
-      items = items.filter(i => !i.has1080pPlus);
+      items = items.filter((i) => !i.has1080pPlus);
     }
 
     let newlyReady = 0;
@@ -651,28 +747,32 @@ app.post('/api/check-all', async (req, res) => {
       const quality = await checkMovieQuality(item.id, item.type || 'movie', item.name, item.year);
       const wasReady = item.has1080pPlus;
 
-      const updated = await db.updateItem(item.id, {
-        has1080pPlus: quality.has1080pPlus,
-        bestQuality: quality.bestQuality,
-        streamCount: quality.streamCount,
-        count1080pPlus: quality.count1080pPlus,
-        lastChecked: quality.checkedAt,
-        checkError: quality.error || null
-      }, userId);
+      const updated = await db.updateItem(
+        item.id,
+        {
+          has1080pPlus: quality.has1080pPlus,
+          bestQuality: quality.bestQuality,
+          streamCount: quality.streamCount,
+          count1080pPlus: quality.count1080pPlus,
+          lastChecked: quality.checkedAt,
+          checkError: quality.error || null,
+        },
+        userId
+      );
 
       if (!wasReady && quality.has1080pPlus) {
         newlyReady++;
       }
       results.push(updated);
 
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 600));
     }
 
     res.json({
       success: true,
       checkedCount: items.length,
       newlyReady,
-      stats: db.getStats(userId)
+      stats: db.getStats(userId),
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -748,7 +848,7 @@ app.post('/api/items/sync-watched', async (req, res) => {
       success: true,
       result,
       items: db.getItems(userId),
-      stats: db.getStats(userId)
+      stats: db.getStats(userId),
     });
   } catch (err) {
     console.error('[Sync Watched Error]', err);
@@ -764,7 +864,12 @@ app.post('/api/items/sync-batch', async (req, res) => {
 
     const { items: clientItems } = req.body;
     if (!Array.isArray(clientItems) || clientItems.length === 0) {
-      return res.json({ success: true, count: 0, items: db.getItems(userId), stats: db.getStats(userId) });
+      return res.json({
+        success: true,
+        count: 0,
+        items: db.getItems(userId),
+        stats: db.getStats(userId),
+      });
     }
 
     let added = 0;
@@ -773,10 +878,27 @@ app.post('/api/items/sync-batch', async (req, res) => {
       if (!db.getItem(item.id, userId)) {
         db.addItem(item, userId);
         added++;
-        if (!item.bestQuality || item.bestQuality === 'Pending' || item.bestQuality === 'Pendente' || item.bestQuality === 'Checking...' || item.bestQuality === 'Verificando...') {
-          checkMovieQuality(item.id, item.type || 'movie', item.name, item.year).then(q => {
-            if (q) db.updateItem(item.id, { has1080pPlus: q.has1080pPlus, bestQuality: q.bestQuality, streamCount: q.streamCount }, userId);
-          }).catch(() => {});
+        if (
+          !item.bestQuality ||
+          item.bestQuality === 'Pending' ||
+          item.bestQuality === 'Pendente' ||
+          item.bestQuality === 'Checking...' ||
+          item.bestQuality === 'Verificando...'
+        ) {
+          checkMovieQuality(item.id, item.type || 'movie', item.name, item.year)
+            .then((q) => {
+              if (q)
+                db.updateItem(
+                  item.id,
+                  {
+                    has1080pPlus: q.has1080pPlus,
+                    bestQuality: q.bestQuality,
+                    streamCount: q.streamCount,
+                  },
+                  userId
+                );
+            })
+            .catch(() => {});
         }
       }
     }
@@ -806,11 +928,13 @@ app.get('/api/lists', async (req, res) => {
     const lists = db.getCustomLists(userId);
     const userItems = db.getItems(userId);
 
-    const listsWithCount = lists.map(l => {
-      const count = userItems.filter(i => Array.isArray(i.customLists) && i.customLists.includes(l.id)).length;
+    const listsWithCount = lists.map((l) => {
+      const count = userItems.filter(
+        (i) => Array.isArray(i.customLists) && i.customLists.includes(l.id)
+      ).length;
       return {
         ...l,
-        itemsCount: count
+        itemsCount: count,
       };
     });
 
@@ -936,7 +1060,9 @@ app.post('/api/curated-lists/:id/add', async (req, res) => {
     await db.ensureLoaded();
     const { authKey, userId } = await getRequestUser(req);
     if (!userId || !authKey) {
-      return res.status(401).json({ error: 'Please sign in with your Stremio account to add curated lists.' });
+      return res
+        .status(401)
+        .json({ error: 'Please sign in with your Stremio account to add curated lists.' });
     }
 
     const { id } = req.params;
@@ -987,7 +1113,9 @@ app.get('/api/info', async (req, res) => {
   const encoded = authKey ? encodeUserData(authKey, items) : '';
 
   const manifestUrl = authKey ? `${baseUrl}/${encoded}/manifest.json` : `${baseUrl}/manifest.json`;
-  const stremioInstallUrl = authKey ? `stremio://${host}/${encoded}/manifest.json` : `stremio://${host}/manifest.json`;
+  const stremioInstallUrl = authKey
+    ? `stremio://${host}/${encoded}/manifest.json`
+    : `stremio://${host}/manifest.json`;
   const webStremioInstallUrl = `https://web.stremio.com/#/addons?addon=${encodeURIComponent(manifestUrl)}`;
 
   res.json({
@@ -996,7 +1124,7 @@ app.get('/api/info', async (req, res) => {
     stremioInstallUrl,
     webStremioInstallUrl,
     supabaseConfigured: db.isSupabaseConfigured(),
-    port: PORT
+    port: PORT,
   });
 });
 
@@ -1011,7 +1139,7 @@ app.get('/api/qr', async (req, res) => {
       const svg = await QRCode.toString(text, {
         type: 'svg',
         margin: 2,
-        color: { dark: '#ffffff', light: '#0c0d14' }
+        color: { dark: '#ffffff', light: '#0c0d14' },
       });
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'public, max-age=86400');
@@ -1022,7 +1150,7 @@ app.get('/api/qr', async (req, res) => {
       type: 'png',
       width: size,
       margin: 2,
-      color: { dark: '#000000', light: '#ffffff' }
+      color: { dark: '#000000', light: '#ffffff' },
     });
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Cache-Control', 'public, max-age=86400');
@@ -1040,15 +1168,17 @@ app.get('/r/qr', async (req, res) => {
     const userAgent = req.get('user-agent') || 'unknown';
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
 
-    console.log(`[QR Code Scan] User scanned QR code from Stremio TV - Context: ${context}, IP: ${ip}, User-Agent: ${userAgent}`);
+    console.log(
+      `[QR Code Scan] User scanned QR code from Stremio TV - Context: ${context}, IP: ${ip}, User-Agent: ${userAgent}`
+    );
 
     // Asynchronously record event in database without blocking redirect
     db.recordAnalyticsEvent('qr_code_scanned', {
       source: 'stremio_tv_qr',
       context,
       ip,
-      userAgent
-    }).catch(err => {
+      userAgent,
+    }).catch((err) => {
       console.warn('[QR Analytics Warning] Failed to log QR event:', err.message);
     });
 
@@ -1072,7 +1202,7 @@ app.get('/api/qr/poster', async (req, res) => {
     const qrDataUrl = await QRCode.toDataURL(targetUrl, {
       width: 280,
       margin: 1,
-      color: { dark: '#000000', light: '#ffffff' }
+      color: { dark: '#000000', light: '#ffffff' },
     });
 
     const cleanDisplayUrl = baseUrl.replace(/^https?:\/\//, '');
@@ -1111,7 +1241,11 @@ app.get('/api/export', async (req, res) => {
     await db.ensureLoaded();
     const { authKey, userId } = await getRequestUser(req);
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized. Please sign in with your Stremio account to export your watchlist.' });
+      return res
+        .status(401)
+        .json({
+          error: 'Unauthorized. Please sign in with your Stremio account to export your watchlist.',
+        });
     }
 
     let items = db.getItems(userId);
@@ -1188,17 +1322,28 @@ app.post('/api/events', async (req, res) => {
     const userEmail = (user?.userEmail || user?.email || '').toLowerCase().trim();
 
     // Check excluded accounts configured via environment
-    const excludedEnvEmails = process.env.EXCLUDED_TRACKING_EMAILS || process.env.VITE_EXCLUDED_TRACKING_EMAILS || '';
-    const excludedEnvIds = process.env.EXCLUDED_TRACKING_USER_IDS || process.env.VITE_EXCLUDED_TRACKING_USER_IDS || '';
+    const excludedEnvEmails =
+      process.env.EXCLUDED_TRACKING_EMAILS || process.env.VITE_EXCLUDED_TRACKING_EMAILS || '';
+    const excludedEnvIds =
+      process.env.EXCLUDED_TRACKING_USER_IDS || process.env.VITE_EXCLUDED_TRACKING_USER_IDS || '';
 
     const excludedList = new Set(
-      excludedEnvEmails.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+      excludedEnvEmails
+        .split(',')
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean)
     );
     const excludedUserIds = new Set(
-      excludedEnvIds.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+      excludedEnvIds
+        .split(',')
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean)
     );
 
-    if ((userEmail && excludedList.has(userEmail)) || (userId && (excludedUserIds.has(userId) || excludedList.has(userId)))) {
+    if (
+      (userEmail && excludedList.has(userEmail)) ||
+      (userId && (excludedUserIds.has(userId) || excludedList.has(userId)))
+    ) {
       return res.json({ success: true, ignored: true });
     }
 
@@ -1236,7 +1381,11 @@ app.post('/api/poll/vote', async (req, res) => {
     }
     const result = await db.savePollVote(userId, option, customText);
     if (result.success) {
-      db.recordAnalyticsEvent('poll_voted', { option, hasCustomText: Boolean(customText) }, userId).catch(() => {});
+      db.recordAnalyticsEvent(
+        'poll_voted',
+        { option, hasCustomText: Boolean(customText) },
+        userId
+      ).catch(() => {});
       return res.json({ success: true, vote: result.vote });
     }
     return res.status(400).json(result);
@@ -1282,39 +1431,61 @@ async function runBackgroundCheck() {
     await db.ensureLoaded();
 
     // 1. Sincroniza filmes assistidos do Stremio apenas para usuários com autoSyncWatched ativado
-    const users = db.getAllUsers().filter(u => Boolean(u.authKey) && Boolean(u.settings?.autoSyncWatched));
+    const users = db
+      .getAllUsers()
+      .filter((u) => Boolean(u.authKey) && Boolean(u.settings?.autoSyncWatched));
     if (users.length > 0) {
-      console.log(`[AutoChecker] Sincronizando histórico assistido do Stremio para ${users.length} usuário(s) com autoSync ativo...`);
+      console.log(
+        `[AutoChecker] Sincronizando histórico assistido do Stremio para ${users.length} usuário(s) com autoSync ativo...`
+      );
       for (const u of users) {
         try {
           const syncRes = await db.syncWatchedWithStremio(u.authKey, u.id);
           if (syncRes.count > 0) {
-            console.log(`[AutoChecker:${u.email}] Sincronizados ${syncRes.count} filme(s) assistidos.`);
+            console.log(
+              `[AutoChecker:${u.email}] Sincronizados ${syncRes.count} filme(s) assistidos.`
+            );
           }
         } catch (syncErr) {
-          console.warn(`[AutoChecker] Erro ao sincronizar assistidos para ${u.email}:`, syncErr.message);
+          console.warn(
+            `[AutoChecker] Erro ao sincronizar assistidos para ${u.email}:`,
+            syncErr.message
+          );
         }
       }
     }
 
     // 2. Checa qualidade de streaming para filmes pendentes (não assistidos)
-    const allPending = db.getAllUsersItems().filter(entry => !entry.item.has1080pPlus && !entry.item.isWatched);
+    const allPending = db
+      .getAllUsersItems()
+      .filter((entry) => !entry.item.has1080pPlus && !entry.item.isWatched);
     if (allPending.length > 0) {
       console.log(`[AutoChecker] Checking ${allPending.length} items waiting for good quality...`);
       for (const { userId, item } of allPending) {
-        const quality = await checkMovieQuality(item.id, item.type || 'movie', item.name, item.year);
+        const quality = await checkMovieQuality(
+          item.id,
+          item.type || 'movie',
+          item.name,
+          item.year
+        );
         if (quality.has1080pPlus) {
-          console.log(`🎉 [NEW:${userId}] "${item.name}" is now available in ${quality.bestQuality}!`);
+          console.log(
+            `🎉 [NEW:${userId}] "${item.name}" is now available in ${quality.bestQuality}!`
+          );
         }
-        db.updateItem(item.id, {
-          has1080pPlus: quality.has1080pPlus,
-          bestQuality: quality.bestQuality,
-          streamCount: quality.streamCount,
-          count1080pPlus: quality.count1080pPlus,
-          lastChecked: quality.checkedAt,
-          checkError: quality.error || null
-        }, userId);
-        await new Promise(r => setTimeout(r, 800));
+        db.updateItem(
+          item.id,
+          {
+            has1080pPlus: quality.has1080pPlus,
+            bestQuality: quality.bestQuality,
+            streamCount: quality.streamCount,
+            count1080pPlus: quality.count1080pPlus,
+            lastChecked: quality.checkedAt,
+            checkError: quality.error || null,
+          },
+          userId
+        );
+        await new Promise((r) => setTimeout(r, 800));
       }
     }
   } catch (err) {
@@ -1329,7 +1500,7 @@ app.get('/api/cron', async (req, res) => {
   try {
     // Initiate background check asynchronously so serverless function responds without timeout
     logPostHog('info', 'background_check_triggered', { trigger: 'cron_endpoint' });
-    runBackgroundCheck().catch(err => console.error('[Cron Error]', err.message));
+    runBackgroundCheck().catch((err) => console.error('[Cron Error]', err.message));
     res.json({ success: true, message: 'Automated background check triggered' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1366,8 +1537,12 @@ if (!process.env.VERCEL) {
     console.log(`👉 Port: ${PORT}`);
     console.log(`👉 Web Dashboard: http://localhost:${PORT}`);
     console.log(`👉 Addon Manifest: http://localhost:${PORT}/manifest.json`);
-    console.log(`👉 Client Source: ${fs.existsSync(distPath) ? '⚛️ REACT BUILD (dist)' : '📁 STATIC (public)'}`);
-    console.log(`👉 Database: ${db.isSupabaseConfigured() ? '🟢 SUPABASE CLOUD ACTIVE (MULTI-USER)' : '🟡 LOCAL JSON'}`);
+    console.log(
+      `👉 Client Source: ${fs.existsSync(distPath) ? '⚛️ REACT BUILD (dist)' : '📁 STATIC (public)'}`
+    );
+    console.log(
+      `👉 Database: ${db.isSupabaseConfigured() ? '🟢 SUPABASE CLOUD ACTIVE (MULTI-USER)' : '🟡 LOCAL JSON'}`
+    );
     console.log(`=======================================================`);
   });
 }

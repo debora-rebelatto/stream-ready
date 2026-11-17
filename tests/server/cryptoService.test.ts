@@ -43,4 +43,3 @@ describe('Backend CryptoService (server/services/cryptoService.ts)', () => {
     expect(typeof cryptoService.decryptText).toBe('function');
   });
 });
-

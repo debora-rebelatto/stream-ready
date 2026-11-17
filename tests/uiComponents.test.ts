@@ -15,17 +15,29 @@ describe('UI Reusable Components (Button & Badge)', () => {
     });
 
     test('supports pill variant with active state', () => {
-      const elActive = React.createElement(Button, { variant: 'pill', active: true, badge: 5 }, 'All Lists');
+      const elActive = React.createElement(
+        Button,
+        { variant: 'pill', active: true, badge: 5 },
+        'All Lists'
+      );
       expect(elActive.props.variant).toBe('pill');
       expect(elActive.props.active).toBe(true);
       expect(elActive.props.badge).toBe(5);
 
-      const elInactive = React.createElement(Button, { variant: 'pill', active: false }, 'All Lists');
+      const elInactive = React.createElement(
+        Button,
+        { variant: 'pill', active: false },
+        'All Lists'
+      );
       expect(elInactive.props.active).toBe(false);
     });
 
     test('supports tab variant with themes', () => {
-      const elTab = React.createElement(Button, { variant: 'tab', tabTheme: 'emerald', active: true }, 'Ready');
+      const elTab = React.createElement(
+        Button,
+        { variant: 'tab', tabTheme: 'emerald', active: true },
+        'Ready'
+      );
       expect(elTab.props.variant).toBe('tab');
       expect(elTab.props.tabTheme).toBe('emerald');
     });
@@ -40,7 +52,11 @@ describe('UI Reusable Components (Button & Badge)', () => {
   describe('Badge Component', () => {
     test('is defined and renders a valid React element', () => {
       expect(Badge).toBeDefined();
-      const el = React.createElement(Badge, { variant: 'amber', size: 'xs', uppercase: true }, 'BETA');
+      const el = React.createElement(
+        Badge,
+        { variant: 'amber', size: 'xs', uppercase: true },
+        'BETA'
+      );
       expect(React.isValidElement(el)).toBe(true);
       expect(el.props.variant).toBe('amber');
       expect(el.props.size).toBe('xs');
@@ -49,7 +65,15 @@ describe('UI Reusable Components (Button & Badge)', () => {
     });
 
     test('supports all standard color variants', () => {
-      const variants = ['purple', 'emerald', 'amber', 'rose', 'blue', 'neutral', 'gradient'] as const;
+      const variants = [
+        'purple',
+        'emerald',
+        'amber',
+        'rose',
+        'blue',
+        'neutral',
+        'gradient',
+      ] as const;
       variants.forEach((v) => {
         const el = React.createElement(Badge, { variant: v }, v);
         expect(el.props.variant).toBe(v);
@@ -67,12 +91,18 @@ describe('UI Reusable Components (Button & Badge)', () => {
   describe('WatchInStremioButton Component', () => {
     test('is defined and renders a valid React element with ready and unready states', () => {
       expect(WatchInStremioButton).toBeDefined();
-      const elReady = React.createElement(WatchInStremioButton, { movieId: 'tt1234567', isReady: true });
+      const elReady = React.createElement(WatchInStremioButton, {
+        movieId: 'tt1234567',
+        isReady: true,
+      });
       expect(React.isValidElement(elReady)).toBe(true);
       expect(elReady.props.movieId).toBe('tt1234567');
       expect(elReady.props.isReady).toBe(true);
 
-      const elUnready = React.createElement(WatchInStremioButton, { movieId: 'tt1234567', isReady: false });
+      const elUnready = React.createElement(WatchInStremioButton, {
+        movieId: 'tt1234567',
+        isReady: false,
+      });
       expect(elUnready.props.isReady).toBe(false);
     });
 

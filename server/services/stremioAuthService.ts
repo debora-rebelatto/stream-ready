@@ -11,7 +11,7 @@ export async function loginStremio(email: string, password: string): Promise<Str
     const res = await fetch(`${STREMIO_API}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim(), password })
+      body: JSON.stringify({ email: email.trim(), password }),
     });
 
     const data: any = await res.json();
@@ -29,8 +29,8 @@ export async function loginStremio(email: string, password: string): Promise<Str
       authKey: data.result.authKey,
       user: {
         id: data.result.user?._id,
-        email: data.result.user?.email || email.trim()
-      }
+        email: data.result.user?.email || email.trim(),
+      },
     };
   } catch (err: any) {
     console.error('[StremioAuth] Erro no login:', err.message);
@@ -46,7 +46,7 @@ export async function getUserInfo(authKey: string): Promise<StremioUser | null> 
     const res = await fetch(`${STREMIO_API}/getUser`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ authKey })
+      body: JSON.stringify({ authKey }),
     });
 
     const data: any = await res.json();
@@ -56,7 +56,7 @@ export async function getUserInfo(authKey: string): Promise<StremioUser | null> 
 
     return {
       id: data.result._id,
-      email: data.result.email
+      email: data.result.email,
     };
   } catch (err: any) {
     console.error('[StremioAuth] Erro ao validar authKey:', err.message);
@@ -77,7 +77,7 @@ export async function installAddonToAccount(
     const getRes = await fetch(`${STREMIO_API}/addonCollectionGet`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ authKey })
+      body: JSON.stringify({ authKey }),
     });
 
     const getData: any = await getRes.json();
@@ -104,7 +104,7 @@ export async function installAddonToAccount(
     const addonEntry = {
       transportUrl: manifestUrl,
       manifest: manifestData,
-      flags: { official: false, protected: false }
+      flags: { official: false, protected: false },
     };
 
     if (existingIndex >= 0) {
@@ -117,7 +117,7 @@ export async function installAddonToAccount(
     const setRes = await fetch(`${STREMIO_API}/addonCollectionSet`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ authKey, addons })
+      body: JSON.stringify({ authKey, addons }),
     });
 
     const setData: any = await setRes.json();
@@ -141,15 +141,19 @@ export async function getAccountWatchlist(authKey: string): Promise<any[] | null
     const res = await fetch(`${STREMIO_API}/addonCollectionGet`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ authKey })
+      body: JSON.stringify({ authKey }),
     });
     const data: any = await res.json();
     if (data.error || !data.result || !Array.isArray(data.result.addons)) {
       return null;
     }
-    const addon = data.result.addons.find((a: any) => 
-      a.manifest?.id === 'community.watchlist.quality.tracker' ||
-      (a.transportUrl && (a.transportUrl.includes('onrender.com') || a.transportUrl.includes('localhost') || a.transportUrl.includes('watchlist')))
+    const addon = data.result.addons.find(
+      (a: any) =>
+        a.manifest?.id === 'community.watchlist.quality.tracker' ||
+        (a.transportUrl &&
+          (a.transportUrl.includes('onrender.com') ||
+            a.transportUrl.includes('localhost') ||
+            a.transportUrl.includes('watchlist')))
     );
     if (!addon) return null;
 
@@ -169,7 +173,15 @@ export async function getAccountWatchlist(authKey: string): Promise<any[] | null
           return decoded.items;
         }
         if (decoded.ids && decoded.ids.length > 0) {
-          return decoded.ids.map(id => ({ id, name: id, has1080pPlus: false, bestQuality: 'Pending', type: 'movie' }));
+          return decoded.ids
+            .filter((id: string) => isLegitimateMovieId(id))
+            .map((id) => ({
+              id,
+              name: id,
+              has1080pPlus: false,
+              bestQuality: 'Pending',
+              type: 'movie',
+            }));
         }
       }
     }
@@ -197,7 +209,7 @@ export async function saveAccountWatchlist(
     const getRes = await fetch(`${STREMIO_API}/addonCollectionGet`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ authKey })
+      body: JSON.stringify({ authKey }),
     });
     const getData: any = await getRes.json();
     if (getData.error) {
@@ -210,14 +222,18 @@ export async function saveAccountWatchlist(
       transportUrl: manifestUrl,
       manifest: {
         ...baseManifest,
-        watchlistItems: items
+        watchlistItems: items,
       },
-      flags: { official: false, protected: false }
+      flags: { official: false, protected: false },
     };
 
-    const existingIndex = addons.findIndex((a: any) => 
-      a.manifest?.id === 'community.watchlist.quality.tracker' ||
-      (a.transportUrl && (a.transportUrl.includes('onrender.com') || a.transportUrl.includes('localhost') || a.transportUrl.includes('watchlist')))
+    const existingIndex = addons.findIndex(
+      (a: any) =>
+        a.manifest?.id === 'community.watchlist.quality.tracker' ||
+        (a.transportUrl &&
+          (a.transportUrl.includes('onrender.com') ||
+            a.transportUrl.includes('localhost') ||
+            a.transportUrl.includes('watchlist')))
     );
 
     if (existingIndex >= 0) {
@@ -229,7 +245,7 @@ export async function saveAccountWatchlist(
     const setRes = await fetch(`${STREMIO_API}/addonCollectionSet`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ authKey, addons })
+      body: JSON.stringify({ authKey, addons }),
     });
 
     const setData: any = await setRes.json();
@@ -237,12 +253,24 @@ export async function saveAccountWatchlist(
       throw new Error(setData.error.message || 'Falha ao salvar addon na conta');
     }
 
-    console.log(`[StremioAuth] Watchlist com ${items.length} filmes salva na nuvem do Stremio com sucesso!`);
+    console.log(
+      `[StremioAuth] Watchlist com ${items.length} filmes salva na nuvem do Stremio com sucesso!`
+    );
     return true;
   } catch (err: any) {
     console.warn('[StremioAuth] Erro ao salvar watchlist na nuvem:', err.message);
     return false;
   }
+}
+
+/**
+ * Validates whether an ID belongs to a legitimate movie (IMDb 'tt...' or TMDB 'tmdb:...').
+ * Ignores third-party utility IDs (e.g. 'dlrealdebrid', 'delete_all', etc.).
+ */
+export function isLegitimateMovieId(rawId: string | null | undefined): boolean {
+  if (!rawId) return false;
+  const id = String(rawId).trim().toLowerCase();
+  return /^tt\d+$/.test(id) || /^tmdb:\d+$/.test(id);
 }
 
 /**
@@ -254,7 +282,7 @@ export async function getStremioWatchedMovies(authKey: string): Promise<StremioW
     const res = await fetch(`${STREMIO_API}/datastoreGet`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ authKey, collection: 'libraryItem', all: true })
+      body: JSON.stringify({ authKey, collection: 'libraryItem', all: true }),
     });
     const data: any = await res.json();
     if (!data || !Array.isArray(data.result)) {
@@ -263,12 +291,17 @@ export async function getStremioWatchedMovies(authKey: string): Promise<StremioW
 
     const watchedList: StremioWatchedMovie[] = [];
     for (const it of data.result) {
+      // Validate that item has a legitimate movie ID (IMDb or TMDB) to ignore third-party utility items
+      if (!isLegitimateMovieId(it._id)) {
+        continue;
+      }
+
       // Aceita filmes (ou itens sem tipo explícito mas com id IMDb)
-      const isMovie = (it.type === 'movie' || (!it.type && /^tt\d+/.test(it._id)));
+      const isMovie = it.type === 'movie' || !it.type;
       if (!isMovie) continue;
 
       const s = it.state || {};
-      const ratio = s.duration > 0 ? (s.timeOffset / s.duration) : 0;
+      const ratio = s.duration > 0 ? s.timeOffset / s.duration : 0;
       const isWatched = s.flaggedWatched === 1 || s.timesWatched > 0 || ratio > 0.8;
 
       if (isWatched) {
@@ -283,7 +316,7 @@ export async function getStremioWatchedMovies(authKey: string): Promise<StremioW
           addedAt: it._ctime || new Date().toISOString(),
           has1080pPlus: true,
           bestQuality: 'Watched',
-          streamCount: 1
+          streamCount: 1,
         });
       }
     }
@@ -304,22 +337,27 @@ export async function removeAccountAddon(authKey: string): Promise<boolean> {
     const res = await fetch(`${STREMIO_API}/addonCollectionGet`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ authKey })
+      body: JSON.stringify({ authKey }),
     });
     const data: any = await res.json();
     if (data.error || !data.result || !Array.isArray(data.result.addons)) {
       return false;
     }
 
-    const filteredAddons = data.result.addons.filter((a: any) =>
-      a.manifest?.id !== 'community.watchlist.quality.tracker' &&
-      !(a.transportUrl && (a.transportUrl.includes('stremiowatchlist') || a.transportUrl.includes('community.watchlist')))
+    const filteredAddons = data.result.addons.filter(
+      (a: any) =>
+        a.manifest?.id !== 'community.watchlist.quality.tracker' &&
+        !(
+          a.transportUrl &&
+          (a.transportUrl.includes('stremiowatchlist') ||
+            a.transportUrl.includes('community.watchlist'))
+        )
     );
 
     const setRes = await fetch(`${STREMIO_API}/addonCollectionSet`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ authKey, addons: filteredAddons })
+      body: JSON.stringify({ authKey, addons: filteredAddons }),
     });
     const setData: any = await setRes.json();
     return !setData.error;
@@ -336,7 +374,8 @@ export const stremioAuthService = {
   getAccountWatchlist,
   saveAccountWatchlist,
   removeAccountAddon,
-  getStremioWatchedMovies
+  getStremioWatchedMovies,
+  isLegitimateMovieId,
 };
 
 export default stremioAuthService;

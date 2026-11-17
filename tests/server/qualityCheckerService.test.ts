@@ -5,7 +5,7 @@ import {
   extractStreamYears,
   parseStreams,
   checkMovieQuality,
-  qualityCheckerService
+  qualityCheckerService,
 } from '../../server/services/qualityCheckerService.ts';
 
 describe('Backend QualityCheckerService (server/services/qualityCheckerService.ts)', () => {
@@ -22,7 +22,11 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
       expect(isCamStream('Avatar 2 HDTS x264 Clean Audio')).toBe(true);
       expect(isCamStream('Gladiator II 2024 TELESYNC NEW AUDIO')).toBe(true);
       expect(isCamStream('Wicked 2024 HQMIC 720p')).toBe(true);
-      expect(isCamStream('Clayface.(2026).(HQ-NoADS-NoLogo).1080p.10bit.x265.LD-AAC5.1.ITA.LD-AAC2.0.ENG.MTRx')).toBe(true);
+      expect(
+        isCamStream(
+          'Clayface.(2026).(HQ-NoADS-NoLogo).1080p.10bit.x265.LD-AAC5.1.ITA.LD-AAC2.0.ENG.MTRx'
+        )
+      ).toBe(true);
       expect(isCamStream('Movie 2026 HDCINE 1080p MD-AAC')).toBe(true);
     });
 
@@ -64,7 +68,7 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
     test('deve marcar como isCamOnly quando só existirem streams de cinema', () => {
       const streams = [
         { name: 'Torrentio', title: 'Movie 2024 HDCAM 1080p' },
-        { name: 'Torrentio', title: 'Movie 2024 TELESYNC HQMIC' }
+        { name: 'Torrentio', title: 'Movie 2024 TELESYNC HQMIC' },
       ];
       const res = parseStreams(streams);
       expect(res.isCamOnly).toBe(true);
@@ -75,7 +79,7 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
     test('deve priorizar stream 4K limpo', () => {
       const streams = [
         { name: 'Torrentio', title: 'Movie 2024 2160p WEB-DL DDP5.1 Atmos HDR' },
-        { name: 'Torrentio', title: 'Movie 2024 1080p BluRay' }
+        { name: 'Torrentio', title: 'Movie 2024 1080p BluRay' },
       ];
       const res = parseStreams(streams);
       expect(res.isReady).toBe(true);
@@ -84,9 +88,7 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
     });
 
     test('deve priorizar stream 1080p quando não houver 4K', () => {
-      const streams = [
-        { name: 'Torrentio', title: 'Movie 2024 1080p WEB-DL DDP5.1' }
-      ];
+      const streams = [{ name: 'Torrentio', title: 'Movie 2024 1080p WEB-DL DDP5.1' }];
       const res = parseStreams(streams);
       expect(res.isReady).toBe(true);
       expect(res.bestQuality).toBe('1080p FHD');
@@ -96,28 +98,28 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
       const streams = [
         {
           name: 'Torrentio\n1080p',
-          title: 'Godzilla Minus Zero 2026 1080p HD h264- ETHEL\n👤 1373 💾 1.2 GB ⚙️ 1337x'
+          title: 'Godzilla Minus Zero 2026 1080p HD h264- ETHEL\n👤 1373 💾 1.2 GB ⚙️ 1337x',
         },
         {
           name: 'Torrentio\n1080p',
-          title: 'Godzilla Minus Zero 2026 1080p HD h264- ETHEL\n👤 172 💾 1.8 GB ⚙️ 1337x'
+          title: 'Godzilla Minus Zero 2026 1080p HD h264- ETHEL\n👤 172 💾 1.8 GB ⚙️ 1337x',
         },
         {
           name: 'Torrentio\nCAM',
-          title: 'Godzilla.Minus.Zero.2026.1080p.CAMRip.Dublado.mkv\n👤 274 💾 3.83 GB'
+          title: 'Godzilla.Minus.Zero.2026.1080p.CAMRip.Dublado.mkv\n👤 274 💾 3.83 GB',
         },
         {
           name: 'Torrentio\nTeleSync',
-          title: 'Godzilla.Minus.Zero.2026.PL.AI.1080p.HDTS.H264-MAXX\n👤 97 💾 2.9 GB'
+          title: 'Godzilla.Minus.Zero.2026.PL.AI.1080p.HDTS.H264-MAXX\n👤 97 💾 2.9 GB',
         },
         {
           name: 'Torrentio\nTeleCine',
-          title: 'Godzilla.Minus.Zero.2026.D.TELECINE.1080p\n👤 42 💾 6.53 GB'
+          title: 'Godzilla.Minus.Zero.2026.D.TELECINE.1080p\n👤 42 💾 6.53 GB',
         },
         {
           name: 'Torrentio',
-          title: 'Godzilla Minus Zero (2026) HdTScr Lat\n👤 215 💾 1.37 GB'
-        }
+          title: 'Godzilla Minus Zero (2026) HdTScr Lat\n👤 215 💾 1.37 GB',
+        },
       ];
       const res = parseStreams(streams, 'Godzilla Minus Zero');
       expect(res.isReady).toBe(false);
@@ -130,24 +132,25 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
       const streams = [
         {
           name: 'Torrentio\n1080p',
-          title: 'Clayface.(2026).(HQ-NoADS-NoLogo).1080p.10bit.x265.LD-AAC5.1.ITA.LD-AAC2.0.ENG.MTRx\n👤 64 💾 1.61 GB'
+          title:
+            'Clayface.(2026).(HQ-NoADS-NoLogo).1080p.10bit.x265.LD-AAC5.1.ITA.LD-AAC2.0.ENG.MTRx\n👤 64 💾 1.61 GB',
         },
         {
           name: 'Torrentio\n1080p',
-          title: 'Clayface (2026) 1080p AMZN WEB-DL DDP5 1 H 264-FLUX\n👤 5 💾 1 GB ⚙️ 1337x'
+          title: 'Clayface (2026) 1080p AMZN WEB-DL DDP5 1 H 264-FLUX\n👤 5 💾 1 GB ⚙️ 1337x',
         },
         {
           name: 'Torrentio\nCAM',
-          title: 'Clayface.2026.CAM .1080p.FR.EN-OnlyFlix\n👤 349 💾 4.59 GB'
+          title: 'Clayface.2026.CAM .1080p.FR.EN-OnlyFlix\n👤 349 💾 4.59 GB',
         },
         {
           name: 'Torrentio\nTeleSync',
-          title: 'Clayface.2026.1080p.TELESYNC.DL.x264-CLEANUP\n👤 247 💾 5.2 GB'
+          title: 'Clayface.2026.1080p.TELESYNC.DL.x264-CLEANUP\n👤 247 💾 5.2 GB',
         },
         {
           name: 'Torrentio\nCAM',
-          title: 'Clayface 2026 1080p CAM x264-OnlyFlix\n👤 38 💾 437.92 MB'
-        }
+          title: 'Clayface 2026 1080p CAM x264-OnlyFlix\n👤 38 💾 437.92 MB',
+        },
       ];
       const res = parseStreams(streams, 'Clayface');
       expect(res.isReady).toBe(false);
@@ -160,24 +163,24 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
       const streams = [
         {
           name: 'Torrentio\n1080p',
-          title: 'How to Rob a Bank 2007 1080p AMZN WEB-DL H264-GPRS\n👤 111 💾 6.18 GB'
+          title: 'How to Rob a Bank 2007 1080p AMZN WEB-DL H264-GPRS\n👤 111 💾 6.18 GB',
         },
         {
           name: 'Torrentio\n1080p',
-          title: 'How to Rob a Bank 2007 1080p AMZN WEB-DL DDP2 0 H 264-GPRS\n👤 6 💾 6.18 GB'
+          title: 'How to Rob a Bank 2007 1080p AMZN WEB-DL DDP2 0 H 264-GPRS\n👤 6 💾 6.18 GB',
         },
         {
           name: 'Torrentio\nCAM',
-          title: 'How.to.Rob.a.Bank.2026.1080p.CAMRip.Dublado.mkv\n👤 65 💾 3.44 GB'
+          title: 'How.to.Rob.a.Bank.2026.1080p.CAMRip.Dublado.mkv\n👤 65 💾 3.44 GB',
         },
         {
           name: 'Torrentio\nTeleCine',
-          title: 'How.to.Rob.a.Bank.2026.D.TELECINE.1080p\n👤 16 💾 5.79 GB'
+          title: 'How.to.Rob.a.Bank.2026.D.TELECINE.1080p\n👤 16 💾 5.79 GB',
         },
         {
           name: 'Torrentio\nTeleSync',
-          title: 'How.to.Rob.a.Bank.2026.TS.1080p\n👤 13 💾 4.67 GB'
-        }
+          title: 'How.to.Rob.a.Bank.2026.TS.1080p\n👤 13 💾 4.67 GB',
+        },
       ];
       const res = parseStreams(streams, 'How to Rob a Bank', 2026);
       expect(res.isReady).toBe(false);
@@ -192,10 +195,8 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          streams: [
-            { name: 'Torrentio', title: 'Movie 1080p BluRay x264' }
-          ]
-        })
+          streams: [{ name: 'Torrentio', title: 'Movie 1080p BluRay x264' }],
+        }),
       });
 
       const res = await checkMovieQuality('tt1234567');
@@ -206,7 +207,7 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
     test('deve lidar com 404 como filme ainda não lançado', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: false,
-        status: 404
+        status: 404,
       });
 
       const res = await checkMovieQuality('tt0000000');
@@ -218,7 +219,7 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
       const streams = [
         { name: 'Torrentio', title: 'You.Can.See.Everything.2026.AUDIONEW.1080P\n👤 174' },
         { name: 'Torrentio', title: 'Porrada 2026 WEB-DL 1080p x264 DUAL 5.1\n👤 1' },
-        { name: 'Torrentio', title: 'You.Can.See.Everything.2026.CAM.720p.EN-OnlyFlix\n👤 1027' }
+        { name: 'Torrentio', title: 'You.Can.See.Everything.2026.CAM.720p.EN-OnlyFlix\n👤 1027' },
       ];
       const res = parseStreams(streams, 'You Can See Everything');
       expect(res.isReady).toBe(false);
@@ -234,4 +235,3 @@ describe('Backend QualityCheckerService (server/services/qualityCheckerService.t
     expect(typeof qualityCheckerService.hasCleanSource).toBe('function');
   });
 });
-

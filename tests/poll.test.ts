@@ -52,19 +52,25 @@ describe('Feature Roadmap Poll Client API', () => {
 
   it('submits a poll vote without custom text', async () => {
     const res = await api.submitPollVote('notifications');
-    expect(global.fetch).toHaveBeenCalledWith('/api/poll/vote', expect.objectContaining({
-      method: 'POST',
-      body: JSON.stringify({ option: 'notifications', customText: undefined }),
-    }));
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/poll/vote',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ option: 'notifications', customText: undefined }),
+      })
+    );
     expect(res.success).toBe(true);
   });
 
   it('submits a poll vote with custom text for other option', async () => {
     const res = await api.submitPollVote('other', 'Audio track selector');
-    expect(global.fetch).toHaveBeenCalledWith('/api/poll/vote', expect.objectContaining({
-      method: 'POST',
-      body: JSON.stringify({ option: 'other', customText: 'Audio track selector' }),
-    }));
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/poll/vote',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ option: 'other', customText: 'Audio track selector' }),
+      })
+    );
     expect(res.success).toBe(true);
   });
 

@@ -13,7 +13,7 @@ flowchart LR
     A["v1.0.0 (Current)"] --> B["v1.1.0 (Alerts & Audio)"]
     B --> C["v1.2.0 (External Sync)"]
     C --> D["v2.0.0 (TV Shows & i18n)"]
-    
+
     style A fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff
     style B fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#fff
     style C fill:#3b82f6,stroke:#2563eb,stroke-width:2px,color:#fff
@@ -24,12 +24,12 @@ flowchart LR
 
 ## 🌟 Milestone Overview
 
-| Version | Status | Focus Area | Key Highlights |
-|---|---|---|---|
+| Version    | Status                   | Focus Area                           | Key Highlights                                                                            |
+| ---------- | ------------------------ | ------------------------------------ | ----------------------------------------------------------------------------------------- |
 | **v1.0.0** | 🟢 **Released (Stable)** | Core Quality Tracker & Stremio Addon | Anti-CAM detection, 1-click install, curated streaming lists, backup, 24h feedback banner |
-| **v1.1.0** | 🟡 **In Planning** | Proactive Alerts & Audio Preferences | Telegram/Discord bot notifications, Dual Audio / PT-BR tags, Dolby Vision / HDR10+ |
-| **v1.2.0** | ⚪ **Planned** | External Watchlist Integrations | Letterboxd URL/CSV import, Trakt.tv two-way sync, IMDb import |
-| **v2.0.0** | ⚪ **Future Major** | TV Shows & Ecosystem Expansion | Episode/Season tracking in 1080p/4K, multi-language UI (i18n), public developer API |
+| **v1.1.0** | 🟡 **In Planning**       | Proactive Alerts & Audio Preferences | Telegram/Discord bot notifications, Dual Audio / PT-BR tags, Dolby Vision / HDR10+        |
+| **v1.2.0** | ⚪ **Planned**           | External Watchlist Integrations      | Letterboxd URL/CSV import, Trakt.tv two-way sync, IMDb import                             |
+| **v2.0.0** | ⚪ **Future Major**      | TV Shows & Ecosystem Expansion       | Episode/Season tracking in 1080p/4K, multi-language UI (i18n), public developer API       |
 
 ---
 
@@ -69,23 +69,26 @@ flowchart LR
 The primary focus of **v1.1.0** is turning the tracker into a proactive personal assistant that notifies users wherever they are.
 
 ### 1. 🔔 Proactive Notifications (Telegram & Discord)
+
 - [ ] **Telegram Bot Integration (`@StremioWatchlistBot`)**:
   - Link Telegram account via 6-digit code or deep-link.
   - Immediate push notification when a tracked movie drops in 1080p or 4K:
-    > *"🎉 Great news! **'Oppenheimer'** is now available in **4K UHD • WEB-DL** (18 clean streams). Open in Stremio: [Link]"*
+    > _"🎉 Great news! **'Oppenheimer'** is now available in **4K UHD • WEB-DL** (18 clean streams). Open in Stremio: [Link]"_
 - [ ] **Discord Webhooks**:
   - Custom Discord webhook URL in Settings to post release updates into personal or community channels.
 - [ ] **Web Push Notifications**:
   - Browser push notifications for desktop and mobile Chrome/Safari.
 
 ### 2. 🇧🇷 Audio & Language Preference Filters
+
 - [ ] **Dual Audio & Dubbed Detection (PT-BR, ES, etc.)**:
   - Detect tags such as `DUAL`, `DUBLADO`, `NACIONAL`, `PT-BR`, `LEG` in stream descriptions.
-  - New filter option: *"Show only releases with Portuguese audio/subtitles"*.
+  - New filter option: _"Show only releases with Portuguese audio/subtitles"_.
 - [ ] **Embedded Multi-Subtitles Tagging**:
   - Identify streams containing official SRT/VobSub subtitle packs.
 
 ### 3. 💎 Advanced Video & Audio Badges
+
 - [ ] **HDR & Video Standards**:
   - Detection for `Dolby Vision (DV)`, `HDR10+`, `IMAX Enhanced`, and `REMUX`.
 - [ ] **Surround & Lossless Audio**:
@@ -98,6 +101,7 @@ The primary focus of **v1.1.0** is turning the tracker into a proactive personal
 Connect your existing movie tracking profiles from across the web into Stremio Watchlist with zero friction.
 
 ### 1. 🍿 Letterboxd Integration
+
 - [ ] **URL Import**:
   - Paste any Letterboxd watchlist or list link (e.g. `letterboxd.com/user/watchlist/`).
   - Automatic title extraction and IMDb ID mapping via Cinemeta.
@@ -105,11 +109,13 @@ Connect your existing movie tracking profiles from across the web into Stremio W
   - Upload Letterboxd export ZIP/CSV files directly into your account.
 
 ### 2. 🔄 Trakt.tv Integration
+
 - [ ] OAuth2 Sign-In with Trakt.tv.
 - [ ] Two-way synchronization: Trakt Watchlist ⇄ Stremio Watchlist.
 - [ ] Automated scrobble alignment (mark watched in both platforms).
 
 ### 3. 📋 IMDb & CSV Data Portability
+
 - [ ] Direct import of IMDb exported watchlists (`ratings.csv` / `watchlist.csv`).
 - [ ] Bulk import plain text or list of IMDb IDs.
 
@@ -120,12 +126,14 @@ Connect your existing movie tracking profiles from across the web into Stremio W
 The next major chapter: extending the tracker from movies to full television series and expanding to global audiences.
 
 ### 1. 📺 Full TV Series & Episode Tracking
+
 - [ ] **Per-Episode & Season Tracking**:
   - Monitor TV series episodes (`tt...:s:e`) for 1080p/4K releases.
   - Track complete season packs (e.g. `Season 1 Complete 1080p WEB-DL`).
-  - Stremio catalog for *"Next Episode Ready to Watch"*.
+  - Stremio catalog for _"Next Episode Ready to Watch"_.
 
 ### 2. 🌍 Internationalization (i18n)
+
 - [ ] Multi-language user interface:
   - English (default)
   - Portuguese (Português do Brasil)
@@ -133,6 +141,7 @@ The next major chapter: extending the tracker from movies to full television ser
 - [ ] Localized catalog titles and status badges.
 
 ### 3. 🔌 Public Developer REST API & Webhooks
+
 - [ ] Read-only and read-write developer API tokens.
 - [ ] OpenAPI / Swagger documentation.
 - [ ] Integration documentation for Home Assistant, Radarr, and Jellyfin.
@@ -142,6 +151,7 @@ The next major chapter: extending the tracker from movies to full television ser
 ## 💡 Submitting Feedback & Proposing Features
 
 Have an idea that isn't on the roadmap? We'd love to hear from you:
+
 - **Feedback Form:** [Share your feedback on Tally](https://tally.so/r/dbazxA)
 - **GitHub Issues:** [Open a Feature Request on GitHub](https://github.com/debora-rebelatto/stremiowatchlist/issues)
 - **Support the Project:** [Become a Sponsor on GitHub](https://github.com/sponsors/debora-rebelatto)

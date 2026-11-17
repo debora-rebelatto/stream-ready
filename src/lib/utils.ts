@@ -93,7 +93,12 @@ export function isItemNewRelease(item: {
   }
 }
 
-export function isItemUnreleased(item: { has1080pPlus?: boolean; bestQuality?: string; streamCount?: number; isWatched?: boolean }): boolean {
+export function isItemUnreleased(item: {
+  has1080pPlus?: boolean;
+  bestQuality?: string;
+  streamCount?: number;
+  isWatched?: boolean;
+}): boolean {
   if (item.has1080pPlus || item.isWatched) return false;
   const rawQuality = formatQualityLabel(item.bestQuality);
   return (

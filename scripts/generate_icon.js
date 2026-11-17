@@ -22,7 +22,7 @@ function createPng(width, height, rgbaBuffer) {
     buf.writeUInt32BE(len, 0);
     buf.write(type, 4, 4, 'ascii');
     data.copy(buf, 8);
-    
+
     // CRC32
     let c = 0xffffffff;
     const typeAndData = buf.subarray(4, 8 + len);

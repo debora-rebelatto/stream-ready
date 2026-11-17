@@ -20,6 +20,7 @@ export { ToastContainer } from './ToastContainer';
 export { LoginModal } from './LoginModal';
 export { InstallGuideModal } from './InstallGuideModal';
 export { SettingsModal } from './SettingsModal';
+export { SettingsPage } from './SettingsPage';
 export { ManageListsModal } from './ManageListsModal';
 export { DeleteMovieModal } from './DeleteMovieModal';
 export { DeleteAccountModal } from './DeleteAccountModal';

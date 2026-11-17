@@ -80,9 +80,15 @@ describe('Database User Bulldoze / Account Deletion (lib/db.js)', () => {
     expect(db.getCustomLists(testUserId)).toEqual([]);
 
     // 2. Verify Supabase REST delete calls were dispatched for all user-related tables
-    const deletedItems = supabaseDeletedUrls.some((u) => u.includes('watchlist_items') && u.includes(testUserId));
-    const deletedLists = supabaseDeletedUrls.some((u) => u.includes('watchlist_custom_lists') && u.includes(testUserId));
-    const deletedEvents = supabaseDeletedUrls.some((u) => u.includes('analytics_events') && u.includes(testUserId));
+    const deletedItems = supabaseDeletedUrls.some(
+      (u) => u.includes('watchlist_items') && u.includes(testUserId)
+    );
+    const deletedLists = supabaseDeletedUrls.some(
+      (u) => u.includes('watchlist_custom_lists') && u.includes(testUserId)
+    );
+    const deletedEvents = supabaseDeletedUrls.some(
+      (u) => u.includes('analytics_events') && u.includes(testUserId)
+    );
     const deletedUser = supabaseDeletedUrls.some((u) => u.includes('watchlist_users'));
 
     expect(deletedItems).toBe(true);

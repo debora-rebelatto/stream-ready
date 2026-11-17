@@ -43,7 +43,8 @@ describe('OnboardingCallout logic & starter recommendations', () => {
     // If expired
     const expiredStored = String(now - 1000);
     localStorage.setItem(ONBOARDING_DISMISS_KEY, expiredStored);
-    const isExpiredDismissed = parseInt(localStorage.getItem(ONBOARDING_DISMISS_KEY) || '0', 10) > now;
+    const isExpiredDismissed =
+      parseInt(localStorage.getItem(ONBOARDING_DISMISS_KEY) || '0', 10) > now;
     expect(isExpiredDismissed).toBe(false);
   });
 });

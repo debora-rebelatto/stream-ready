@@ -4,3 +4,4 @@ export * from './userDataService.ts';
 export * from './qualityCheckerService.ts';
 export * from './stremioAuthService.ts';
 export * from './stremioAddonService.ts';
+export * from './tmdbService.ts';

@@ -16,8 +16,8 @@ export const ToastContainer: React.FC = () => {
             t.type === 'success'
               ? 'bg-[#151824]/95 border-emerald-500/50 text-emerald-300'
               : t.type === 'error'
-              ? 'bg-[#151824]/95 border-red-500/50 text-red-300'
-              : 'bg-[#151824]/95 border-purple-500/50 text-purple-200'
+                ? 'bg-[#151824]/95 border-red-500/50 text-red-300'
+                : 'bg-[#151824]/95 border-purple-500/50 text-purple-200'
           }`}
         >
           <div className="flex items-center gap-2.5 min-w-0">

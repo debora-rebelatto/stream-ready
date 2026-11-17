@@ -2,15 +2,15 @@ import React from 'react';
 import { RotateCw } from 'lucide-react';
 
 export type ButtonVariant =
-  | 'primary'      // Gradient purple-to-indigo with glow
-  | 'solid'        // Solid purple with shadow
-  | 'secondary'    // Dark card background with subtle border
-  | 'outline'      // Semi-transparent background with border
-  | 'ghost'        // Minimal background on hover
-  | 'danger'       // Rose tinted background & border
-  | 'indigo'       // Indigo tinted background & border
-  | 'pill'         // Filter pill buttons (list filters)
-  | 'tab';         // Header status tab buttons (All, Ready, etc.)
+  | 'primary' // Gradient purple-to-indigo with glow
+  | 'solid' // Solid purple with shadow
+  | 'secondary' // Dark card background with subtle border
+  | 'outline' // Semi-transparent background with border
+  | 'ghost' // Minimal background on hover
+  | 'danger' // Rose tinted background & border
+  | 'indigo' // Indigo tinted background & border
+  | 'pill' // Filter pill buttons (list filters)
+  | 'tab'; // Header status tab buttons (All, Ready, etc.)
 
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 
@@ -99,7 +99,9 @@ export const Button: React.FC<ButtonProps> = ({
         }`;
       case 'tab':
         return `rounded-lg font-semibold whitespace-nowrap border ${
-          active ? tabActiveClasses[tabTheme] : 'border-transparent text-gray-400 hover:text-gray-200'
+          active
+            ? tabActiveClasses[tabTheme]
+            : 'border-transparent text-gray-400 hover:text-gray-200'
         }`;
       default:
         return 'bg-[#1f2438] text-gray-200';
@@ -113,7 +115,10 @@ export const Button: React.FC<ButtonProps> = ({
       {...props}
     >
       {isLoading ? (
-        <RotateCw size={size === 'lg' ? 16 : 13} className="animate-spin text-purple-400 shrink-0" />
+        <RotateCw
+          size={size === 'lg' ? 16 : 13}
+          className="animate-spin text-purple-400 shrink-0"
+        />
       ) : (
         icon && iconPosition === 'left' && <span className="shrink-0">{icon}</span>
       )}

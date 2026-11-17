@@ -14,7 +14,7 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
   userEmail,
   onConfirm,
   onClose,
-  isDeleting = false
+  isDeleting = false,
 }) => {
   const [confirmText, setConfirmText] = useState('');
 
@@ -81,12 +81,13 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
             <AlertTriangle size={22} />
           </div>
           <div>
-            <h3 id="delete-account-modal-title" className="text-lg font-bold text-white tracking-tight">
+            <h3
+              id="delete-account-modal-title"
+              className="text-lg font-bold text-white tracking-tight"
+            >
               Permanently Delete Account
             </h3>
-            <p className="text-xs text-red-400/90 font-medium">
-              Irreversible database wipe
-            </p>
+            <p className="text-xs text-red-400/90 font-medium">Irreversible database wipe</p>
           </div>
         </div>
 
@@ -120,7 +121,10 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
         {/* Confirmation Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="confirm-delete-input" className="block text-xs font-medium text-gray-300 mb-1.5">
+            <label
+              htmlFor="confirm-delete-input"
+              className="block text-xs font-medium text-gray-300 mb-1.5"
+            >
               Type <span className="font-bold text-red-400">DELETE</span> to confirm:
             </label>
             <input

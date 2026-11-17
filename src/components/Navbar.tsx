@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, useToast } from '../context/useAppContext';
-import { api } from '../lib/api';
+import { systemService } from '../services';
 import { trackEvent } from '../lib/analytics';
-import { Settings, Copy, LogIn, LogOut, Menu, X, Play, MessageSquare, Folder, QrCode } from 'lucide-react';
+import {
+  Settings,
+  Copy,
+  LogIn,
+  LogOut,
+  Menu,
+  X,
+  Play,
+  MessageSquare,
+  Folder,
+  QrCode,
+} from 'lucide-react';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
 import { Button } from './Button';
 import { Badge } from './Badge';
@@ -21,7 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenLogin,
   onOpenInstallGuide,
   onOpenLists,
-  onOpenQrModal
+  onOpenQrModal,
 }) => {
   const { user, logout, isLoading: isAuthLoading } = useAuth();
   const { showToast } = useToast();
@@ -30,7 +41,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [installUrl, setInstallUrl] = useState('');
 
   useEffect(() => {
-    api.getInfo()
+    systemService
+      .getInfo()
       .then((info) => {
         setManifestUrl(info.manifestUrl);
         setInstallUrl(info.stremioInstallUrl);
@@ -49,7 +61,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       .writeText(manifestUrl)
       .then(() => {
         if (!user) {
-          showToast('Manifest copied! Note: Connect your Stremio account to enable movie tracking and sync.', 'info');
+          showToast(
+            'Manifest copied! Note: Connect your Stremio account to enable movie tracking and sync.',
+            'info'
+          );
         } else {
           showToast('Manifest link copied! Paste into Stremio Addons search bar.', 'success');
         }
@@ -59,13 +74,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const handleInstallClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!user && onOpenInstallGuide) {
+    if (onOpenInstallGuide) {
       onOpenInstallGuide();
       return;
     }
     if (installUrl) {
       trackEvent('addon_install_clicked', { location: 'navbar' });
-      showToast('🎬 Reminder: After installing in Stremio, use the search bar on this site to add movies!', 'info');
+      showToast(
+        '🎬 Reminder: After installing in Stremio, use the search bar on this site to add movies!',
+        'info'
+      );
       window.location.href = installUrl;
     }
   };
@@ -185,7 +203,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           ) : user ? (
             <div className="flex items-center gap-1.5 bg-[#151824] border border-white/10 pl-2.5 pr-1 py-1 rounded-lg text-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-              <span className="text-gray-200 max-w-32.5 truncate text-[11px] font-medium" title={user.email}>
+              <span
+                className="text-gray-200 max-w-32.5 truncate text-[11px] font-medium"
+                title={user.email}
+              >
                 {user.email}
               </span>
               <button
@@ -201,15 +222,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <LogOut size={13} />
               </button>
-              
             </div>
           ) : (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={onOpenLogin}
-              icon={<LogIn size={13} />}
-            >
+            <Button variant="primary" size="sm" onClick={onOpenLogin} icon={<LogIn size={13} />}>
               Sign In
             </Button>
           )}
@@ -333,7 +348,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* GitHub Sponsor row */}
           <div className="pt-2 flex flex-col items-center justify-center p-3 rounded-xl bg-purple-500/5 border border-purple-500/20 text-center">
-            <span className="text-[11px] text-gray-300 font-medium mb-2">Support this project on GitHub</span>
+            <span className="text-[11px] text-gray-300 font-medium mb-2">
+              Support this project on GitHub
+            </span>
             <GitHubSponsorButton size="md" />
           </div>
         </div>

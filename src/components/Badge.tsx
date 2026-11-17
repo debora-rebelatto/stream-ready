@@ -1,13 +1,7 @@
 import React from 'react';
 
 export type BadgeVariant =
-  | 'purple'
-  | 'emerald'
-  | 'amber'
-  | 'rose'
-  | 'blue'
-  | 'neutral'
-  | 'gradient';
+  'purple' | 'emerald' | 'amber' | 'rose' | 'blue' | 'neutral' | 'gradient';
 
 export type BadgeSize = 'xs' | 'sm' | 'md' | 'lg';
 

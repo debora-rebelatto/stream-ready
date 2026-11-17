@@ -6,9 +6,11 @@ import { getMeta } from './cinemetaService.ts';
  */
 export function isCamStream(text: string): boolean {
   // Theater video patterns (CAM, Telesync, Telecine, Screener, Workprint, HDCINE, cleanup tags)
-  const camVideo = /\b(cam|camrip|cam-rip|hdcam|hd-cam|cam-hd|telesync|ts|hdts|hd-ts|tsrip|telecine|tc|hdtc|screener|scr|dvdscr|dvd-scr|bdscr|tscr|hdtscr|hd-tscr|telescreener|workprint|wp|predvd|pdvd|cinema|theater|theatre|gravacao|gravado|gravada|hdcine|hd-cine|cinemahd|hq[-._]?noads|noads[-._]?nologo|noads|nologo|mtrx)\b/i;
+  const camVideo =
+    /\b(cam|camrip|cam-rip|hdcam|hd-cam|cam-hd|telesync|ts|hdts|hd-ts|tsrip|telecine|tc|hdtc|screener|scr|dvdscr|dvd-scr|bdscr|tscr|hdtscr|hd-tscr|telescreener|workprint|wp|predvd|pdvd|cinema|theater|theatre|gravacao|gravado|gravada|hdcine|hd-cine|cinemahd|hq[-._]?noads|noads[-._]?nologo|noads|nologo|mtrx)\b/i;
   // Theater / mic audio patterns (e.g. AUDIONEW, NEW AUDIO, LINE AUDIO, HQMIC, LINE DUB, MIC DUB)
-  const camAudio = /\b(audionew|audio-new|audio\.new|newaudio|new-audio|new\.audio|cleanaudio|clean-audio|clean\.audio|lineaudio|line-audio|line\.audio|linesound|line-sound|hqmic|hq-mic|mic-audio|mic\.audio|line[-._ ]?dub(bed)?|mic[-._ ]?dub(bed)?)\b/i;
+  const camAudio =
+    /\b(audionew|audio-new|audio\.new|newaudio|new-audio|new\.audio|cleanaudio|clean-audio|clean\.audio|lineaudio|line-audio|line\.audio|linesound|line-sound|hqmic|hq-mic|mic-audio|mic\.audio|line[-._ ]?dub(bed)?|mic[-._ ]?dub(bed)?)\b/i;
   // Line-dubbed / mic-dubbed audio codes (e.g. LD-AAC, MD-AAC, LD.5.1, MD5.1)
   const camLd = /\b(ld|md)[-._]?(aac|ac3|mp3|dts|ddp|dd|5\.1|2\.0)\b/i;
   // Hardcoded CAM subtitles
@@ -22,15 +24,21 @@ export function isCamStream(text: string): boolean {
  */
 export function hasCleanSource(text: string): boolean {
   // Official digital and physical formats
-  const cleanFormat = /\b(web|web-dl|webdl|web\.dl|web-rip|webrip|web\.rip|bluray|blu-ray|bdrip|bd-rip|brrip|br-rip|hdtv|hdtvrip|dvdrip|dvd-rip|vodrip|voddler|remux)\b/i;
+  const cleanFormat =
+    /\b(web|web-dl|webdl|web\.dl|web-rip|webrip|web\.rip|bluray|blu-ray|bdrip|bd-rip|brrip|br-rip|hdtv|hdtvrip|dvdrip|dvd-rip|vodrip|voddler|remux)\b/i;
   // Official streaming platforms
-  const streamingPlatform = /\b(amzn|amazon|netflix|nf|atvp|appletv|apple-tv|dsnp|disney|disney\+|hmax|hbomax|max|peacock|pcok|paramount|pmtp|paramount\+|itunes|hulu|bcore|braviacore)\b/i;
+  const streamingPlatform =
+    /\b(amzn|amazon|netflix|nf|atvp|appletv|apple-tv|dsnp|disney|disney\+|hmax|hbomax|max|peacock|pcok|paramount|pmtp|paramount\+|itunes|hulu|bcore|braviacore)\b/i;
   // Multichannel digital audio patterns (excluding plain stereo ac3/aac/mp3 which CAMs frequently use)
   const cleanAudio = /\b(ddp5\.1|ddp5|dd5\.1|dd5|eac3|truehd|atmos|dts-hd|dts-x|flac)\b/i;
   // Official HDR specifications on UHD/4K releases
-  const cleanHDR = /\b(2160p|uhd|4k)\b/i.test(text) && /\b(dovi|dv\b|hdr10\+|hdr10|dolby[-._ ]?vision)\b/i.test(text);
+  const cleanHDR =
+    /\b(2160p|uhd|4k)\b/i.test(text) &&
+    /\b(dovi|dv\b|hdr10\+|hdr10|dolby[-._ ]?vision)\b/i.test(text);
 
-  return cleanFormat.test(text) || streamingPlatform.test(text) || cleanAudio.test(text) || cleanHDR;
+  return (
+    cleanFormat.test(text) || streamingPlatform.test(text) || cleanAudio.test(text) || cleanHDR
+  );
 }
 
 /**
@@ -40,18 +48,42 @@ export function hasCleanSource(text: string): boolean {
 export function isStreamMatchingTitle(streamText: string, movieName?: string): boolean {
   if (!movieName || movieName.trim().length === 0) return true;
 
-  const cleanName = movieName.toLowerCase()
+  const cleanName = movieName
+    .toLowerCase()
     .replace(/[^\w\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
   const stopWords = new Set([
-    'the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'at', 'to', 'for', 'with', 'by', 'from',
-    'o', 'a', 'os', 'as', 'de', 'do', 'da', 'em', 'um', 'uma', 'e', 'ou'
+    'the',
+    'a',
+    'an',
+    'and',
+    'or',
+    'of',
+    'in',
+    'on',
+    'at',
+    'to',
+    'for',
+    'with',
+    'by',
+    'from',
+    'o',
+    'a',
+    'os',
+    'as',
+    'de',
+    'do',
+    'da',
+    'em',
+    'um',
+    'uma',
+    'e',
+    'ou',
   ]);
 
-  const words = cleanName.split(' ')
-    .filter(w => w.length >= 2 && !stopWords.has(w));
+  const words = cleanName.split(' ').filter((w) => w.length >= 2 && !stopWords.has(w));
 
   if (words.length === 0) {
     const rawClean = movieName.toLowerCase().replace(/[^\w]/g, '');
@@ -77,7 +109,7 @@ export function isStreamMatchingTitle(streamText: string, movieName?: string): b
 export function extractStreamYears(text: string): number[] {
   const matches = text.match(/\b(19\d{2}|20\d{2})\b(?![pi])/gi);
   if (!matches) return [];
-  return matches.map(m => parseInt(m, 10));
+  return matches.map((m) => parseInt(m, 10));
 }
 
 /**
@@ -93,7 +125,7 @@ export function isStreamMatchingYear(streamText: string, movieYear?: string | nu
   if (streamYears.length === 0) return true; // No year specified in stream name
 
   // Check if at least one year in the stream title is within +/- 1 year of the movie release year
-  return streamYears.some(y => Math.abs(y - targetYear) <= 1);
+  return streamYears.some((y) => Math.abs(y - targetYear) <= 1);
 }
 
 /**
@@ -137,7 +169,7 @@ export function parseStreams(
       streamCount: 0,
       cleanStreamCount: 0,
       count1080pPlus: 0,
-      checkedAt: new Date().toISOString()
+      checkedAt: new Date().toISOString(),
     };
   }
 
@@ -172,10 +204,12 @@ export function parseStreams(
 
     // Reject fake / impossible file sizes (e.g. 4K claiming < 2.5 GB, or 1080p claiming < 750 MB)
     const sizeBytes = getStreamSizeBytes(streamTitle);
-    const isSuspicious4k = sizeBytes !== null && sizeBytes < 2.5 * 1024 * 1024 * 1024 &&
+    const isSuspicious4k =
+      sizeBytes !== null &&
+      sizeBytes < 2.5 * 1024 * 1024 * 1024 &&
       /\b(2160p|4k|uhd)\b/i.test(fullText);
-    const isSuspicious1080p = sizeBytes !== null && sizeBytes < 750 * 1024 * 1024 &&
-      /\b(1080p|fhd)\b/i.test(fullText);
+    const isSuspicious1080p =
+      sizeBytes !== null && sizeBytes < 750 * 1024 * 1024 && /\b(1080p|fhd)\b/i.test(fullText);
     const isSuspiciousSize = isSuspicious4k || isSuspicious1080p;
 
     const seeds = getStreamSeedCount(streamTitle);
@@ -215,10 +249,11 @@ export function parseStreams(
   // If CAM dominates and there are only 1-2 clean streams with low seeds,
   // or CAM streams flood the release (e.g. 3+ CAM streams and clean stream has <= 15 seeds),
   // treat as unconfirmed / poisoned torrent
-  const isIsolatedSuspiciousClean = (
+  const isIsolatedSuspiciousClean =
     (cleanStreamCount <= 2 && maxCleanSeeds !== null && maxCleanSeeds <= 8) ||
-    (camStreamCount >= 3 && cleanStreamCount <= 2 && (maxCleanSeeds === null || maxCleanSeeds <= 15))
-  );
+    (camStreamCount >= 3 &&
+      cleanStreamCount <= 2 &&
+      (maxCleanSeeds === null || maxCleanSeeds <= 15));
 
   if (hasCam && isIsolatedSuspiciousClean) {
     cleanStreamCount = 0;
@@ -252,7 +287,7 @@ export function parseStreams(
     streamCount: streams.length,
     cleanStreamCount,
     count1080pPlus: cleanStreamCount,
-    checkedAt: new Date().toISOString()
+    checkedAt: new Date().toISOString(),
   };
 }
 
@@ -266,7 +301,7 @@ export async function checkMovieQuality(
   movieYear?: string | number
 ): Promise<QualityCheckResult> {
   const baseUrl = (process.env.TORRENTIO_URL || 'https://torrentio.strem.fun').replace(/\/+$/, '');
-  
+
   if (!movieName || !movieYear) {
     try {
       const meta = await getMeta(type, imdbId);
@@ -293,8 +328,8 @@ export async function checkMovieQuality(
       signal: controller.signal,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) StremioWatchlist/1.0',
-        'Accept': 'application/json'
-      }
+        Accept: 'application/json',
+      },
     });
 
     if (!res.ok) {
@@ -308,7 +343,7 @@ export async function checkMovieQuality(
           streamCount: 0,
           cleanStreamCount: 0,
           count1080pPlus: 0,
-          checkedAt: new Date().toISOString()
+          checkedAt: new Date().toISOString(),
         };
       }
       throw new Error(`Torrentio responded with status ${res.status}`);
@@ -327,7 +362,7 @@ export async function checkMovieQuality(
       streamCount: 0,
       cleanStreamCount: 0,
       count1080pPlus: 0,
-      checkedAt: new Date().toISOString()
+      checkedAt: new Date().toISOString(),
     };
   } finally {
     if (timeout) clearTimeout(timeout);
@@ -341,8 +376,7 @@ export const qualityCheckerService = {
   isStreamMatchingYear,
   extractStreamYears,
   parseStreams,
-  checkMovieQuality
+  checkMovieQuality,
 };
 
 export default qualityCheckerService;
-

@@ -3,11 +3,12 @@ import path from 'path';
 import crypto from 'crypto';
 
 // Garante que o .env esteja carregado antes de derivar as chaves
-const currentDir = typeof __dirname !== 'undefined' ? __dirname : (import.meta.dirname || process.cwd());
+const currentDir =
+  typeof __dirname !== 'undefined' ? __dirname : import.meta.dirname || process.cwd();
 const envCandidates = [
   path.join(process.cwd(), '.env'),
   path.join(currentDir, '..', '.env'),
-  path.join(currentDir, '..', '..', '.env')
+  path.join(currentDir, '..', '..', '.env'),
 ];
 for (const ENV_FILE of envCandidates) {
   if (fs.existsSync(ENV_FILE)) {
@@ -19,7 +20,10 @@ for (const ENV_FILE of envCandidates) {
         const eqIdx = trimmed.indexOf('=');
         if (eqIdx > 0) {
           const key = trimmed.slice(0, eqIdx).trim();
-          const val = trimmed.slice(eqIdx + 1).trim().replace(/^['"]|['"]$/g, '');
+          const val = trimmed
+            .slice(eqIdx + 1)
+            .trim()
+            .replace(/^['"]|['"]$/g, '');
           if (!process.env[key]) {
             process.env[key] = val;
           }
@@ -40,9 +44,9 @@ function getCandidateKeys(): Buffer[] {
   const seeds = [
     process.env.ENCRYPTION_KEY,
     process.env.SUPABASE_KEY,
-    'stremio-good-quality-tracker-master-key-seed'
+    'stremio-good-quality-tracker-master-key-seed',
   ].filter(Boolean) as string[];
-  return Array.from(new Set(seeds)).map(s => crypto.createHash('sha256').update(s).digest());
+  return Array.from(new Set(seeds)).map((s) => crypto.createHash('sha256').update(s).digest());
 }
 
 /**
@@ -112,7 +116,7 @@ export function decryptText(cipherText: string | null | undefined): string | nul
 
 export const cryptoService = {
   encryptText,
-  decryptText
+  decryptText,
 };
 
 export default cryptoService;

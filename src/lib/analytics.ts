@@ -2,10 +2,17 @@ import posthog from 'posthog-js';
 import { getAuthHeaders } from './api';
 
 export type EventSource = 'search' | 'recommendations' | 'curated_list' | 'manual';
-export type AddonActionLocation = 'navbar' | 'landing_page' | 'hero';
+export type AddonActionLocation =
+  'navbar' | 'landing_page' | 'hero' | 'dashboard_guide' | 'install_modal';
 
 export interface EventDataMap {
-  movie_added: { title: string; year?: string; imdbId?: string; source?: EventSource; isReady?: boolean };
+  movie_added: {
+    title: string;
+    year?: string;
+    imdbId?: string;
+    source?: EventSource;
+    isReady?: boolean;
+  };
   movie_removed: { title: string; imdbId?: string };
   movie_watched_toggled: { isWatched: boolean; imdbId?: string };
   addon_manifest_copied: { location: AddonActionLocation };
@@ -62,7 +69,7 @@ const safeStorage = {
     try {
       if (typeof localStorage !== 'undefined') localStorage.removeItem(key);
     } catch {}
-  }
+  },
 };
 
 /**
@@ -84,7 +91,8 @@ export function getExcludedTrackingEmails(): string[] {
   const emailsSet = new Set<string>(BUILTIN_EXCLUDED_EMAILS.map((e) => e.toLowerCase()));
 
   // 1. From environment variables (Vite / Node)
-  const envVal = getEnvVar('VITE_EXCLUDED_TRACKING_EMAILS') || getEnvVar('EXCLUDED_TRACKING_EMAILS');
+  const envVal =
+    getEnvVar('VITE_EXCLUDED_TRACKING_EMAILS') || getEnvVar('EXCLUDED_TRACKING_EMAILS');
   if (envVal) {
     envVal.split(',').forEach((email) => {
       const clean = email.trim().toLowerCase();
@@ -120,7 +128,8 @@ export function getExcludedTrackingEmails(): string[] {
 export function getExcludedTrackingUserIds(): string[] {
   const idsSet = new Set<string>(BUILTIN_EXCLUDED_USER_IDS.map((id) => id.toLowerCase()));
 
-  const envVal = getEnvVar('VITE_EXCLUDED_TRACKING_USER_IDS') || getEnvVar('EXCLUDED_TRACKING_USER_IDS');
+  const envVal =
+    getEnvVar('VITE_EXCLUDED_TRACKING_USER_IDS') || getEnvVar('EXCLUDED_TRACKING_USER_IDS');
   if (envVal) {
     envVal.split(',').forEach((id) => {
       const clean = id.trim().toLowerCase();
@@ -265,10 +274,7 @@ export function resetUser(): void {
  * 1. PostHog (Product analytics, funnels, session replays)
  * 2. Supabase backend (/api/events - First-party, privacy-preserving, anti-adblock)
  */
-export function trackEvent<T extends EventName>(
-  name: T,
-  data?: EventDataMap[T]
-): void {
+export function trackEvent<T extends EventName>(name: T, data?: EventDataMap[T]): void {
   if (isTrackingBlocked()) {
     return;
   }

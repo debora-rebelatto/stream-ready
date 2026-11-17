@@ -47,9 +47,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" 
-        onClick={onClose} 
+      <div
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
         aria-hidden="true"
       />
 
@@ -61,7 +61,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400">
               <Lock size={16} />
             </div>
-            <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">Sign in with Stremio</h3>
+            <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
+              Sign in with Stremio
+            </h3>
           </div>
           <button
             onClick={onClose}
@@ -82,7 +84,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 Why connect your Stremio account?
               </strong>
               <span>
-                Stremio addons are read-only inside the player. Connecting your account links this website to your Stremio library so you can search and add cinema movies here. Our 24/7 cloud scanner will automatically push 1080p FHD &amp; 4K UHD releases straight to your TV!
+                Stremio addons are read-only inside the player. Connecting your account links this
+                website to your Stremio library so you can search and add cinema movies here. Our
+                24/7 cloud scanner will automatically push 1080p FHD &amp; 4K UHD releases straight
+                to your TV!
               </span>
             </div>
           </div>
@@ -252,7 +257,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           <div className="mt-3 p-3 rounded-xl bg-black/30 border border-white/5 text-[11px] text-gray-400 leading-relaxed flex items-start gap-2">
             <span className="text-sm shrink-0">🔒</span>
             <span>
-              <strong>Security:</strong> Authentication connects directly with the official Stremio API (<code>api.strem.io</code>) over encrypted TLS.
+              <strong>Security:</strong> Authentication connects directly with the official Stremio
+              API (<code>api.strem.io</code>) over encrypted TLS.
             </span>
           </div>
         </div>

@@ -5,7 +5,7 @@ import {
   getAccountWatchlist,
   saveAccountWatchlist,
   getStremioWatchedMovies,
-  stremioAuthService
+  stremioAuthService,
 } from '../../server/services/stremioAuthService.ts';
 
 describe('Backend StremioAuthService (server/services/stremioAuthService.ts)', () => {
@@ -23,9 +23,9 @@ describe('Backend StremioAuthService (server/services/stremioAuthService.ts)', (
         json: async () => ({
           result: {
             authKey: 'mock_stremio_auth_token_xyz',
-            user: { _id: 'user_123', email: 'test@example.com' }
-          }
-        })
+            user: { _id: 'user_123', email: 'test@example.com' },
+          },
+        }),
       });
 
       const res = await loginStremio('test@example.com', 'password123');
@@ -38,8 +38,8 @@ describe('Backend StremioAuthService (server/services/stremioAuthService.ts)', (
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          error: { message: 'USER_ERR_BAD_CREDENTIALS' }
-        })
+          error: { message: 'USER_ERR_BAD_CREDENTIALS' },
+        }),
       });
 
       const res = await loginStremio('wrong@example.com', 'wrongpass');
@@ -53,8 +53,8 @@ describe('Backend StremioAuthService (server/services/stremioAuthService.ts)', (
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          result: { _id: 'stremio_user_999', email: 'user@stremio.com' }
-        })
+          result: { _id: 'stremio_user_999', email: 'user@stremio.com' },
+        }),
       });
 
       const user = await getUserInfo('valid_token');
@@ -66,11 +66,34 @@ describe('Backend StremioAuthService (server/services/stremioAuthService.ts)', (
     test('deve retornar null se o authKey for inválido', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ error: { message: 'Invalid session' } })
+        json: async () => ({ error: { message: 'Invalid session' } }),
       });
 
       const user = await getUserInfo('expired_token');
       expect(user).toBeNull();
+    });
+  });
+
+  describe('isLegitimateMovieId', () => {
+    test('should accept standard IMDb IDs (tt followed by numbers)', () => {
+      expect(stremioAuthService.isLegitimateMovieId('tt1375666')).toBe(true);
+      expect(stremioAuthService.isLegitimateMovieId('tt0111161')).toBe(true);
+      expect(stremioAuthService.isLegitimateMovieId('tt12345678')).toBe(true);
+    });
+
+    test('should accept TMDB IDs (tmdb: followed by numbers)', () => {
+      expect(stremioAuthService.isLegitimateMovieId('tmdb:550')).toBe(true);
+      expect(stremioAuthService.isLegitimateMovieId('tmdb:123456')).toBe(true);
+    });
+
+    test('should reject third-party debrid utility IDs and non-movie identifiers', () => {
+      expect(stremioAuthService.isLegitimateMovieId('dlrealdebrid')).toBe(false);
+      expect(stremioAuthService.isLegitimateMovieId('delete_all_files')).toBe(false);
+      expect(stremioAuthService.isLegitimateMovieId('realdebrid:delete')).toBe(false);
+      expect(stremioAuthService.isLegitimateMovieId('kitsu:123')).toBe(false);
+      expect(stremioAuthService.isLegitimateMovieId('')).toBe(false);
+      expect(stremioAuthService.isLegitimateMovieId(null)).toBe(false);
+      expect(stremioAuthService.isLegitimateMovieId(undefined)).toBe(false);
     });
   });
 
@@ -84,22 +107,50 @@ describe('Backend StremioAuthService (server/services/stremioAuthService.ts)', (
               _id: 'tt1375666',
               name: 'Inception',
               type: 'movie',
-              state: { flaggedWatched: 1, timesWatched: 1 }
+              state: { flaggedWatched: 1, timesWatched: 1 },
             },
             {
               _id: 'tt9999999',
               name: 'Unwatched Movie',
               type: 'movie',
-              state: { flaggedWatched: 0, timesWatched: 0 }
-            }
-          ]
-        })
+              state: { flaggedWatched: 0, timesWatched: 0 },
+            },
+          ],
+        }),
       });
 
       const watched = await getStremioWatchedMovies('token');
       expect(watched).toHaveLength(1);
       expect(watched[0].id).toBe('tt1375666');
       expect(watched[0].isWatched).toBe(true);
+    });
+
+    test('should ignore third-party utility items like MediaFusion delete all files', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          result: [
+            {
+              _id: 'dlrealdebrid',
+              name: '🗑️💩 Delete all files',
+              type: 'movie',
+              poster: 'https://mediafusion.elfhosted.com/static/images/delete_all_poster.jpg',
+              state: { flaggedWatched: 1, timesWatched: 1 },
+            },
+            {
+              _id: 'tt0111161',
+              name: 'The Shawshank Redemption',
+              type: 'movie',
+              state: { flaggedWatched: 1, timesWatched: 1 },
+            },
+          ],
+        }),
+      });
+
+      const watched = await getStremioWatchedMovies('token');
+      expect(watched).toHaveLength(1);
+      expect(watched[0].id).toBe('tt0111161');
+      expect(watched[0].name).toBe('The Shawshank Redemption');
     });
   });
 
@@ -110,6 +161,6 @@ describe('Backend StremioAuthService (server/services/stremioAuthService.ts)', (
     expect(typeof stremioAuthService.getAccountWatchlist).toBe('function');
     expect(typeof stremioAuthService.saveAccountWatchlist).toBe('function');
     expect(typeof stremioAuthService.getStremioWatchedMovies).toBe('function');
+    expect(typeof stremioAuthService.isLegitimateMovieId).toBe('function');
   });
 });
-

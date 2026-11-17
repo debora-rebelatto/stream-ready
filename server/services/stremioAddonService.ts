@@ -64,31 +64,30 @@ export function isItemNewRelease(item: any): boolean {
 }
 
 export function getManifest(hostUrl: string = '', userId: string = ''): AddonManifest {
-  const allCatalogs: Array<{ type: string; id: string; name: string; extra?: Array<{ name: string; isRequired?: boolean }> }> = [
+  const allCatalogs: Array<{
+    type: string;
+    id: string;
+    name: string;
+    extra?: Array<{ name: string; isRequired?: boolean }>;
+  }> = [
     {
       type: 'movie',
       id: 'watchlist_ready',
       name: '🟢 Watchlist: Ready (Good Quality)',
-      extra: [
-        { name: 'skip', isRequired: false }
-      ]
+      extra: [{ name: 'skip', isRequired: false }],
     },
     {
       type: 'movie',
       id: 'watchlist_all',
       name: '📋 Watchlist: All Movies',
-      extra: [
-        { name: 'skip', isRequired: false }
-      ]
+      extra: [{ name: 'skip', isRequired: false }],
     },
     {
       type: 'movie',
       id: 'watchlist_pending',
       name: '⏳ Watchlist: Waiting for Quality',
-      extra: [
-        { name: 'skip', isRequired: false }
-      ]
-    }
+      extra: [{ name: 'skip', isRequired: false }],
+    },
   ];
 
   // Adiciona os catálogos das listas personalizadas do usuário
@@ -101,9 +100,7 @@ export function getManifest(hostUrl: string = '', userId: string = ''): AddonMan
             type: 'movie',
             id: `watchlist_custom_${l.id}`,
             name: `${l.emoji || '🎬'} Watchlist: ${l.name}`,
-            extra: [
-              { name: 'skip', isRequired: false }
-            ]
+            extra: [{ name: 'skip', isRequired: false }],
           });
         }
       }
@@ -117,17 +114,22 @@ export function getManifest(hostUrl: string = '', userId: string = ''): AddonMan
     id: 'community.watchlist.quality.tracker',
     version: '1.4.1',
     name: 'Watchlist (Good Quality Tracker)',
-    description: 'Tracks when cinema movies release in 1080p FHD & 4K UHD. ⚠️ ACCOUNT REQUIRED: Connect your Stremio account at ' + websiteUrl + ' to manage your watchlist and enable release tracking.',
+    description:
+      'Tracks when cinema movies release in 1080p FHD & 4K UHD. ⚠️ ACCOUNT REQUIRED: Connect your Stremio account at ' +
+      websiteUrl +
+      ' to manage your watchlist and enable release tracking.',
     logo: hostUrl ? `${hostUrl}/icon.png` : 'https://stremiowatchlist.vercel.app/icon.png',
-    background: hostUrl ? `${hostUrl}/background.jpg` : 'https://stremiowatchlist.vercel.app/background.jpg',
+    background: hostUrl
+      ? `${hostUrl}/background.jpg`
+      : 'https://stremiowatchlist.vercel.app/background.jpg',
     resources: ['catalog', 'meta'],
     types: ['movie'],
     catalogs: allCatalogs,
     idPrefixes: ['tt', 'guide_'],
     behaviorHints: {
       configurable: true,
-      configurationRequired: !isConfigured
-    }
+      configurationRequired: !isConfigured,
+    },
   };
 }
 
@@ -136,8 +138,12 @@ export function formatCatalogItem(item: any, minQuality: string = '1080p') {
   const unreleased = db.isItemUnreleased(item);
   const isNew = isItemNewRelease(item);
 
-  let statusPrefix = ready ? '🟢 [Ready]' : (unreleased ? '📅 [Unreleased]' : '⏳ [Waiting]');
-  let statusBadge = ready ? '🟢 Good Quality' : (unreleased ? '📅 Unreleased' : '⏳ Waiting for Quality');
+  let statusPrefix = ready ? '🟢 [Ready]' : unreleased ? '📅 [Unreleased]' : '⏳ [Waiting]';
+  let statusBadge = ready
+    ? '🟢 Good Quality'
+    : unreleased
+      ? '📅 Unreleased'
+      : '⏳ Waiting for Quality';
 
   if (ready && isNew) {
     statusPrefix = '🔥 [NEW RELEASE]';
@@ -167,12 +173,9 @@ export function formatCatalogItem(item: any, minQuality: string = '1080p') {
     poster: item.poster || '',
     posterShape: 'regular',
     banner: item.banner || '',
-    genres: [
-      statusBadge,
-      displayQuality
-    ],
+    genres: [statusBadge, displayQuality],
     releaseInfo: item.year ? String(item.year) : undefined,
-    description: statusDescription
+    description: statusDescription,
   };
 }
 
@@ -197,9 +200,10 @@ export async function handleCatalog(
             posterShape: 'regular',
             banner: 'https://stremiowatchlist.vercel.app/background.jpg',
             genres: ['⚠️ Setup Required', 'Connect Stremio Account', 'Scan QR Code'],
-            description: '⚠️ ACCOUNT SETUP REQUIRED\n\nTo use this addon and track movie releases in 1080p FHD & 4K UHD, you must connect your Stremio account on our website:\n\n🌐 https://stremiowatchlist.vercel.app/\n\n📱 SCAN QR CODE:\nPoint your phone camera at the QR code on this poster to open the website directly!\n\n📌 WHY IS AN ACCOUNT REQUIRED?\n1. Stremio addons are read-only: You cannot add or manage movies from inside the Stremio player interface.\n2. Automatic Cloud Sync: Connecting your account allows our background engine to monitor releases 24/7 and sync good quality movies directly to your TV and devices.\n\n🚀 3 SIMPLE STEPS TO GET STARTED:\n1. Scan the QR code or open https://stremiowatchlist.vercel.app in your browser\n2. Click "Connect Stremio & Start Tracking" and sign in with your Stremio account\n3. Search and add any movies you want to track — that\'s it! As soon as 1080p FHD or 4K UHD drops, they will appear right here in your Stremio library!'
-          }
-        ]
+            description:
+              '⚠️ ACCOUNT SETUP REQUIRED\n\nTo use this addon and track movie releases in 1080p FHD & 4K UHD, you must connect your Stremio account on our website:\n\n🌐 https://stremiowatchlist.vercel.app/\n\n📱 SCAN QR CODE:\nPoint your phone camera at the QR code on this poster to open the website directly!\n\n📌 WHY IS AN ACCOUNT REQUIRED?\n1. Stremio addons are read-only: You cannot add or manage movies from inside the Stremio player interface.\n2. Automatic Cloud Sync: Connecting your account allows our background engine to monitor releases 24/7 and sync good quality movies directly to your TV and devices.\n\n🚀 3 SIMPLE STEPS TO GET STARTED:\n1. Scan the QR code or open https://stremiowatchlist.vercel.app in your browser\n2. Click "Connect Stremio & Start Tracking" and sign in with your Stremio account\n3. Search and add any movies you want to track — that\'s it! As soon as 1080p FHD or 4K UHD drops, they will appear right here in your Stremio library!',
+          },
+        ],
       };
     }
     return { metas: [] };
@@ -227,9 +231,10 @@ export async function handleCatalog(
           posterShape: 'regular',
           banner: 'https://stremiowatchlist.vercel.app/background.jpg',
           genres: ['ℹ️ Tip', 'Add on Website', 'Scan QR Code'],
-          description: 'Your watchlist is empty! Movies must be added through the website:\n\n🌐 https://stremiowatchlist.vercel.app/\n\n📱 SCAN QR CODE:\nScan the QR code on this poster with your phone camera to open the dashboard and start tracking movies right from the couch!\n\nSearch and add any movie on the website. The addon will monitor releases 24/7 and notify you in Stremio when good quality (1080p / 4K) arrives!'
-        }
-      ]
+          description:
+            'Your watchlist is empty! Movies must be added through the website:\n\n🌐 https://stremiowatchlist.vercel.app/\n\n📱 SCAN QR CODE:\nScan the QR code on this poster with your phone camera to open the dashboard and start tracking movies right from the couch!\n\nSearch and add any movie on the website. The addon will monitor releases 24/7 and notify you in Stremio when good quality (1080p / 4K) arrives!',
+        },
+      ],
     };
   }
 
@@ -241,7 +246,9 @@ export async function handleCatalog(
 
   if (isCustomCatalog) {
     const listId = catalogId.replace('watchlist_custom_', '');
-    filtered = filtered.filter((i: any) => Array.isArray(i.customLists) && i.customLists.includes(listId));
+    filtered = filtered.filter(
+      (i: any) => Array.isArray(i.customLists) && i.customLists.includes(listId)
+    );
   } else {
     // Esconde filmes assistidos dos catálogos ativos
     filtered = filtered.filter((i: any) => !i.isWatched);
@@ -259,11 +266,15 @@ export async function handleCatalog(
   const pageItems = filtered.slice(skip, skip + 100);
 
   return {
-    metas: pageItems.map((item: any) => formatCatalogItem(item, minQuality))
+    metas: pageItems.map((item: any) => formatCatalogItem(item, minQuality)),
   };
 }
 
-export async function handleMeta(type: string, id: string, userId: string = ''): Promise<MetaResponse> {
+export async function handleMeta(
+  type: string,
+  id: string,
+  userId: string = ''
+): Promise<MetaResponse> {
   if (id === 'guide_configure') {
     return {
       meta: {
@@ -273,8 +284,9 @@ export async function handleMeta(type: string, id: string, userId: string = ''):
         poster: 'https://stremiowatchlist.vercel.app/api/qr/poster',
         banner: 'https://stremiowatchlist.vercel.app/background.jpg',
         genres: ['⚠️ Setup Required', 'Connect Stremio Account', 'Scan QR Code'],
-        description: '⚠️ ACCOUNT SETUP REQUIRED\n\nTo use this addon and track movie releases in 1080p FHD & 4K UHD, you must connect your Stremio account on our website:\n\n🌐 https://stremiowatchlist.vercel.app/\n\n📱 SCAN QR CODE:\nPoint your phone camera at the QR code on this poster to open the website directly!\n\n📌 WHY IS AN ACCOUNT REQUIRED?\n1. Stremio addons are read-only: You cannot add or manage movies from inside the Stremio player interface.\n2. Automatic Cloud Sync: Connecting your account allows our background engine to monitor releases 24/7 and sync good quality movies directly to your TV and devices.\n\n🚀 3 SIMPLE STEPS TO GET STARTED:\n1. Scan the QR code or open https://stremiowatchlist.vercel.app in your browser\n2. Click "Connect Stremio & Start Tracking" and sign in with your Stremio account\n3. Search and add any movies you want to track — that\'s it! As soon as 1080p FHD or 4K UHD drops, they will appear right here in your Stremio library!'
-      }
+        description:
+          '⚠️ ACCOUNT SETUP REQUIRED\n\nTo use this addon and track movie releases in 1080p FHD & 4K UHD, you must connect your Stremio account on our website:\n\n🌐 https://stremiowatchlist.vercel.app/\n\n📱 SCAN QR CODE:\nPoint your phone camera at the QR code on this poster to open the website directly!\n\n📌 WHY IS AN ACCOUNT REQUIRED?\n1. Stremio addons are read-only: You cannot add or manage movies from inside the Stremio player interface.\n2. Automatic Cloud Sync: Connecting your account allows our background engine to monitor releases 24/7 and sync good quality movies directly to your TV and devices.\n\n🚀 3 SIMPLE STEPS TO GET STARTED:\n1. Scan the QR code or open https://stremiowatchlist.vercel.app in your browser\n2. Click "Connect Stremio & Start Tracking" and sign in with your Stremio account\n3. Search and add any movies you want to track — that\'s it! As soon as 1080p FHD or 4K UHD drops, they will appear right here in your Stremio library!',
+      },
     };
   }
 
@@ -287,8 +299,9 @@ export async function handleMeta(type: string, id: string, userId: string = ''):
         poster: 'https://stremiowatchlist.vercel.app/api/qr/poster',
         banner: 'https://stremiowatchlist.vercel.app/background.jpg',
         genres: ['ℹ️ Tip', 'Add on Website', 'Scan QR Code'],
-        description: 'Your watchlist currently has no movies added.\n\n📱 SCAN QR CODE:\nScan the QR code on this poster with your phone camera to open the dashboard and start adding movies right from the couch!\n\n⚠️ Movies must be added directly through the website:\n🌐 https://stremiowatchlist.vercel.app/\n\nOpen the website, search for any movie and click "+ Add to Watchlist". The addon will monitor quality automatically and notify you once it releases in 1080p or 4K!'
-      }
+        description:
+          'Your watchlist currently has no movies added.\n\n📱 SCAN QR CODE:\nScan the QR code on this poster with your phone camera to open the dashboard and start adding movies right from the couch!\n\n⚠️ Movies must be added directly through the website:\n🌐 https://stremiowatchlist.vercel.app/\n\nOpen the website, search for any movie and click "+ Add to Watchlist". The addon will monitor quality automatically and notify you once it releases in 1080p or 4K!',
+      },
     };
   }
 
@@ -308,8 +321,12 @@ export async function handleMeta(type: string, id: string, userId: string = ''):
   const unreleased = db.isItemUnreleased(watchlistItem);
   const isNew = isItemNewRelease(watchlistItem);
 
-  let statusPrefix = ready ? '🟢 [Ready]' : (unreleased ? '📅 [Unreleased]' : '⏳ [Waiting]');
-  let statusBadge = ready ? '🟢 Good Quality' : (unreleased ? '📅 Unreleased' : '⏳ Waiting for Quality');
+  let statusPrefix = ready ? '🟢 [Ready]' : unreleased ? '📅 [Unreleased]' : '⏳ [Waiting]';
+  let statusBadge = ready
+    ? '🟢 Good Quality'
+    : unreleased
+      ? '📅 Unreleased'
+      : '⏳ Waiting for Quality';
 
   if (ready && isNew) {
     statusPrefix = '🔥 [NEW RELEASE]';
@@ -340,9 +357,9 @@ export async function handleMeta(type: string, id: string, userId: string = ''):
     genres: [
       statusBadge,
       displayQuality,
-      ...((base.genres || []).filter((g: string) => g !== statusBadge))
+      ...(base.genres || []).filter((g: string) => g !== statusBadge),
     ],
-    description: `${statusDescription}\n\n${base.description || ''}`
+    description: `${statusDescription}\n\n${base.description || ''}`,
   };
 
   return { meta: enrichedMeta };
@@ -354,7 +371,7 @@ export const stremioAddonService = {
   getManifest,
   formatCatalogItem,
   handleCatalog,
-  handleMeta
+  handleMeta,
 };
 
 export default stremioAddonService;

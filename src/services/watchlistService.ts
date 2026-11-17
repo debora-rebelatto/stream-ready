@@ -1,5 +1,6 @@
 import { api } from '../lib/api';
 import { cinemetaService } from './cinemetaService';
+import { customListService } from './customListService';
 import type { WatchlistItem, WatchlistStats, SearchMovieResult } from '../types';
 
 export const watchlistService = {
@@ -96,33 +97,33 @@ export const watchlistService = {
    * Custom user lists
    */
   async getCustomLists() {
-    return api.getCustomLists();
+    return customListService.getCustomLists();
   },
 
   async createCustomList(name: string, emoji = '') {
-    return api.createCustomList(name, emoji);
+    return customListService.createCustomList(name, emoji);
   },
 
   async updateCustomList(id: string, name: string, emoji?: string) {
-    return api.updateCustomList(id, name, emoji);
+    return customListService.updateCustomList(id, name, emoji);
   },
 
   async deleteCustomList(id: string) {
-    return api.deleteCustomList(id);
+    return customListService.deleteCustomList(id);
   },
 
   async setItemCustomLists(id: string, listIds: string[]) {
-    return api.setItemCustomLists(id, listIds);
+    return customListService.setItemCustomLists(id, listIds);
   },
 
   /**
    * Curated / standard lists (New on Netflix, Disney+, HBO Max, etc.)
    */
   async getCuratedLists() {
-    return api.getCuratedLists();
+    return customListService.getCuratedLists();
   },
 
   async addCuratedList(id: string) {
-    return api.addCuratedList(id);
+    return customListService.addCuratedList(id);
   },
 };

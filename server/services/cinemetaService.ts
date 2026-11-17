@@ -38,7 +38,7 @@ export async function searchMovies(query: string): Promise<CinemetaItem[]> {
         banner: item.banner || item.background || '',
         genres: item.genres || [],
         description: item.description || '',
-        imdbRating: item.imdbRating || ''
+        imdbRating: item.imdbRating || '',
       }));
   } catch (err: any) {
     console.error('[Cinemeta] Erro ao buscar filmes:', err.message);
@@ -80,7 +80,7 @@ export async function getMeta(type: string = 'movie', id: string): Promise<Cinem
       imdbRating: m.imdbRating || '',
       runtime: m.runtime || '',
       director: m.director || [],
-      cast: m.cast || []
+      cast: m.cast || [],
     };
   } catch (err: any) {
     console.error(`[Cinemeta] Erro ao obter meta de ${id}:`, err.message);
@@ -92,8 +92,7 @@ export async function getMeta(type: string = 'movie', id: string): Promise<Cinem
 
 export const cinemetaService = {
   searchMovies,
-  getMeta
+  getMeta,
 };
 
 export default cinemetaService;
-

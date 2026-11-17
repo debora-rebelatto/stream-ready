@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @layer base {
   :root {
@@ -28,9 +28,15 @@
 }
 
 @keyframes gentle-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(123, 66, 246, 0.6); }
-  70% { box-shadow: 0 0 0 10px rgba(123, 66, 246, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(123, 66, 246, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(123, 66, 246, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(123, 66, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(123, 66, 246, 0);
+  }
 }
 
 .pulse-btn {

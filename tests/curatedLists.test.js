@@ -2,7 +2,7 @@ const {
   loadCuratedListsData,
   getCuratedLists,
   getCuratedListById,
-  addCuratedListToUser
+  addCuratedListToUser,
 } = require('../lib/curatedLists');
 
 describe('CuratedLists CommonJS Module (lib/curatedLists.js)', () => {
@@ -46,7 +46,7 @@ describe('CuratedLists CommonJS Module (lib/curatedLists.js)', () => {
         addedItems.push(item);
         return item;
       },
-      updateItem: async (id, upd) => ({ id, ...upd })
+      updateItem: async (id, upd) => ({ id, ...upd }),
     };
 
     const res = await addCuratedListToUser('user_cjs', 'new_prime', mockDb);

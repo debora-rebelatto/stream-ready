@@ -14,7 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
   Star,
-  Tv
+  Tv,
 } from 'lucide-react';
 import type { CuratedList } from '../types';
 
@@ -24,12 +24,27 @@ interface ManageListsModalProps {
   initialTab?: 'standard' | 'custom';
 }
 
-const EMOJI_OPTIONS = ['🎬', '🍿', '👻', '💖', '🚀', '🏆', '🤠', '📺', '🔥', '⭐', '🧟', '🕵️', '🧠', '⚡'];
+const EMOJI_OPTIONS = [
+  '🎬',
+  '🍿',
+  '👻',
+  '💖',
+  '🚀',
+  '🏆',
+  '🤠',
+  '📺',
+  '🔥',
+  '⭐',
+  '🧟',
+  '🕵️',
+  '🧠',
+  '⚡',
+];
 
 export const ManageListsModal: React.FC<ManageListsModalProps> = ({
   isOpen,
   onClose,
-  initialTab = 'standard'
+  initialTab = 'standard',
 }) => {
   const {
     customLists,
@@ -38,7 +53,7 @@ export const ManageListsModal: React.FC<ManageListsModalProps> = ({
     deleteCustomList,
     curatedLists,
     addCuratedList,
-    isCuratedListsLoading
+    isCuratedListsLoading,
   } = useWatchlist();
 
   const [activeTab, setActiveTab] = useState<'standard' | 'custom'>(initialTab);
@@ -109,7 +124,9 @@ export const ManageListsModal: React.FC<ManageListsModalProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white">Watchlist Catalogs & Lists</h2>
-              <p className="text-xs text-gray-400">Add standardized streaming lists or organize your own custom folders</p>
+              <p className="text-xs text-gray-400">
+                Add standardized streaming lists or organize your own custom folders
+              </p>
             </div>
           </div>
           <button
@@ -157,8 +174,8 @@ export const ManageListsModal: React.FC<ManageListsModalProps> = ({
                 <Info className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-semibold text-white">Preset Streaming Catalogs: </span>
-                  Add standardized lists like Netflix, Disney+, and HBO Max to your account.
-                  Each list automatically syncs to your Stremio home screen with quality release badges!
+                  Add standardized lists like Netflix, Disney+, and HBO Max to your account. Each
+                  list automatically syncs to your Stremio home screen with quality release badges!
                 </div>
               </div>
 
@@ -241,9 +258,7 @@ export const ManageListsModal: React.FC<ManageListsModalProps> = ({
                                 key={item.id}
                                 className="w-14 h-20 rounded-lg overflow-hidden shrink-0 bg-white/5 border border-white/5 relative group cursor-pointer"
                                 title={`${item.name} (${item.year || ''})`}
-                                onClick={() =>
-                                  setExpandedCuratedId(isExpanded ? null : curated.id)
-                                }
+                                onClick={() => setExpandedCuratedId(isExpanded ? null : curated.id)}
                               >
                                 {item.poster ? (
                                   <img
@@ -262,9 +277,7 @@ export const ManageListsModal: React.FC<ManageListsModalProps> = ({
 
                             <button
                               type="button"
-                              onClick={() =>
-                                setExpandedCuratedId(isExpanded ? null : curated.id)
-                              }
+                              onClick={() => setExpandedCuratedId(isExpanded ? null : curated.id)}
                               className="h-20 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-xs flex flex-col items-center justify-center shrink-0 transition-colors cursor-pointer"
                             >
                               {isExpanded ? (
@@ -328,7 +341,10 @@ export const ManageListsModal: React.FC<ManageListsModalProps> = ({
             /* MY CUSTOM LISTS TAB */
             <div className="space-y-4">
               {/* Create List Form */}
-              <form onSubmit={handleCreate} className="bg-white/[0.03] border border-white/5 rounded-xl p-4">
+              <form
+                onSubmit={handleCreate}
+                className="bg-white/[0.03] border border-white/5 rounded-xl p-4"
+              >
                 <label className="block text-xs font-medium text-gray-300 mb-2">
                   Create New List
                 </label>
@@ -434,9 +450,12 @@ export const ManageListsModal: React.FC<ManageListsModalProps> = ({
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <span className="text-xl shrink-0">{list.emoji || '🎬'}</span>
                                 <div className="min-w-0">
-                                  <h4 className="text-sm font-medium text-white truncate">{list.name}</h4>
+                                  <h4 className="text-sm font-medium text-white truncate">
+                                    {list.name}
+                                  </h4>
                                   <p className="text-xs text-gray-400">
-                                    {list.itemsCount ?? 0} {list.itemsCount === 1 ? 'movie' : 'movies'}
+                                    {list.itemsCount ?? 0}{' '}
+                                    {list.itemsCount === 1 ? 'movie' : 'movies'}
                                   </p>
                                 </div>
                               </div>

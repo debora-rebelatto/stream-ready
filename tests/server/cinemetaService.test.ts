@@ -22,9 +22,9 @@ describe('Backend CinemetaService (server/services/cinemetaService.ts)', () => {
             id: 'tt1375666',
             name: 'Inception',
             year: '2010',
-            poster: 'https://example.com/poster.jpg'
-          }
-        })
+            poster: 'https://example.com/poster.jpg',
+          },
+        }),
       });
 
       const res = await searchMovies('tt1375666');
@@ -37,10 +37,8 @@ describe('Backend CinemetaService (server/services/cinemetaService.ts)', () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          metas: [
-            { id: 'tt0816692', name: 'Interstellar', year: '2014', genres: ['Sci-Fi'] }
-          ]
-        })
+          metas: [{ id: 'tt0816692', name: 'Interstellar', year: '2014', genres: ['Sci-Fi'] }],
+        }),
       });
 
       const res = await searchMovies('Interstellar');
@@ -56,9 +54,9 @@ describe('Backend CinemetaService (server/services/cinemetaService.ts)', () => {
         json: async () => ({
           metas: [
             { id: 'tt0903747', name: 'Breaking Bad', type: 'series' },
-            { id: 'tt0816692', name: 'Interstellar', type: 'movie' }
-          ]
-        })
+            { id: 'tt0816692', name: 'Interstellar', type: 'movie' },
+          ],
+        }),
       });
 
       const res = await searchMovies('Breaking');
@@ -70,7 +68,7 @@ describe('Backend CinemetaService (server/services/cinemetaService.ts)', () => {
     test('deve retornar vazio se a API retornar erro HTTP', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: false,
-        status: 500
+        status: 500,
       });
 
       const res = await searchMovies('Avatar');
@@ -96,9 +94,9 @@ describe('Backend CinemetaService (server/services/cinemetaService.ts)', () => {
             year: '1994',
             runtime: '142 min',
             director: ['Frank Darabont'],
-            cast: ['Tim Robbins', 'Morgan Freeman']
-          }
-        })
+            cast: ['Tim Robbins', 'Morgan Freeman'],
+          },
+        }),
       });
 
       const meta = await getMeta('movie', 'tt0111161');
@@ -111,7 +109,7 @@ describe('Backend CinemetaService (server/services/cinemetaService.ts)', () => {
     test('deve retornar null se meta não for encontrado', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({})
+        json: async () => ({}),
       });
 
       const meta = await getMeta('movie', 'tt0000000');
@@ -125,9 +123,9 @@ describe('Backend CinemetaService (server/services/cinemetaService.ts)', () => {
           meta: {
             id: 'tt0903747',
             name: 'Breaking Bad',
-            type: 'series'
-          }
-        })
+            type: 'series',
+          },
+        }),
       });
 
       const meta = await getMeta('series', 'tt0903747');
@@ -137,7 +135,7 @@ describe('Backend CinemetaService (server/services/cinemetaService.ts)', () => {
     test('deve retornar null em caso de erro HTTP', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: false,
-        status: 404
+        status: 404,
       });
 
       const meta = await getMeta('movie', 'invalid');
@@ -150,4 +148,3 @@ describe('Backend CinemetaService (server/services/cinemetaService.ts)', () => {
     expect(typeof cinemetaService.getMeta).toBe('function');
   });
 });
-

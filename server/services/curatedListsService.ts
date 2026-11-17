@@ -22,7 +22,9 @@ export function loadCuratedListsData(): CuratedList[] {
   return Array.isArray(curatedDataRaw) ? curatedDataRaw : [];
 }
 
-export function getCuratedLists(userCustomLists?: Array<{ id: string; name: string; emoji?: string }>): CuratedList[] {
+export function getCuratedLists(
+  userCustomLists?: Array<{ id: string; name: string; emoji?: string }>
+): CuratedList[] {
   const lists = loadCuratedListsData();
   const existingNames = new Set(
     (userCustomLists || []).map((l) => (l.name || '').trim().toLowerCase())
@@ -31,7 +33,7 @@ export function getCuratedLists(userCustomLists?: Array<{ id: string; name: stri
   return lists.map((l) => ({
     ...l,
     itemsCount: l.items ? l.items.length : 0,
-    isAdded: existingNames.has((l.name || '').trim().toLowerCase())
+    isAdded: existingNames.has((l.name || '').trim().toLowerCase()),
   }));
 }
 
@@ -68,7 +70,7 @@ export async function addCuratedListToUser(
   if (!targetList) {
     targetList = await database.createCustomList(userId, {
       name: curated.name,
-      emoji: curated.emoji || ''
+      emoji: curated.emoji || '',
     });
   }
 
@@ -89,9 +91,7 @@ export async function addCuratedListToUser(
       if (!currentCustomLists.includes(targetListId)) {
         currentCustomLists.push(targetListId);
         operations.push(
-          Promise.resolve(
-            database.updateItem(item.id, { customLists: currentCustomLists }, userId)
-          )
+          Promise.resolve(database.updateItem(item.id, { customLists: currentCustomLists }, userId))
         );
       }
     } else {
@@ -109,7 +109,7 @@ export async function addCuratedListToUser(
         has1080pPlus: false,
         bestQuality: 'Pending',
         streamCount: 0,
-        customLists: [targetListId]
+        customLists: [targetListId],
       };
 
       operations.push(
@@ -124,7 +124,7 @@ export async function addCuratedListToUser(
                       has1080pPlus: q.has1080pPlus,
                       bestQuality: q.bestQuality,
                       streamCount: q.streamCount,
-                      lastChecked: q.checkedAt
+                      lastChecked: q.checkedAt,
                     },
                     userId
                   );
@@ -146,10 +146,10 @@ export async function addCuratedListToUser(
     success: true,
     list: {
       ...targetList,
-      itemsCount: (targetList.itemsCount || 0) + addedMoviesCount
+      itemsCount: (targetList.itemsCount || 0) + addedMoviesCount,
     },
     addedMoviesCount,
-    existingMoviesCount
+    existingMoviesCount,
   };
 }
 
@@ -157,7 +157,7 @@ export const curatedListsService = {
   loadCuratedListsData,
   getCuratedLists,
   getCuratedListById,
-  addCuratedListToUser
+  addCuratedListToUser,
 };
 
 export default curatedListsService;

@@ -8,22 +8,24 @@ export function encodeUserData(authKey: string, itemsOrIds: any[]): string {
   try {
     let compactItems: any[] = [];
     if (Array.isArray(itemsOrIds)) {
-      compactItems = itemsOrIds.map(item => {
-        if (!item) return null;
-        if (typeof item === 'string') return { i: item, r: 0 };
-        return {
-          i: item.id,
-          n: item.name || '',
-          p: item.poster || '',
-          y: item.year || '',
-          q: item.bestQuality || 'Pending',
-          r: item.has1080pPlus ? 1 : 0
-        };
-      }).filter(Boolean);
+      compactItems = itemsOrIds
+        .map((item) => {
+          if (!item) return null;
+          if (typeof item === 'string') return { i: item, r: 0 };
+          return {
+            i: item.id,
+            n: item.name || '',
+            p: item.poster || '',
+            y: item.year || '',
+            q: item.bestQuality || 'Pending',
+            r: item.has1080pPlus ? 1 : 0,
+          };
+        })
+        .filter(Boolean);
     }
     const payload = {
       k: authKey || '',
-      v: compactItems
+      v: compactItems,
     };
     const jsonStr = JSON.stringify(payload);
     const compressed = zlib.deflateRawSync(Buffer.from(jsonStr, 'utf-8'));
@@ -31,7 +33,9 @@ export function encodeUserData(authKey: string, itemsOrIds: any[]): string {
   } catch (err) {
     const payload = {
       authKey: authKey || '',
-      ids: Array.isArray(itemsOrIds) ? itemsOrIds.map(i => (typeof i === 'string' ? i : i?.id)).filter(Boolean) : []
+      ids: Array.isArray(itemsOrIds)
+        ? itemsOrIds.map((i) => (typeof i === 'string' ? i : i?.id)).filter(Boolean)
+        : [],
     };
     return Buffer.from(JSON.stringify(payload)).toString('base64url');
   }
@@ -55,12 +59,12 @@ export function decodeUserData(param: string): UserDataDecoded {
         bestQuality: v.q || 'Pending',
         has1080pPlus: v.r === 1,
         streamCount: 0,
-        type: 'movie'
+        type: 'movie',
       }));
       return {
         authKey: parsed.k || '',
         items,
-        ids: items.map(i => i.id)
+        ids: items.map((i) => i.id),
       };
     }
     const raw = Buffer.from(param, 'base64url').toString('utf-8');
@@ -74,13 +78,13 @@ export function decodeUserData(param: string): UserDataDecoded {
         bestQuality: item.bestQuality || item.q || 'Pending',
         has1080pPlus: !!(item.has1080pPlus || item.r),
         streamCount: item.streamCount || item.s || 0,
-        type: 'movie'
+        type: 'movie',
       }));
-      const ids: string[] = Array.isArray(parsed.ids) ? parsed.ids : items.map(i => i.id);
+      const ids: string[] = Array.isArray(parsed.ids) ? parsed.ids : items.map((i) => i.id);
       return {
         authKey: parsed.authKey || parsed.k || '',
         items,
-        ids
+        ids,
       };
     }
   } catch (e) {
@@ -91,8 +95,7 @@ export function decodeUserData(param: string): UserDataDecoded {
 
 export const userDataService = {
   encodeUserData,
-  decodeUserData
+  decodeUserData,
 };
 
 export default userDataService;
-

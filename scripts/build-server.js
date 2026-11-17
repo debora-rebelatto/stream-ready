@@ -13,6 +13,7 @@ const mapping = {
   'stremioAuthService.ts': 'stremioAuth.js',
   'userDataService.ts': 'userData.js',
   'curatedListsService.ts': 'curatedLists.js',
+  'tmdbService.ts': 'tmdb.js',
 };
 
 console.log('Compiling server TypeScript services to lib/*.js (CommonJS)...');
@@ -37,7 +38,10 @@ for (const [tsFile, jsFile] of Object.entries(mapping)) {
 
   // Fix createRequire and relative imports for CommonJS output
   code = code
-    .replace(/import\s*\{\s*createRequire\s*\}\s*from\s*['"]module['\"];?\s*const\s*req\s*=\s*createRequire\(import\.meta\.url\);?/g, '')
+    .replace(
+      /import\s*\{\s*createRequire\s*\}\s*from\s*['"]module['\"];?\s*const\s*req\s*=\s*createRequire\(import\.meta\.url\);?/g,
+      ''
+    )
     .replace(/\breq\(['"]\.\.\/\.\.\/lib\/db['"]\)/g, "require('./db')")
     .replace(/\breq\(/g, 'require(');
 
@@ -45,14 +49,14 @@ for (const [tsFile, jsFile] of Object.entries(mapping)) {
     module: {
       type: 'commonjs',
       strict: false,
-      strictMode: false
+      strictMode: false,
     },
     jsc: {
       parser: {
-        syntax: 'typescript'
+        syntax: 'typescript',
       },
-      target: 'es2022'
-    }
+      target: 'es2022',
+    },
   });
 
   let outputCode = transformed.code.replace(

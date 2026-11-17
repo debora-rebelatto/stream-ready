@@ -1,10 +1,20 @@
 import { createContext, useContext } from 'react';
-import type { WatchlistItem, WatchlistStats, StremioUser, ToastMessage, CustomList, CuratedList } from '../types';
+import type {
+  WatchlistItem,
+  WatchlistStats,
+  StremioUser,
+  ToastMessage,
+  CustomList,
+  CuratedList,
+} from '../types';
 
 export interface AuthContextType {
   user: StremioUser | null;
   isLoading: boolean;
-  loginWithCreds: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithCreds: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>;
   loginWithKey: (authKey: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   deleteAccount: () => Promise<{ success: boolean; error?: string }>;
@@ -40,7 +50,10 @@ export interface WatchlistContextType {
   isLoading: boolean;
   isCheckingAll: boolean;
   refreshWatchlist: () => Promise<void>;
-  addItem: (id: string, source?: 'search' | 'recommendations' | 'curated_list' | 'manual') => Promise<void>;
+  addItem: (
+    id: string,
+    source?: 'search' | 'recommendations' | 'curated_list' | 'manual'
+  ) => Promise<void>;
   removeItem: (id: string, name: string) => Promise<boolean>;
   markWatched: (id: string, watched: boolean) => Promise<void>;
   setItemMinQuality: (id: string, minQuality: '1080p' | '4k' | null) => Promise<void>;

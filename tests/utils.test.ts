@@ -1,4 +1,10 @@
-import { cn, formatQualityLabel, isItemReady, isItemNewRelease, isItemUnreleased } from '../src/lib/utils';
+import {
+  cn,
+  formatQualityLabel,
+  isItemReady,
+  isItemNewRelease,
+  isItemUnreleased,
+} from '../src/lib/utils';
 
 describe('Frontend Utils (src/lib/utils.ts)', () => {
   describe('cn (Tailwind class merger)', () => {
@@ -60,7 +66,9 @@ describe('Frontend Utils (src/lib/utils.ts)', () => {
     test('deve retornar false quando item for inválido ou não tiver readyAt', () => {
       expect(isItemNewRelease(null as any)).toBe(false);
       expect(isItemNewRelease({ readyAt: null, has1080pPlus: true })).toBe(false);
-      expect(isItemNewRelease({ readyAt: new Date().toISOString(), has1080pPlus: false })).toBe(false);
+      expect(isItemNewRelease({ readyAt: new Date().toISOString(), has1080pPlus: false })).toBe(
+        false
+      );
     });
 
     test('deve retornar true para lançamentos dos últimos 3 meses', () => {
@@ -68,15 +76,21 @@ describe('Frontend Utils (src/lib/utils.ts)', () => {
       const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
       const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
       expect(isItemNewRelease({ readyAt: oneHourAgo, has1080pPlus: true })).toBe(true);
-      expect(isItemNewRelease({ readyAt: thirtyDaysAgo, has1080pPlus: true, year: 2026 })).toBe(true);
+      expect(isItemNewRelease({ readyAt: thirtyDaysAgo, has1080pPlus: true, year: 2026 })).toBe(
+        true
+      );
       expect(isItemNewRelease({ released: thirtyDaysAgo, has1080pPlus: true })).toBe(true);
     });
 
     test('deve retornar false para filmes antigos mesmo com readyAt recente', () => {
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-      expect(isItemNewRelease({ readyAt: oneHourAgo, has1080pPlus: true, year: '1995' })).toBe(false);
+      expect(isItemNewRelease({ readyAt: oneHourAgo, has1080pPlus: true, year: '1995' })).toBe(
+        false
+      );
       expect(isItemNewRelease({ readyAt: oneHourAgo, has1080pPlus: true, year: 2010 })).toBe(false);
-      expect(isItemNewRelease({ readyAt: oneHourAgo, has1080pPlus: true, year: '2020' })).toBe(false);
+      expect(isItemNewRelease({ readyAt: oneHourAgo, has1080pPlus: true, year: '2020' })).toBe(
+        false
+      );
     });
 
     test('deve retornar false para lançamentos com mais de 3 meses (90 dias)', () => {
@@ -91,8 +105,8 @@ describe('Frontend Utils (src/lib/utils.ts)', () => {
         readyAt: {
           valueOf() {
             throw new Error('Data inválida');
-          }
-        } as unknown as string
+          },
+        } as unknown as string,
       };
       expect(isItemNewRelease(badItem)).toBe(false);
     });
@@ -111,16 +125,34 @@ describe('Frontend Utils (src/lib/utils.ts)', () => {
     });
 
     test('deve retornar true se streamCount for 0 e não for CAM', () => {
-      expect(isItemUnreleased({ has1080pPlus: false, streamCount: 0, bestQuality: 'Pending' })).toBe(true);
+      expect(
+        isItemUnreleased({ has1080pPlus: false, streamCount: 0, bestQuality: 'Pending' })
+      ).toBe(true);
     });
 
     test('deve retornar false se o item já foi assistido (isWatched: true)', () => {
-      expect(isItemUnreleased({ has1080pPlus: false, streamCount: 0, bestQuality: 'Watched', isWatched: true })).toBe(false);
-      expect(isItemUnreleased({ has1080pPlus: false, streamCount: 0, bestQuality: 'Pending', isWatched: true })).toBe(false);
+      expect(
+        isItemUnreleased({
+          has1080pPlus: false,
+          streamCount: 0,
+          bestQuality: 'Watched',
+          isWatched: true,
+        })
+      ).toBe(false);
+      expect(
+        isItemUnreleased({
+          has1080pPlus: false,
+          streamCount: 0,
+          bestQuality: 'Pending',
+          isWatched: true,
+        })
+      ).toBe(false);
     });
 
     test('deve retornar false se for gravação de cinema (CAM)', () => {
-      expect(isItemUnreleased({ has1080pPlus: false, streamCount: 1, bestQuality: 'CAM / Theater Rip' })).toBe(false);
+      expect(
+        isItemUnreleased({ has1080pPlus: false, streamCount: 1, bestQuality: 'CAM / Theater Rip' })
+      ).toBe(false);
     });
   });
 });

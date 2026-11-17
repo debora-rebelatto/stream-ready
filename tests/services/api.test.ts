@@ -1,10 +1,4 @@
-import {
-  api,
-  getAuthKey,
-  setAuthKey,
-  clearAuth,
-  getAuthHeaders,
-} from '../../src/lib/api';
+import { api, getAuthKey, setAuthKey, clearAuth, getAuthHeaders } from '../../src/lib/api';
 
 describe('API Client (src/lib/api.ts)', () => {
   const originalFetch = global.fetch;
@@ -99,10 +93,13 @@ describe('API Client (src/lib/api.ts)', () => {
       });
 
       const res = await api.login({ email: 'a@b.com', password: '123' });
-      expect(global.fetch).toHaveBeenCalledWith('/api/auth/login', expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ email: 'a@b.com', password: '123' }),
-      }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/auth/login',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ email: 'a@b.com', password: '123' }),
+        })
+      );
       expect(res).toEqual(mockResult);
     });
 
@@ -161,16 +158,28 @@ describe('API Client (src/lib/api.ts)', () => {
       });
 
       await api.addItem('tt123', 'movie');
-      expect(global.fetch).toHaveBeenCalledWith('/api/items', expect.objectContaining({ method: 'POST' }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/items',
+        expect.objectContaining({ method: 'POST' })
+      );
 
       await api.deleteItem('tt123');
-      expect(global.fetch).toHaveBeenCalledWith('/api/items/tt123', expect.objectContaining({ method: 'DELETE' }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/items/tt123',
+        expect.objectContaining({ method: 'DELETE' })
+      );
 
       await api.setWatched('tt123', true);
-      expect(global.fetch).toHaveBeenCalledWith('/api/items/tt123/watched', expect.objectContaining({ method: 'POST' }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/items/tt123/watched',
+        expect.objectContaining({ method: 'POST' })
+      );
 
       await api.setItemMinQuality('tt123', '4k');
-      expect(global.fetch).toHaveBeenCalledWith('/api/items/tt123/min-quality', expect.objectContaining({ method: 'POST' }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/items/tt123/min-quality',
+        expect.objectContaining({ method: 'POST' })
+      );
     });
 
     test('syncWatchedFromStremio, recheckSingle, recheckAll', async () => {
@@ -185,9 +194,12 @@ describe('API Client (src/lib/api.ts)', () => {
       expect(global.fetch).toHaveBeenCalledWith('/api/check/tt123', expect.any(Object));
 
       await api.recheckAll(true);
-      expect(global.fetch).toHaveBeenCalledWith('/api/check-all', expect.objectContaining({
-        body: JSON.stringify({ forceAll: true }),
-      }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/check-all',
+        expect.objectContaining({
+          body: JSON.stringify({ forceAll: true }),
+        })
+      );
     });
 
     test('getSettings e saveSettings', async () => {
@@ -199,10 +211,13 @@ describe('API Client (src/lib/api.ts)', () => {
       expect(global.fetch).toHaveBeenCalledWith('/api/settings', expect.any(Object));
 
       await api.saveSettings({ minQuality: '4k' });
-      expect(global.fetch).toHaveBeenCalledWith('/api/settings', expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ minQuality: '4k' }),
-      }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/settings',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ minQuality: '4k' }),
+        })
+      );
     });
 
     test('getInfo, exportBackup e importBackup', async () => {
@@ -216,7 +231,7 @@ describe('API Client (src/lib/api.ts)', () => {
 
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => ([{ id: 'tt1' }]),
+        json: async () => [{ id: 'tt1' }],
       });
 
       const backup = await api.exportBackup();
@@ -229,9 +244,12 @@ describe('API Client (src/lib/api.ts)', () => {
       });
 
       await api.importBackup([{ id: 'tt1' }] as any);
-      expect(global.fetch).toHaveBeenCalledWith('/api/import', expect.objectContaining({
-        method: 'POST',
-      }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/import',
+        expect.objectContaining({
+          method: 'POST',
+        })
+      );
     });
 
     test('custom lists endpoints (get, create, update, delete, setItemCustomLists)', async () => {
@@ -243,16 +261,28 @@ describe('API Client (src/lib/api.ts)', () => {
       expect(global.fetch).toHaveBeenCalledWith('/api/lists', expect.any(Object));
 
       await api.createCustomList('Anime', '🍙');
-      expect(global.fetch).toHaveBeenCalledWith('/api/lists', expect.objectContaining({ method: 'POST' }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/lists',
+        expect.objectContaining({ method: 'POST' })
+      );
 
       await api.updateCustomList('l1', 'Animes', '🎌');
-      expect(global.fetch).toHaveBeenCalledWith('/api/lists/l1', expect.objectContaining({ method: 'PUT' }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/lists/l1',
+        expect.objectContaining({ method: 'PUT' })
+      );
 
       await api.deleteCustomList('l1');
-      expect(global.fetch).toHaveBeenCalledWith('/api/lists/l1', expect.objectContaining({ method: 'DELETE' }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/lists/l1',
+        expect.objectContaining({ method: 'DELETE' })
+      );
 
       await api.setItemCustomLists('tt123', ['l1']);
-      expect(global.fetch).toHaveBeenCalledWith('/api/items/tt123/lists', expect.objectContaining({ method: 'POST' }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/items/tt123/lists',
+        expect.objectContaining({ method: 'POST' })
+      );
     });
 
     test('curated lists endpoints (getCuratedLists, addCuratedList)', async () => {
@@ -267,11 +297,15 @@ describe('API Client (src/lib/api.ts)', () => {
 
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
-        text: async () => JSON.stringify({ success: true, list: { id: 'list_1', name: 'New on Netflix' } }),
+        text: async () =>
+          JSON.stringify({ success: true, list: { id: 'list_1', name: 'New on Netflix' } }),
       });
 
       const addRes = await api.addCuratedList('new_netflix');
-      expect(global.fetch).toHaveBeenCalledWith('/api/curated-lists/new_netflix/add', expect.objectContaining({ method: 'POST' }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/curated-lists/new_netflix/add',
+        expect.objectContaining({ method: 'POST' })
+      );
       expect(addRes.success).toBe(true);
 
       // Gracefully handles empty or network failure
@@ -293,12 +327,15 @@ describe('API Client (src/lib/api.ts)', () => {
       });
 
       const res = await api.deleteAccount();
-      expect(global.fetch).toHaveBeenCalledWith('/api/auth/account', expect.objectContaining({
-        method: 'DELETE',
-        headers: expect.objectContaining({
-          'x-stremio-auth': 'token_to_delete',
-        }),
-      }));
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/auth/account',
+        expect.objectContaining({
+          method: 'DELETE',
+          headers: expect.objectContaining({
+            'x-stremio-auth': 'token_to_delete',
+          }),
+        })
+      );
       expect(res.success).toBe(true);
     });
   });

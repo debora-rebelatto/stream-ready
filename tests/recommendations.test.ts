@@ -1,7 +1,4 @@
-import {
-  buildRecommendedList,
-  CURATED_RECOMMENDED_MOVIES,
-} from '../src/lib/recommendations';
+import { buildRecommendedList, CURATED_RECOMMENDED_MOVIES } from '../src/lib/recommendations';
 import type { WatchlistItem } from '../src/types';
 
 describe('recommendations library', () => {

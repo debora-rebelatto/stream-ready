@@ -18,6 +18,7 @@ Welcome to **Stremio Watchlist (Good Quality Tracker)**. This document serves as
 
 > [!IMPORTANT]
 > **ALL CODE, USER-FACING TEXT, COMMITS, AND DOCUMENTATION MUST BE IN ENGLISH.**
+>
 > - All UI labels, toasts, placeholder texts, and modals must be in English.
 > - All Stremio catalog names, card titles, badges, and status descriptions must be in English.
 > - All comments, variable names, documentation, and commit messages must be in English.
@@ -55,6 +56,7 @@ Welcome to **Stremio Watchlist (Good Quality Tracker)**. This document serves as
 ## 🛠️ Essential Commands
 
 ### Development
+
 ```bash
 # Start both backend server and Vite client concurrently
 npm run dev
@@ -67,6 +69,7 @@ npm run dev:client
 ```
 
 ### Testing
+
 ```bash
 # Run all automated tests
 npm test
@@ -79,6 +82,7 @@ npm run test:coverage
 ```
 
 ### Production Build
+
 ```bash
 # Build the production frontend bundle into dist/
 npm run build
@@ -95,16 +99,21 @@ npm start
 ## 📐 Key Rules for Agents & Contributors
 
 ### 1. Verification Before Completion
+
 Always run the following commands before completing any task:
+
 1. `npm test` — Ensure all unit and integration tests pass without errors or open handle warnings.
 2. `npm run build` — Verify that Vite builds the frontend bundle into `dist/` cleanly.
 
 ### 2. Resource Cleanup & Asynchronous Timers
+
 Whenever using `setTimeout`, `setInterval`, or `AbortController`:
+
 - Always wrap execution in `try ... finally` and clear active timers (`clearTimeout(timeout)` in `finally`).
 - Never leave dangling timer handles in the Node.js event loop, as this causes Jest to hang and leak memory.
 
 ### 3. Stremio Addon Protocol Specifics
+
 - **Manifest (`manifest.json`):**
   - Uses `idPrefixes: ['tt', 'guide_']`.
   - Sets `behaviorHints.configurationRequired: !userId`. When an unauthenticated user accesses the public addon, Stremio shows a **Configure** button instead of installing blindly, routing the user to the web dashboard.
@@ -113,6 +122,7 @@ Whenever using `setTimeout`, `setInterval`, or `AbortController`:
 - **Movies must be added via the website:** The Stremio player interface cannot directly write to third-party databases; all movie additions and watchlist searches occur on the web dashboard.
 
 ### 4. Testing & Mocking Standards
+
 - Never perform real external network calls during tests (mock calls to Torrentio, Cinemeta, and Stremio API using `jest.fn()`).
 - Maintain test coverage for newly added services and utilities.
 - Keep tests fast and isolated.
@@ -120,6 +130,7 @@ Whenever using `setTimeout`, `setInterval`, or `AbortController`:
 ---
 
 ## 🔒 Security Best Practices
+
 - Sensitive keys (`SUPABASE_KEY`, `ENCRYPTION_KEY`) must never be hardcoded; load them through environment variables or `.env`.
 - Private data backups and local cache files are excluded in `.gitignore`.
 - Authentication tokens stored in URLs or headers must be properly validated and sanitized.

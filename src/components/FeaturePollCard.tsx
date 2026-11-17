@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../lib/api';
+import { pollService } from '../services';
 import { trackEvent } from '../lib/analytics';
 import { Check, X, Send, Vote } from 'lucide-react';
 
@@ -109,7 +109,8 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({
     } catch {}
 
     // Verify with backend if user has already voted in Supabase
-    api.getPollStatus()
+    pollService
+      .getPollStatus()
       .then((status) => {
         if (status.hasVoted) {
           try {
@@ -146,7 +147,7 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({
     setIsSubmitting(true);
     setSelectedOption(optionId);
     try {
-      const res = await api.submitPollVote(optionId);
+      const res = await pollService.submitPollVote(optionId);
       if (res.success) {
         trackEvent('poll_voted', { option: optionId, hasCustomText: false });
         try {
@@ -168,7 +169,7 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({
 
     setIsSubmitting(true);
     try {
-      const res = await api.submitPollVote('other', customText.trim());
+      const res = await pollService.submitPollVote('other', customText.trim());
       if (res.success) {
         trackEvent('poll_voted', { option: 'other', hasCustomText: Boolean(customText.trim()) });
         try {
@@ -210,7 +211,8 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({
             Thank you for your feedback!
           </h3>
           <p className="text-xs text-gray-400 max-w-md">
-            Your vote directly shapes our product roadmap. We are building the features our community needs most.
+            Your vote directly shapes our product roadmap. We are building the features our
+            community needs most.
           </p>
         </div>
       ) : (
@@ -260,7 +262,9 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold leading-snug">{opt.title}</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5 leading-tight">{opt.description}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5 leading-tight">
+                      {opt.description}
+                    </p>
                   </div>
                 </button>
               );
@@ -269,8 +273,14 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({
 
           {/* Custom suggestion field when 'other' is selected */}
           {selectedOption === 'other' && (
-            <form onSubmit={handleSubmitCustom} className="mt-3 pt-3 border-t border-white/10 animate-fadeIn">
-              <label htmlFor="custom-feedback" className="block text-xs font-medium text-purple-300 mb-1.5">
+            <form
+              onSubmit={handleSubmitCustom}
+              className="mt-3 pt-3 border-t border-white/10 animate-fadeIn"
+            >
+              <label
+                htmlFor="custom-feedback"
+                className="block text-xs font-medium text-purple-300 mb-1.5"
+              >
                 What feature or improvement do you have in mind?
               </label>
               <div className="flex flex-col sm:flex-row gap-2">

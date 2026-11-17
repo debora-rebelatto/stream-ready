@@ -1,15 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import type { WatchlistItem, WatchlistStats, StremioUser, ToastMessage, CustomList, CuratedList } from '../types';
-import { authService } from '../services/authService';
-import { watchlistService } from '../services/watchlistService';
-import { cinemetaService } from '../services/cinemetaService';
-import { api } from '../lib/api';
+import type {
+  WatchlistItem,
+  WatchlistStats,
+  StremioUser,
+  ToastMessage,
+  CustomList,
+  CuratedList,
+} from '../types';
+import {
+  authService,
+  watchlistService,
+  cinemetaService,
+  customListService,
+  systemService,
+} from '../services';
 import { isItemReady, isItemUnreleased } from '../lib/utils';
 import {
   trackEvent,
   identifyUser as identifyAnalyticsUser,
   resetUser as resetAnalyticsUser,
-  type EventSource
+  type EventSource,
 } from '../lib/analytics';
 import { AuthContext, WatchlistContext, ToastContext, useToast } from './useAppContext';
 
@@ -45,17 +55,20 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const showToast = useCallback((message: string, type: 'info' | 'success' | 'error' = 'info') => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => {
-      const filtered = prev.filter((t) => t.message !== message);
-      return [...filtered, { id, message, type }];
-    });
+  const showToast = useCallback(
+    (message: string, type: 'info' | 'success' | 'error' = 'info') => {
+      const id = Math.random().toString(36).substring(2, 9);
+      setToasts((prev) => {
+        const filtered = prev.filter((t) => t.message !== message);
+        return [...filtered, { id, message, type }];
+      });
 
-    setTimeout(() => {
-      removeToast(id);
-    }, 4000);
-  }, [removeToast]);
+      setTimeout(() => {
+        removeToast(id);
+      }, 4000);
+    },
+    [removeToast]
+  );
 
   return (
     <ToastContext.Provider value={{ toasts, showToast, removeToast }}>
@@ -70,8 +83,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   const [items, setItems] = useState<WatchlistItem[]>([]);
-  const [stats, setStats] = useState<WatchlistStats>({ total: 0, ready: 0, pending: 0, unreleased: 0, watched: 0 });
-  const [currentTab, setCurrentTab] = useState<'all' | 'ready' | 'pending' | 'unreleased' | 'watched'>('all');
+  const [stats, setStats] = useState<WatchlistStats>({
+    total: 0,
+    ready: 0,
+    pending: 0,
+    unreleased: 0,
+    watched: 0,
+  });
+  const [currentTab, setCurrentTab] = useState<
+    'all' | 'ready' | 'pending' | 'unreleased' | 'watched'
+  >('all');
   const [customLists, setCustomLists] = useState<CustomList[]>([]);
   const [activeCustomListId, setActiveCustomListId] = useState<string | null>(null);
   const [isListsLoading, setIsListsLoading] = useState(false);
@@ -92,7 +113,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     setIsListsLoading(true);
     try {
-      const res = await watchlistService.getCustomLists();
+      const res = await customListService.getCustomLists();
       if (res.success && Array.isArray(res.lists)) {
         setCustomLists(res.lists);
       }
@@ -106,7 +127,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const fetchCuratedLists = useCallback(async () => {
     setIsCuratedListsLoading(true);
     try {
-      const res = await watchlistService.getCuratedLists();
+      const res = await customListService.getCuratedLists();
       if (res.success && Array.isArray(res.lists)) {
         setCuratedLists(res.lists);
       }
@@ -126,7 +147,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         identifyUser(res.user);
         setUser(res.user);
         try {
-          const settings = await api.getSettings();
+          const settings = await systemService.getSettings();
           if (settings?.minQuality === '4k' || settings?.minQuality === '1080p') {
             setGlobalMinQualityState(settings.minQuality);
           }
@@ -180,7 +201,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       let updatedRatings = false;
 
       const itemsWithRatings = loadedItems.map((item) => {
-        const rating = (item.imdbRating && String(item.imdbRating) !== 'N/A') ? String(item.imdbRating) : (storedRatings[item.id] || '');
+        const rating =
+          item.imdbRating && String(item.imdbRating) !== 'N/A'
+            ? String(item.imdbRating)
+            : storedRatings[item.id] || '';
         if (item.imdbRating && !storedRatings[item.id]) {
           storedRatings[item.id] = String(item.imdbRating);
           updatedRatings = true;
@@ -194,8 +218,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const unwatched = itemsWithRatings.filter((i) => !i.isWatched);
       const ready = unwatched.filter((i) => isItemReady(i, globalMinQuality)).length;
-      const unreleased = unwatched.filter((i) => !isItemReady(i, globalMinQuality) && isItemUnreleased(i)).length;
-      const pending = unwatched.filter((i) => !isItemReady(i, globalMinQuality) && !isItemUnreleased(i)).length;
+      const unreleased = unwatched.filter(
+        (i) => !isItemReady(i, globalMinQuality) && isItemUnreleased(i)
+      ).length;
+      const pending = unwatched.filter(
+        (i) => !isItemReady(i, globalMinQuality) && !isItemUnreleased(i)
+      ).length;
       const watched = itemsWithRatings.filter((i) => Boolean(i.isWatched)).length;
 
       setItems(itemsWithRatings);
@@ -337,7 +365,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await authService.installToAccount();
       if (res.success) {
         trackEvent('addon_install_clicked', { location: 'navbar' });
-        showToast('🎉 Addon installed to Stremio! Remember to search and add your movies here on the website.', 'success');
+        showToast(
+          '🎉 Addon installed to Stremio! Remember to search and add your movies here on the website.',
+          'success'
+        );
         return { success: true };
       }
       showToast(res.error || 'Failed to install to account.', 'error');
@@ -362,10 +393,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         year: item.year ? String(item.year) : undefined,
         imdbId: id,
         source,
-        isReady: Boolean(item.has1080pPlus)
+        isReady: Boolean(item.has1080pPlus),
       });
       if (item.has1080pPlus) {
-        showToast(`🎉 "${item.name}" added! Already READY in good quality (${item.bestQuality})!`, 'success');
+        showToast(
+          `🎉 "${item.name}" added! Already READY in good quality (${item.bestQuality})!`,
+          'success'
+        );
       } else {
         showToast(`⏳ "${item.name}" added! Waiting for good quality release.`, 'info');
       }
@@ -398,9 +432,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await watchlistService.recheckItem(id);
       if (res.success && res.item) {
         if (res.becameReady) {
-          showToast(`🎉 "${res.item.name}" is now available in good quality (${res.item.bestQuality})!`, 'success');
+          showToast(
+            `🎉 "${res.item.name}" is now available in good quality (${res.item.bestQuality})!`,
+            'success'
+          );
         } else {
-          showToast(`Checked: ${res.item.name} (${res.item.bestQuality} - ${res.item.streamCount} sources)`, 'info');
+          showToast(
+            `Checked: ${res.item.name} (${res.item.bestQuality} - ${res.item.streamCount} sources)`,
+            'info'
+          );
         }
         await refreshWatchlist();
       }
@@ -416,7 +456,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.recheckAll(true);
       if (res.success) {
-        trackEvent('recheck_all_triggered', { totalItems: items.length, newlyReady: res.newlyReady || 0 });
+        trackEvent('recheck_all_triggered', {
+          totalItems: items.length,
+          newlyReady: res.newlyReady || 0,
+        });
         if (res.newlyReady > 0) {
           showToast(`🎉 ${res.newlyReady} movie(s) are now ready in good quality!`, 'success');
         } else {
@@ -435,7 +478,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     trackEvent('quality_setting_updated', { minQuality: quality, scope: 'global' });
     setGlobalMinQualityState(quality);
     try {
-      await api.saveSettings({ minQuality: quality });
+      await systemService.saveSettings({ minQuality: quality });
       showToast(`🎯 Quality preference set to ${quality.toUpperCase()}!`, 'success');
       await refreshWatchlist();
     } catch {
@@ -447,7 +490,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     trackEvent('sync_setting_updated', { setting: 'autoSyncWatched', enabled });
     setAutoSyncWatchedState(enabled);
     try {
-      await api.saveSettings({ autoSyncWatched: enabled });
+      await systemService.saveSettings({ autoSyncWatched: enabled });
       showToast(
         enabled
           ? 'Auto-sync for watched movies enabled.'
@@ -463,7 +506,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     trackEvent('sync_setting_updated', { setting: 'trackWatchlistWatched', enabled });
     setTrackWatchlistWatchedState(enabled);
     try {
-      await api.saveSettings({ trackWatchlistWatched: enabled });
+      await systemService.saveSettings({ trackWatchlistWatched: enabled });
       showToast(
         enabled
           ? 'Watchlist tracking enabled (watched after adding).'
@@ -479,7 +522,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     trackEvent('sync_setting_updated', { setting: 'syncPreviouslyWatched', enabled });
     setSyncPreviouslyWatchedState(enabled);
     try {
-      await api.saveSettings({ syncPreviouslyWatched: enabled });
+      await systemService.saveSettings({ syncPreviouslyWatched: enabled });
       showToast(
         enabled
           ? 'Sync for previously watched movies enabled.'
@@ -498,7 +541,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         trackEvent('movie_watched_toggled', { isWatched: watched, imdbId: id });
         setItems((prev) =>
           prev.map((i) =>
-            i.id === id ? { ...i, isWatched: watched, watchedAt: watched ? new Date().toISOString() : null } : i
+            i.id === id
+              ? { ...i, isWatched: watched, watchedAt: watched ? new Date().toISOString() : null }
+              : i
           )
         );
         if (res.stats) setStats(res.stats);
@@ -516,16 +561,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.setItemMinQuality(id, minQuality);
       if (res.success) {
-        setItems((prev) =>
-          prev.map((i) => (i.id === id ? { ...i, minQuality } : i))
-        );
+        setItems((prev) => prev.map((i) => (i.id === id ? { ...i, minQuality } : i)));
         if (res.stats) setStats(res.stats);
         trackEvent('quality_setting_updated', {
           minQuality: minQuality || 'default',
           scope: 'item',
-          imdbId: id
+          imdbId: id,
         });
-        showToast(`Target quality set to ${minQuality ? minQuality.toUpperCase() : 'Default'}.`, 'success');
+        showToast(
+          `Target quality set to ${minQuality ? minQuality.toUpperCase() : 'Default'}.`,
+          'success'
+        );
       }
     } catch {
       showToast('Failed to update item target quality.', 'error');
@@ -559,7 +605,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const createCustomList = async (name: string, emoji = '🎬'): Promise<boolean> => {
     try {
-      const res = await watchlistService.createCustomList(name, emoji);
+      const res = await customListService.createCustomList(name, emoji);
       if (res.success && res.list) {
         trackEvent('custom_list_created', { listName: res.list.name });
         setCustomLists((prev) => [...prev, res.list]);
@@ -577,7 +623,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateCustomList = async (id: string, name: string, emoji?: string): Promise<boolean> => {
     try {
-      const res = await watchlistService.updateCustomList(id, name, emoji);
+      const res = await customListService.updateCustomList(id, name, emoji);
       if (res.success && res.list) {
         setCustomLists((prev) => prev.map((l) => (l.id === id ? { ...l, ...res.list } : l)));
         showToast('List updated successfully!', 'success');
@@ -594,7 +640,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteCustomList = async (id: string): Promise<boolean> => {
     try {
-      const res = await watchlistService.deleteCustomList(id);
+      const res = await customListService.deleteCustomList(id);
       if (res.success) {
         setCustomLists((prev) => prev.filter((l) => l.id !== id));
         if (activeCustomListId === id) {
@@ -636,7 +682,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const setItemCustomLists = async (itemId: string, listIds: string[]) => {
     try {
-      const res = await watchlistService.setItemCustomLists(itemId, listIds);
+      const res = await customListService.setItemCustomLists(itemId, listIds);
       if (res.success) {
         setItems((prev) =>
           prev.map((item) => (item.id === itemId ? { ...item, customLists: listIds } : item))
@@ -669,30 +715,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return false;
     }
     try {
-      const res = await watchlistService.addCuratedList(id);
+      const res = await customListService.addCuratedList(id);
       if (res.success && res.list) {
         const addedList = res.list;
-        trackEvent('curated_list_added', { listName: addedList.name || id, addedMoviesCount: res.addedMoviesCount ?? 0 });
-        showToast(`Added "${addedList.name || 'Standard List'}" (${res.addedMoviesCount ?? 0} new movies)!`, 'success');
+        trackEvent('curated_list_added', {
+          listName: addedList.name || id,
+          addedMoviesCount: res.addedMoviesCount ?? 0,
+        });
+        showToast(
+          `Added "${addedList.name || 'Standard List'}" (${res.addedMoviesCount ?? 0} new movies)!`,
+          'success'
+        );
 
         // Optimistically update customLists and curatedLists immediately for instant UI response
         setCustomLists((prev) => {
-          if (prev.some((cl) => cl.id === addedList.id || cl.name.trim().toLowerCase() === addedList.name.trim().toLowerCase())) {
+          if (
+            prev.some(
+              (cl) =>
+                cl.id === addedList.id ||
+                cl.name.trim().toLowerCase() === addedList.name.trim().toLowerCase()
+            )
+          ) {
             return prev;
           }
           return [...prev, addedList];
         });
 
-        setCuratedLists((prev) =>
-          prev.map((cl) => (cl.id === id ? { ...cl, isAdded: true } : cl))
-        );
+        setCuratedLists((prev) => prev.map((cl) => (cl.id === id ? { ...cl, isAdded: true } : cl)));
 
         // Refresh full data in the background without freezing the UI modal
-        Promise.all([
-          refreshWatchlist(),
-          fetchCustomLists(),
-          fetchCuratedLists()
-        ]).catch(() => {});
+        Promise.all([refreshWatchlist(), fetchCustomLists(), fetchCuratedLists()]).catch(() => {});
 
         return true;
       } else {

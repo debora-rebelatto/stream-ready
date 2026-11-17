@@ -1,9 +1,4 @@
-const {
-  deleteCustomList,
-  findUserBucket,
-  addItem,
-  ensureLoaded,
-} = require('../../lib/db');
+const { deleteCustomList, findUserBucket, addItem, ensureLoaded } = require('../../lib/db');
 
 describe('Custom List Deletion and Movie Removal (lib/db.js)', () => {
   const testUserId = 'a0000000-0000-0000-0000-000000000001';

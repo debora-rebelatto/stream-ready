@@ -9,9 +9,9 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
-  Send
+  Send,
 } from 'lucide-react';
-import { api } from '../lib/api';
+import { pollService } from '../services';
 import { trackEvent } from '../lib/analytics';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
 import {
@@ -30,7 +30,9 @@ export interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
-  const [dismissBetaBanner, setDismissBetaBanner] = useState<boolean>(() => isBetaNoticeDismissed());
+  const [dismissBetaBanner, setDismissBetaBanner] = useState<boolean>(() =>
+    isBetaNoticeDismissed()
+  );
 
   const [isPollExpanded, setIsPollExpanded] = useState<boolean>(true);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -46,7 +48,8 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
   const [votedOption, setVotedOption] = useState<string | null>(null);
 
   useEffect(() => {
-    api.getPollStatus()
+    pollService
+      .getPollStatus()
       .then((status) => {
         if (status.hasVoted) {
           try {
@@ -84,7 +87,7 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
     setIsSubmitting(true);
     setSelectedOption(optionId);
     try {
-      const res = await api.submitPollVote(optionId);
+      const res = await pollService.submitPollVote(optionId);
       if (res.success) {
         trackEvent('poll_voted', { option: optionId, hasCustomText: false });
         try {
@@ -104,7 +107,7 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
 
     setIsSubmitting(true);
     try {
-      const res = await api.submitPollVote('other', customText.trim());
+      const res = await pollService.submitPollVote('other', customText.trim());
       if (res.success) {
         trackEvent('poll_voted', { option: 'other', hasCustomText: Boolean(customText.trim()) });
         try {
@@ -134,7 +137,9 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
             <span className="font-bold text-amber-300 uppercase tracking-wide mr-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-400/20 border border-amber-400/30">
               Beta Notice
             </span>
-            This addon is currently in public beta. Stream analysis and quality detection are actively being improved. If you encounter any misclassified releases or wish to support development, please{' '}
+            This addon is currently in public beta. Stream analysis and quality detection are
+            actively being improved. If you encounter any misclassified releases or wish to support
+            development, please{' '}
             <a
               href="https://tally.so/r/dbazxA"
               target="_blank"
@@ -195,7 +200,8 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
                 Would you like to contribute to the project?
               </h3>
               <p className="text-xs text-gray-400 mt-0.5">
-                Help us prioritize our next updates! Vote below on which feature you would love to see next:
+                Help us prioritize our next updates! Vote below on which feature you would love to
+                see next:
               </p>
             </div>
           </div>
@@ -222,7 +228,8 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
                       Thank you for contributing!
                     </strong>
                     <span className="text-xs text-gray-300">
-                      Your vote {votedTitle ? `for "${votedTitle}"` : ''} directly influences our development roadmap.
+                      Your vote {votedTitle ? `for "${votedTitle}"` : ''} directly influences our
+                      development roadmap.
                     </span>
                   </div>
                 </div>
@@ -260,7 +267,9 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-semibold leading-snug">{opt.title}</p>
-                          <p className="text-[11px] text-gray-400 mt-0.5 leading-tight">{opt.description}</p>
+                          <p className="text-[11px] text-gray-400 mt-0.5 leading-tight">
+                            {opt.description}
+                          </p>
                         </div>
                       </button>
                     );
@@ -269,7 +278,10 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
 
                 {selectedOption === 'other' && (
                   <form onSubmit={handleSubmitCustom} className="pt-2 animate-fadeIn">
-                    <label htmlFor="hero-custom-feedback" className="block text-xs font-medium text-purple-300 mb-1.5">
+                    <label
+                      htmlFor="hero-custom-feedback"
+                      className="block text-xs font-medium text-purple-300 mb-1.5"
+                    >
                       What feature or improvement do you have in mind?
                     </label>
                     <div className="flex flex-col sm:flex-row gap-2">

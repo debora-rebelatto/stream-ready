@@ -5,16 +5,16 @@ const {
   addItem,
   getItems,
   findUser,
-  findUserBucket
+  findUserBucket,
 } = require('../../lib/db');
 
 // Mock external network calls
 jest.mock('../../lib/stremioAuth', () => ({
-  getStremioWatchedMovies: jest.fn()
+  getStremioWatchedMovies: jest.fn(),
 }));
 
 jest.mock('../../lib/cinemeta', () => ({
-  getMeta: jest.fn().mockResolvedValue(null)
+  getMeta: jest.fn().mockResolvedValue(null),
 }));
 
 const { getStremioWatchedMovies } = require('../../lib/stremioAuth');
@@ -27,7 +27,7 @@ describe('syncWatchedWithStremio & Watchlist Tracking', () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => []
+      json: async () => [],
     });
   });
 
@@ -40,7 +40,7 @@ describe('syncWatchedWithStremio & Watchlist Tracking', () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => []
+      json: async () => [],
     });
     const bucket = findUser(testUserId);
     if (bucket) {
@@ -48,7 +48,7 @@ describe('syncWatchedWithStremio & Watchlist Tracking', () => {
       bucket.settings = {
         minQuality: '1080p',
         trackWatchlistWatched: true,
-        syncPreviouslyWatched: false
+        syncPreviouslyWatched: false,
       };
     }
   });
@@ -61,7 +61,7 @@ describe('syncWatchedWithStremio & Watchlist Tracking', () => {
         id: 'tt0111161',
         name: 'The Shawshank Redemption',
         isWatched: false,
-        addedAt: addedTime
+        addedAt: addedTime,
       },
       testUserId
     );
@@ -72,18 +72,18 @@ describe('syncWatchedWithStremio & Watchlist Tracking', () => {
       {
         id: 'tt0111161',
         name: 'The Shawshank Redemption',
-        watchedAt: watchedTime
-      }
+        watchedAt: watchedTime,
+      },
     ]);
 
     const result = await syncWatchedWithStremio('fake_auth_key', testUserId, {
       trackWatchlistWatched: true,
-      syncPreviouslyWatched: false
+      syncPreviouslyWatched: false,
     });
 
     expect(result.newlyMarked).toBe(1);
     const items = getItems(testUserId);
-    const movie = items.find(i => i.id === 'tt0111161');
+    const movie = items.find((i) => i.id === 'tt0111161');
     expect(movie.isWatched).toBe(true);
     expect(movie.watchedAt).toBe(watchedTime);
   });
@@ -96,7 +96,7 @@ describe('syncWatchedWithStremio & Watchlist Tracking', () => {
         id: 'tt0068646',
         name: 'The Godfather',
         isWatched: false,
-        addedAt: addedTime
+        addedAt: addedTime,
       },
       testUserId
     );
@@ -107,18 +107,18 @@ describe('syncWatchedWithStremio & Watchlist Tracking', () => {
       {
         id: 'tt0068646',
         name: 'The Godfather',
-        watchedAt: watchedTime
-      }
+        watchedAt: watchedTime,
+      },
     ]);
 
     const result = await syncWatchedWithStremio('fake_auth_key', testUserId, {
       trackWatchlistWatched: true,
-      syncPreviouslyWatched: false
+      syncPreviouslyWatched: false,
     });
 
     expect(result.newlyMarked).toBe(0);
     const items = getItems(testUserId);
-    const movie = items.find(i => i.id === 'tt0068646');
+    const movie = items.find((i) => i.id === 'tt0068646');
     expect(movie.isWatched).toBe(false);
   });
 
@@ -130,7 +130,7 @@ describe('syncWatchedWithStremio & Watchlist Tracking', () => {
         id: 'tt0068646',
         name: 'The Godfather',
         isWatched: false,
-        addedAt: addedTime
+        addedAt: addedTime,
       },
       testUserId
     );
@@ -141,18 +141,18 @@ describe('syncWatchedWithStremio & Watchlist Tracking', () => {
       {
         id: 'tt0068646',
         name: 'The Godfather',
-        watchedAt: watchedTime
-      }
+        watchedAt: watchedTime,
+      },
     ]);
 
     const result = await syncWatchedWithStremio('fake_auth_key', testUserId, {
       trackWatchlistWatched: true,
-      syncPreviouslyWatched: true
+      syncPreviouslyWatched: true,
     });
 
     expect(result.newlyMarked).toBe(1);
     const items = getItems(testUserId);
-    const movie = items.find(i => i.id === 'tt0068646');
+    const movie = items.find((i) => i.id === 'tt0068646');
     expect(movie.isWatched).toBe(true);
   });
 
@@ -161,18 +161,18 @@ describe('syncWatchedWithStremio & Watchlist Tracking', () => {
       {
         id: 'tt0468569',
         name: 'The Dark Knight',
-        watchedAt: '2026-01-01T00:00:00Z'
-      }
+        watchedAt: '2026-01-01T00:00:00Z',
+      },
     ]);
 
     const result = await syncWatchedWithStremio('fake_auth_key', testUserId, {
       trackWatchlistWatched: true,
-      syncPreviouslyWatched: false
+      syncPreviouslyWatched: false,
     });
 
     expect(result.newlyAdded).toBe(0);
     const items = getItems(testUserId);
-    expect(items.find(i => i.id === 'tt0468569')).toBeUndefined();
+    expect(items.find((i) => i.id === 'tt0468569')).toBeUndefined();
   });
 
   test('imports non-watchlist movies from Stremio library when syncPreviouslyWatched is true', async () => {
@@ -180,19 +180,45 @@ describe('syncWatchedWithStremio & Watchlist Tracking', () => {
       {
         id: 'tt0468569',
         name: 'The Dark Knight',
-        watchedAt: '2026-01-01T00:00:00Z'
-      }
+        watchedAt: '2026-01-01T00:00:00Z',
+      },
     ]);
 
     const result = await syncWatchedWithStremio('fake_auth_key', testUserId, {
       trackWatchlistWatched: true,
-      syncPreviouslyWatched: true
+      syncPreviouslyWatched: true,
     });
 
     expect(result.newlyAdded).toBe(1);
     const items = getItems(testUserId);
-    const movie = items.find(i => i.id === 'tt0468569');
+    const movie = items.find((i) => i.id === 'tt0468569');
     expect(movie).toBeDefined();
     expect(movie.isWatched).toBe(true);
+  });
+
+  test('ignores third-party debrid utility IDs even when syncPreviouslyWatched is true', async () => {
+    getStremioWatchedMovies.mockResolvedValueOnce([
+      {
+        id: 'dlrealdebrid',
+        name: '🗑️💩 Delete all files',
+        watchedAt: '2025-11-15T16:04:58.110Z',
+        poster: 'https://mediafusion.elfhosted.com/static/images/delete_all_poster.jpg',
+      },
+      {
+        id: 'tt0468569',
+        name: 'The Dark Knight',
+        watchedAt: '2026-01-01T00:00:00Z',
+      },
+    ]);
+
+    const result = await syncWatchedWithStremio('fake_auth_key', testUserId, {
+      trackWatchlistWatched: true,
+      syncPreviouslyWatched: true,
+    });
+
+    expect(result.newlyAdded).toBe(1);
+    const items = getItems(testUserId);
+    expect(items.find((i) => i.id === 'dlrealdebrid')).toBeUndefined();
+    expect(items.find((i) => i.id === 'tt0468569')).toBeDefined();
   });
 });

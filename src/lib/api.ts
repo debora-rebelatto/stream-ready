@@ -6,7 +6,7 @@ import type {
   ServerInfo,
   SearchMovieResult,
   CustomList,
-  CuratedList
+  CuratedList,
 } from '../types';
 
 export function getAuthKey(): string | null {
@@ -49,7 +49,11 @@ export function getAuthHeaders(): HeadersInit {
 }
 
 export const api = {
-  async getAuthStatus(): Promise<{ loggedIn: boolean; user?: StremioUser; isUnauthorized?: boolean }> {
+  async getAuthStatus(): Promise<{
+    loggedIn: boolean;
+    user?: StremioUser;
+    isUnauthorized?: boolean;
+  }> {
     const key = getAuthKey();
     if (!key) return { loggedIn: false, isUnauthorized: true };
 
@@ -128,7 +132,10 @@ export const api = {
     return res.json();
   },
 
-  async addItem(id: string, type: string = 'movie'): Promise<{
+  async addItem(
+    id: string,
+    type: string = 'movie'
+  ): Promise<{
     success: boolean;
     item: WatchlistItem;
     error?: string;
@@ -150,7 +157,10 @@ export const api = {
     return res.json();
   },
 
-  async setWatched(id: string, watched: boolean): Promise<{ success: boolean; item: WatchlistItem; stats: WatchlistStats }> {
+  async setWatched(
+    id: string,
+    watched: boolean
+  ): Promise<{ success: boolean; item: WatchlistItem; stats: WatchlistStats }> {
     const res = await fetch(`/api/items/${id}/watched`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -159,7 +169,10 @@ export const api = {
     return res.json();
   },
 
-  async setItemMinQuality(id: string, minQuality: '1080p' | '4k' | null): Promise<{ success: boolean; item: WatchlistItem; stats: WatchlistStats }> {
+  async setItemMinQuality(
+    id: string,
+    minQuality: '1080p' | '4k' | null
+  ): Promise<{ success: boolean; item: WatchlistItem; stats: WatchlistStats }> {
     const res = await fetch(`/api/items/${id}/min-quality`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -214,7 +227,9 @@ export const api = {
     return res.json();
   },
 
-  async saveSettings(settings: Partial<AppSettings>): Promise<{ success: boolean; settings: AppSettings }> {
+  async saveSettings(
+    settings: Partial<AppSettings>
+  ): Promise<{ success: boolean; settings: AppSettings }> {
     const res = await fetch('/api/settings', {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -241,7 +256,9 @@ export const api = {
     return res.json();
   },
 
-  async importBackup(items: WatchlistItem[]): Promise<{ success: boolean; addedCount: number; stats: WatchlistStats }> {
+  async importBackup(
+    items: WatchlistItem[]
+  ): Promise<{ success: boolean; addedCount: number; stats: WatchlistStats }> {
     const res = await fetch('/api/import', {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -257,7 +274,10 @@ export const api = {
     return res.json();
   },
 
-  async createCustomList(name: string, emoji = ''): Promise<{ success: boolean; list: CustomList; error?: string }> {
+  async createCustomList(
+    name: string,
+    emoji = ''
+  ): Promise<{ success: boolean; list: CustomList; error?: string }> {
     const res = await fetch('/api/lists', {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -266,7 +286,11 @@ export const api = {
     return res.json();
   },
 
-  async updateCustomList(id: string, name: string, emoji?: string): Promise<{ success: boolean; list: CustomList; error?: string }> {
+  async updateCustomList(
+    id: string,
+    name: string,
+    emoji?: string
+  ): Promise<{ success: boolean; list: CustomList; error?: string }> {
     const res = await fetch(`/api/lists/${id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
@@ -288,7 +312,10 @@ export const api = {
     return res.json();
   },
 
-  async setItemCustomLists(id: string, listIds: string[]): Promise<{ success: boolean; item: WatchlistItem; error?: string }> {
+  async setItemCustomLists(
+    id: string,
+    listIds: string[]
+  ): Promise<{ success: boolean; item: WatchlistItem; error?: string }> {
     const res = await fetch(`/api/items/${id}/lists`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -328,13 +355,13 @@ export const api = {
       } catch {
         return {
           success: false,
-          error: `Server returned an invalid response (${res.status}). Please check server logs.`
+          error: `Server returned an invalid response (${res.status}). Please check server logs.`,
         };
       }
       if (!res.ok) {
         return {
           success: false,
-          error: data.error || `Server returned ${res.status}. Please check server connection.`
+          error: data.error || `Server returned ${res.status}. Please check server connection.`,
         };
       }
       return data;
@@ -343,12 +370,15 @@ export const api = {
         success: false,
         error: err.message?.includes('JSON')
           ? 'Cannot connect to backend server. Please verify the server is running on port 7000.'
-          : (err.message || 'Error connecting to server.')
+          : err.message || 'Error connecting to server.',
       };
     }
   },
 
-  async submitPollVote(option: string, customText?: string): Promise<{ success: boolean; vote?: any; error?: string }> {
+  async submitPollVote(
+    option: string,
+    customText?: string
+  ): Promise<{ success: boolean; vote?: any; error?: string }> {
     try {
       const res = await fetch('/api/poll/vote', {
         method: 'POST',

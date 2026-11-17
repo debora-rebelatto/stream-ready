@@ -13,17 +13,8 @@ import {
   Heart,
   AlertTriangle,
   Trash2,
-  Shield,
-  EyeOff,
-  Plus
 } from 'lucide-react';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
-import {
-  getExcludedTrackingEmails,
-  setExcludedTrackingEmails,
-  setTrackingDisabled,
-  TRACKING_DISABLED_KEY
-} from '../lib/analytics';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -31,7 +22,11 @@ interface SettingsModalProps {
   onOpenDeleteAccount?: () => void;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onOpenDeleteAccount }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({
+  isOpen,
+  onClose,
+  onOpenDeleteAccount,
+}) => {
   const {
     refreshWatchlist,
     globalMinQuality,
@@ -49,50 +44,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const { user } = useAuth();
   const { showToast } = useToast();
   const [isExporting, setIsExporting] = React.useState(false);
-
-  const [isOptedOut, setIsOptedOut] = React.useState<boolean>(() => {
-    try {
-      return localStorage.getItem(TRACKING_DISABLED_KEY) === 'true';
-    } catch {
-      return false;
-    }
-  });
-
-  const [excludedEmails, setExcludedEmails] = React.useState<string[]>(() => {
-    return getExcludedTrackingEmails();
-  });
-
-  const [newEmailInput, setNewEmailInput] = React.useState('');
-
-  const handleToggleOptOut = (val: boolean) => {
-    setIsOptedOut(val);
-    setTrackingDisabled(val);
-    showToast(val ? 'Telemetry and analytics disabled.' : 'Telemetry re-enabled.', 'info');
-  };
-
-  const handleAddExcludedEmail = (emailToAdd: string) => {
-    const clean = emailToAdd.trim().toLowerCase();
-    if (!clean || !clean.includes('@')) {
-      showToast('Please enter a valid email address.', 'error');
-      return;
-    }
-    if (excludedEmails.includes(clean)) {
-      showToast('This email is already in the exclusion list.', 'info');
-      return;
-    }
-    const updated = [...excludedEmails, clean];
-    setExcludedEmails(updated);
-    setExcludedTrackingEmails(updated);
-    setNewEmailInput('');
-    showToast(`Account "${clean}" will never be tracked.`, 'success');
-  };
-
-  const handleRemoveExcludedEmail = (emailToRemove: string) => {
-    const updated = excludedEmails.filter((e) => e !== emailToRemove);
-    setExcludedEmails(updated);
-    setExcludedTrackingEmails(updated);
-    showToast(`Removed "${emailToRemove}" from exclusion list.`, 'info');
-  };
 
   if (!isOpen) return null;
 
@@ -117,7 +68,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      showToast(`🎉 Exported ${items.length} movie${items.length === 1 ? '' : 's'} successfully!`, 'success');
+      showToast(
+        `🎉 Exported ${items.length} movie${items.length === 1 ? '' : 's'} successfully!`,
+        'success'
+      );
     } catch (err: any) {
       console.error('[Export Backup Error]', err);
       showToast(err.message || 'Failed to export backup.', 'error');
@@ -134,7 +88,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     reader.onload = async (ev) => {
       try {
         const raw = JSON.parse(ev.target?.result as string);
-        const items = Array.isArray(raw) ? raw : (raw.items || raw.movies || []);
+        const items = Array.isArray(raw) ? raw : raw.items || raw.movies || [];
         if (!Array.isArray(items) || items.length === 0) {
           showToast('No valid movies found in this JSON backup file.', 'error');
           return;
@@ -157,7 +111,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
+      <div
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
       {/* Modal Dialog */}
       <div className="relative w-full max-w-lg bg-[#151824] border border-white/10 rounded-2xl shadow-2xl z-10 my-auto max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
@@ -190,7 +148,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               </span>
             </div>
             <p className="text-[11px] text-gray-400 leading-relaxed">
-              Choose when a movie is considered "Ready" in good quality. You can also override this per-movie directly on each card.
+              Choose when a movie is considered "Ready" in good quality. You can also override this
+              per-movie directly on each card.
             </p>
 
             <div className="grid grid-cols-2 gap-3 pt-1">
@@ -205,7 +164,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               >
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-xs text-white">1080p Full HD</span>
-                  {globalMinQuality === '1080p' && <span className="text-blue-400 text-xs">✓ Active</span>}
+                  {globalMinQuality === '1080p' && (
+                    <span className="text-blue-400 text-xs">✓ Active</span>
+                  )}
                 </div>
                 <span className="text-[10px] text-gray-400 leading-normal">
                   Standard releases. Alerts when 1080p, BluRay, WEB-DL, or 4K arrives.
@@ -223,7 +184,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               >
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-xs text-white">4K UHD Only</span>
-                  {globalMinQuality === '4k' && <span className="text-purple-400 text-xs">✓ Active</span>}
+                  {globalMinQuality === '4k' && (
+                    <span className="text-purple-400 text-xs">✓ Active</span>
+                  )}
                 </div>
                 <span className="text-[10px] text-gray-400 leading-normal">
                   Pristine quality. Alerts only when 4K UHD or 2160p is detected.
@@ -252,13 +215,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-[#151824] border border-white/5 transition-colors hover:border-white/10">
                 <div className="flex-1 min-w-0 pr-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-gray-200">Track Watchlist Movies</span>
+                    <span className="text-xs font-semibold text-gray-200">
+                      Track Watchlist Movies
+                    </span>
                     <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                       Recommended
                     </span>
                   </div>
                   <p className="text-[10.5px] text-gray-400 leading-relaxed mt-1">
-                    Tracks movies already in your watchlist. Automatically moves them to <strong className="text-purple-300">Watched</strong> only if you play them on Stremio <strong className="text-gray-200">after</strong> adding them to your list.
+                    Tracks movies already in your watchlist. Automatically moves them to{' '}
+                    <strong className="text-purple-300">Watched</strong> only if you play them on
+                    Stremio <strong className="text-gray-200">after</strong> adding them to your
+                    list.
                   </p>
                 </div>
                 <button
@@ -284,10 +252,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-[#151824] border border-white/5 transition-colors hover:border-white/10">
                 <div className="flex-1 min-w-0 pr-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-gray-200">Sync Previously Watched Movies</span>
+                    <span className="text-xs font-semibold text-gray-200">
+                      Sync Previously Watched Movies
+                    </span>
                   </div>
                   <p className="text-[10.5px] text-gray-400 leading-relaxed mt-1">
-                    Syncs movies you watched in the past (before adding them, or from your general Stremio library) into your Watched tab. Keeps movies in active watchlist when turned off.
+                    Syncs movies you watched in the past (before adding them, or from your general
+                    Stremio library) into your Watched tab. Keeps movies in active watchlist when
+                    turned off.
                   </p>
                 </div>
                 <button
@@ -313,10 +285,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-[#151824] border border-white/5 transition-colors hover:border-white/10">
                 <div className="flex-1 min-w-0 pr-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-gray-200">Automatic Background Verification</span>
+                    <span className="text-xs font-semibold text-gray-200">
+                      Automatic Background Verification
+                    </span>
                   </div>
                   <p className="text-[10.5px] text-gray-400 leading-relaxed mt-1">
-                    Runs periodic verification in the background every 30 minutes without needing to open the app or click manually.
+                    Runs periodic verification in the background every 30 minutes without needing to
+                    open the app or click manually.
                   </p>
                 </div>
                 <button
@@ -354,7 +329,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               </button>
               {!user && (
                 <p className="text-[10px] text-amber-400/90 mt-1.5 flex items-center gap-1">
-                  ⚠️ Connect your Stremio account (via the Sign In button) to enable watched verification.
+                  ⚠️ Connect your Stremio account (via the Sign In button) to enable watched
+                  verification.
                 </p>
               )}
             </div>
@@ -367,16 +343,35 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               How to add to Stremio:
             </h4>
             <ol className="list-decimal list-inside space-y-1.5 leading-relaxed text-gray-300">
-              <li>Click <strong>"Install in App"</strong> in the top navigation bar.</li>
-              <li>If the Stremio app does not open automatically, click <strong>"Copy Link"</strong>.</li>
-              <li>In Stremio, open the <strong>Addons (Puzzle icon)</strong> tab, paste the link in the search bar and press <strong>Enter</strong>.</li>
-              <li>Click <strong>Install</strong>.</li>
-              <li>Done! Your custom rows will appear on your Stremio Home Screen / Discover:
+              <li>
+                Click <strong>"Install in App"</strong> in the top navigation bar.
+              </li>
+              <li>
+                If the Stremio app does not open automatically, click <strong>"Copy Link"</strong>.
+              </li>
+              <li>
+                In Stremio, open the <strong>Addons (Puzzle icon)</strong> tab, paste the link in
+                the search bar and press <strong>Enter</strong>.
+              </li>
+              <li>
+                Click <strong>Install</strong>.
+              </li>
+              <li>
+                Done! Your custom rows will appear on your Stremio Home Screen / Discover:
                 <ul className="list-disc list-inside ml-3 mt-1.5 space-y-0.5 text-gray-400">
-                  <li><span className="text-emerald-400 font-semibold">🟢 Watchlist: Ready (Good Quality)</span></li>
-                  <li><span>📋 Watchlist: All Movies</span></li>
-                  <li><span className="text-amber-400 font-semibold">⏳ Watchlist: Waiting for Quality</span></li>
-                  <li><span className="text-purple-400 font-semibold">👁️ Watchlist: Watched History</span></li>
+                  <li>
+                    <span className="text-emerald-400 font-semibold">
+                      🟢 Watchlist: Ready (Good Quality)
+                    </span>
+                  </li>
+                  <li>
+                    <span>📋 Watchlist: All Movies</span>
+                  </li>
+                  <li>
+                    <span className="text-amber-400 font-semibold">
+                      ⏳ Watchlist: Waiting for Quality
+                    </span>
+                  </li>
                 </ul>
               </li>
             </ol>
@@ -389,7 +384,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               Backup & Restore
             </span>
             <p className="text-[10.5px] text-gray-400 leading-relaxed">
-              Export your watchlist to a JSON file to keep a personal backup, or import movies from an existing backup file.
+              Export your watchlist to a JSON file to keep a personal backup, or import movies from
+              an existing backup file.
             </p>
             <div className="flex gap-3 pt-1">
               <button
@@ -404,134 +400,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
               <label className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-[#151824] hover:bg-[#1a1e2e] border border-white/10 text-gray-200 font-medium text-xs cursor-pointer transition-colors">
                 <Upload size={13} /> Import Backup (.json)
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleImport}
-                  className="hidden"
-                />
+                <input type="file" accept=".json" onChange={handleImport} className="hidden" />
               </label>
-            </div>
-          </div>
-
-          {/* Privacy & Tracking Opt-Out */}
-          <div className="p-4 rounded-xl bg-[#1f2438] border border-white/10 space-y-3.5">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-white flex items-center gap-2">
-                <Shield size={16} className="text-emerald-400" />
-                Privacy & Telemetry Opt-Out
-              </span>
-              {isOptedOut && (
-                <span className="text-[10px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-semibold px-2 py-0.5 rounded-full">
-                  All Tracking Off
-                </span>
-              )}
-            </div>
-
-            <p className="text-[10.5px] text-gray-400 leading-relaxed">
-              Exclude specific accounts from PostHog, Vercel Analytics, and server database telemetry. No actions performed by excluded accounts will ever be tracked.
-            </p>
-
-            {/* Global Opt-Out Switch */}
-            <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-[#151824] border border-white/5 transition-colors hover:border-white/10">
-              <div className="flex-1 min-w-0 pr-2">
-                <div className="flex items-center gap-1.5">
-                  <EyeOff size={13} className="text-gray-300" />
-                  <span className="text-xs font-semibold text-gray-200">Disable All Tracking on this Browser</span>
-                </div>
-                <p className="text-[10.5px] text-gray-400 leading-relaxed mt-1">
-                  Stops all telemetry across all accounts on this device.
-                </p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={isOptedOut}
-                onClick={() => handleToggleOptOut(!isOptedOut)}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden mt-0.5 ${
-                  isOptedOut ? 'bg-emerald-600' : 'bg-white/10'
-                }`}
-                title="Toggle global telemetry opt-out"
-              >
-                <span
-                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                    isOptedOut ? 'translate-x-4' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Excluded Accounts Manager */}
-            <div className="space-y-2 pt-1">
-              <span className="text-xs font-semibold text-gray-300 block">
-                Excluded Accounts ({excludedEmails.length}):
-              </span>
-
-              {excludedEmails.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {excludedEmails.map((email) => (
-                    <span
-                      key={email}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#151824] border border-white/10 text-gray-200 text-xs font-mono"
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                      <span>{email}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveExcludedEmail(email)}
-                        className="text-gray-400 hover:text-red-400 rounded-sm p-0.5 cursor-pointer ml-0.5"
-                        title={`Remove ${email}`}
-                        aria-label={`Remove ${email}`}
-                      >
-                        <X size={11} />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-[11px] text-gray-500 italic">No specific accounts excluded yet.</p>
-              )}
-
-              {/* Quick Add Current Account Button */}
-              {user?.email && !excludedEmails.includes(user.email.toLowerCase().trim()) && (
-                <button
-                  type="button"
-                  onClick={() => handleAddExcludedEmail(user.email)}
-                  className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 text-xs font-medium cursor-pointer transition-colors"
-                >
-                  <Plus size={12} />
-                  <span>Exclude current account ({user.email})</span>
-                </button>
-              )}
-
-              {/* Add Custom Email Input */}
-              <div className="flex gap-2 pt-1">
-                <input
-                  type="email"
-                  value={newEmailInput}
-                  onChange={(e) => setNewEmailInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddExcludedEmail(newEmailInput);
-                    }
-                  }}
-                  placeholder="Enter account email to exclude..."
-                  className="flex-1 px-3 py-1.5 rounded-lg bg-[#151824] border border-white/10 text-white placeholder-gray-500 text-xs focus:outline-hidden focus:border-purple-500 transition-all font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleAddExcludedEmail(newEmailInput)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-gray-200 text-xs font-semibold cursor-pointer transition-colors"
-                >
-                  <Plus size={12} />
-                  <span>Add</span>
-                </button>
-              </div>
-
-              <p className="text-[10px] text-gray-500 leading-normal pt-0.5">
-                💡 Tip: You can also define <code className="text-gray-400 bg-white/5 px-1 py-0.5 rounded font-mono">EXCLUDED_TRACKING_EMAILS</code> in your <code className="text-gray-400 bg-white/5 px-1 py-0.5 rounded font-mono">.env</code> file.
-              </p>
             </div>
           </div>
 
@@ -548,7 +418,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </span>
               </div>
               <p className="text-[10.5px] text-gray-400 leading-relaxed">
-                Permanently delete your account and bulldoze all stored movies, custom lists, and watch history from the database. This action is irreversible.
+                Permanently delete your account and bulldoze all stored movies, custom lists, and
+                watch history from the database. This action is irreversible.
               </p>
               <button
                 type="button"

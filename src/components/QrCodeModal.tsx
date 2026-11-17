@@ -24,12 +24,13 @@ export const QrCodeModal: React.FC<QrCodeModalProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Web App dashboard URL with QR tracking route
-  const webAppUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/r/qr?context=modal_webapp`
-    : 'https://stremiowatchlist.vercel.app/r/qr?context=modal_webapp';
+  const webAppUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/r/qr?context=modal_webapp`
+      : 'https://stremiowatchlist.vercel.app/r/qr?context=modal_webapp';
 
   // Target URL depending on active tab
-  const activeUrl = activeTab === 'webapp' ? webAppUrl : (installUrl || manifestUrl);
+  const activeUrl = activeTab === 'webapp' ? webAppUrl : installUrl || manifestUrl;
 
   // Generate QR Code data URL whenever target URL changes
   useEffect(() => {
@@ -119,9 +120,7 @@ export const QrCodeModal: React.FC<QrCodeModalProps> = ({
               <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
                 Scan QR Code
               </h3>
-              <p className="text-xs text-gray-400">
-                Open on your mobile phone or Smart TV
-              </p>
+              <p className="text-xs text-gray-400">Open on your mobile phone or Smart TV</p>
             </div>
           </div>
           <button
@@ -185,8 +184,8 @@ export const QrCodeModal: React.FC<QrCodeModalProps> = ({
                 </>
               ) : (
                 <>
-                  Point your phone camera here to open <strong>Stremio</strong> and install the addon
-                  directly to your account.
+                  Point your phone camera here to open <strong>Stremio</strong> and install the
+                  addon directly to your account.
                 </>
               )}
             </p>

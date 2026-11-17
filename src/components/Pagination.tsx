@@ -49,8 +49,11 @@ export const Pagination: React.FC<PaginationProps> = ({
       {/* Items Count & Selector */}
       <div className="flex items-center gap-3 text-xs text-gray-400 order-2 sm:order-1">
         <span>
-          Showing <strong className="text-white font-semibold">{startItem}–{endItem}</strong> of{' '}
-          <strong className="text-white font-semibold">{totalItems}</strong> movies
+          Showing{' '}
+          <strong className="text-white font-semibold">
+            {startItem}–{endItem}
+          </strong>{' '}
+          of <strong className="text-white font-semibold">{totalItems}</strong> movies
         </span>
 
         {onItemsPerPageChange && (

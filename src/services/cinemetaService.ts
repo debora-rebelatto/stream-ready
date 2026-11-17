@@ -42,7 +42,10 @@ export const cinemetaService = {
           imdbRating: item.imdbRating || '',
         }));
     } catch (err: any) {
-      console.warn('[CinemetaService] Direct search error, falling back to proxy if needed:', err.message);
+      console.warn(
+        '[CinemetaService] Direct search error, falling back to proxy if needed:',
+        err.message
+      );
       return [];
     } finally {
       if (timeout) clearTimeout(timeout);

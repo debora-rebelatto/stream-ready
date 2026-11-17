@@ -18,7 +18,7 @@ export const DeleteMovieModal: React.FC<DeleteMovieModalProps> = ({
   movieYear,
   onConfirm,
   onClose,
-  isDeleting = false
+  isDeleting = false,
 }) => {
   // Handle ESC key to cancel
   useEffect(() => {
@@ -70,9 +70,7 @@ export const DeleteMovieModal: React.FC<DeleteMovieModalProps> = ({
             <h3 id="delete-modal-title" className="text-lg font-bold text-white tracking-tight">
               Remove from Watchlist
             </h3>
-            <p className="text-xs text-gray-400">
-              Confirm movie removal
-            </p>
+            <p className="text-xs text-gray-400">Confirm movie removal</p>
           </div>
         </div>
 
@@ -93,9 +91,7 @@ export const DeleteMovieModal: React.FC<DeleteMovieModalProps> = ({
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <h4 className="text-sm font-semibold text-white truncate">
-              {movieName}
-            </h4>
+            <h4 className="text-sm font-semibold text-white truncate">{movieName}</h4>
             {movieYear && (
               <span className="inline-block mt-0.5 text-xs text-gray-400 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
                 {movieYear}
@@ -106,7 +102,8 @@ export const DeleteMovieModal: React.FC<DeleteMovieModalProps> = ({
 
         {/* Confirmation Message */}
         <p className="text-xs sm:text-sm text-gray-300/90 leading-relaxed mb-6">
-          Are you sure you want to remove this movie? It will no longer be tracked or appear in your Stremio library catalogs.
+          Are you sure you want to remove this movie? It will no longer be tracked or appear in your
+          Stremio library catalogs.
         </p>
 
         {/* Actions */}

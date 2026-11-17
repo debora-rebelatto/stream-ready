@@ -5,7 +5,7 @@ import {
   formatCatalogItem,
   handleCatalog,
   handleMeta,
-  stremioAddonService
+  stremioAddonService,
 } from '../../server/services/stremioAddonService.ts';
 
 describe('Backend StremioAddonService (server/services/stremioAddonService.ts)', () => {
@@ -15,8 +15,8 @@ describe('Backend StremioAddonService (server/services/stremioAddonService.ts)',
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        meta: { id: 'tt9999999', name: 'Mock Movie', type: 'movie' }
-      })
+        meta: { id: 'tt9999999', name: 'Mock Movie', type: 'movie' },
+      }),
     });
   });
 
@@ -40,7 +40,7 @@ describe('Backend StremioAddonService (server/services/stremioAddonService.ts)',
     test('deve identificar lançamento recente (< 3 meses)', () => {
       const recent = {
         has1080pPlus: true,
-        readyAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 horas atrás
+        readyAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 horas atrás
       };
       expect(isItemNewRelease(recent)).toBe(true);
       expect(isItemNewRelease({ ...recent, year: 2026 })).toBe(true);
@@ -52,7 +52,7 @@ describe('Backend StremioAddonService (server/services/stremioAddonService.ts)',
       const oldYear = {
         has1080pPlus: true,
         year: '1995',
-        readyAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+        readyAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
       };
       expect(isItemNewRelease(oldYear)).toBe(false);
     });
@@ -60,7 +60,7 @@ describe('Backend StremioAddonService (server/services/stremioAddonService.ts)',
     test('deve retornar falso para lançamentos mais antigos (> 3 meses / 90 dias)', () => {
       const old = {
         has1080pPlus: true,
-        readyAt: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString() // 100 dias atrás
+        readyAt: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString(), // 100 dias atrás
       };
       expect(isItemNewRelease(old)).toBe(false);
     });
@@ -121,4 +121,3 @@ describe('Backend StremioAddonService (server/services/stremioAddonService.ts)',
     expect(typeof stremioAddonService.handleMeta).toBe('function');
   });
 });
-

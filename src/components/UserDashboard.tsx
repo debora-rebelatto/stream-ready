@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { isItemReady, isItemUnreleased } from '../lib/utils';
 import { trackEvent } from '../lib/analytics';
 import { useAuth, useWatchlist, useToast } from '../context/useAppContext';
-import { api } from '../lib/api';
+import { systemService } from '../services';
 import { Navbar } from './Navbar';
 import { Hero } from './Hero';
 import { OnboardingCallout } from './OnboardingCallout';
@@ -12,7 +12,7 @@ import { FeaturePollCard, isBetaNoticeDismissed } from './FeaturePollCard';
 import { MovieCard } from './MovieCard';
 import { Pagination } from './Pagination';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
-import { SettingsModal } from './SettingsModal';
+import { SettingsPage } from './SettingsPage';
 import { ManageListsModal } from './ManageListsModal';
 import { DeleteMovieModal } from './DeleteMovieModal';
 import { DeleteAccountModal } from './DeleteAccountModal';
@@ -41,7 +41,12 @@ export const UserDashboard: React.FC = () => {
   } = useWatchlist();
 
   const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<'dashboard' | 'settings'>(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#settings') {
+      return 'settings';
+    }
+    return 'dashboard';
+  });
   const [isManageListsOpen, setIsManageListsOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [manageListsTab, setManageListsTab] = useState<'standard' | 'custom'>('standard');
@@ -51,7 +56,9 @@ export const UserDashboard: React.FC = () => {
   }>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [isBetaNoticeVisible, setIsBetaNoticeVisible] = useState<boolean>(() => !isBetaNoticeDismissed());
+  const [isBetaNoticeVisible, setIsBetaNoticeVisible] = useState<boolean>(
+    () => !isBetaNoticeDismissed()
+  );
   const listTopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -73,11 +80,35 @@ export const UserDashboard: React.FC = () => {
   }, [showToast]);
 
   useEffect(() => {
-    api
+    systemService
       .getInfo()
       .then((info) => setManifestInfo(info))
       .catch(() => {});
   }, [user]);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#settings') {
+        setCurrentView('settings');
+      } else {
+        setCurrentView('dashboard');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const handleOpenSettings = () => {
+    setCurrentView('settings');
+    window.location.hash = '#settings';
+  };
+
+  const handleBackFromSettings = () => {
+    setCurrentView('dashboard');
+    if (window.location.hash === '#settings') {
+      window.history.pushState(null, '', window.location.pathname + window.location.search);
+    }
+  };
 
   // Delete movie confirmation modal state
   const [movieToDelete, setMovieToDelete] = useState<{
@@ -120,7 +151,7 @@ export const UserDashboard: React.FC = () => {
       const res = await deleteAccount();
       if (res.success) {
         setIsDeleteAccountOpen(false);
-        setIsSettingsOpen(false);
+        setCurrentView('dashboard');
       }
     } finally {
       setIsDeletingAccount(false);
@@ -335,10 +366,46 @@ export const UserDashboard: React.FC = () => {
 
   const activeList = customLists.find((l) => l.id === activeCustomListId);
 
+  if (currentView === 'settings') {
+    return (
+      <>
+        <SettingsPage
+          onBack={handleBackFromSettings}
+          onOpenDeleteAccount={() => setIsDeleteAccountOpen(true)}
+          onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
+          onOpenQrModal={() => setIsQrModalOpen(true)}
+          manifestUrl={manifestInfo.manifestUrl}
+          installUrl={manifestInfo.stremioInstallUrl}
+        />
+        <InstallGuideModal
+          isOpen={isInstallGuideOpen}
+          onClose={() => setIsInstallGuideOpen(false)}
+          onOpenLogin={() => {}}
+          onOpenQrModal={() => setIsQrModalOpen(true)}
+          installUrl={manifestInfo.stremioInstallUrl}
+          manifestUrl={manifestInfo.manifestUrl}
+        />
+        <DeleteAccountModal
+          isOpen={isDeleteAccountOpen}
+          userEmail={user?.email}
+          onConfirm={handleConfirmDeleteAccount}
+          onClose={() => setIsDeleteAccountOpen(false)}
+          isDeleting={isDeletingAccount}
+        />
+        <QrCodeModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          manifestUrl={manifestInfo.manifestUrl}
+          installUrl={manifestInfo.stremioInstallUrl}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0c0d14]">
       <Navbar
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenSettings={handleOpenSettings}
         onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
         onOpenLists={() => setIsManageListsOpen(true)}
         onOpenDeleteAccount={() => setIsDeleteAccountOpen(true)}
@@ -346,10 +413,7 @@ export const UserDashboard: React.FC = () => {
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <Hero
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          onDismiss={() => setIsBetaNoticeVisible(false)}
-        />
+        <Hero onOpenSettings={handleOpenSettings} onDismiss={() => setIsBetaNoticeVisible(false)} />
         <OnboardingCallout
           onScrollToRecommendations={() => {
             const el = document.getElementById('recommended-banner');
@@ -747,11 +811,6 @@ export const UserDashboard: React.FC = () => {
         onOpenQrModal={() => setIsQrModalOpen(true)}
         installUrl={manifestInfo.stremioInstallUrl}
         manifestUrl={manifestInfo.manifestUrl}
-      />
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        onOpenDeleteAccount={() => setIsDeleteAccountOpen(true)}
       />
       <ManageListsModal
         isOpen={isManageListsOpen}

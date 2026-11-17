@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Sparkles, Clock, Check, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import {
-  Sparkles,
-  Clock,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Star,
-} from 'lucide-react';
-import { buildRecommendedList, type RecommendedMovie } from '../lib/recommendations';
+  buildRecommendedList,
+  fetchTrendingMovies,
+  type RecommendedMovie,
+} from '../lib/recommendations';
 import { useWatchlist, useToast } from '../context/useAppContext';
 import { cinemetaService } from '../services/cinemetaService';
 import { WatchInStremioButton } from './WatchInStremioButton';
@@ -18,17 +15,36 @@ interface RecommendedBannerProps {
   onOpenLogin?: () => void;
 }
 
-export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({ className = '', onOpenLogin }) => {
+export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({
+  className = '',
+  onOpenLogin,
+}) => {
   const { items: watchlistItems, globalMinQuality, addItem } = useWatchlist();
   const { showToast } = useToast();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [liveTrending, setLiveTrending] = useState<RecommendedMovie[]>([]);
 
-  // Base list generated from user watchlist + curated recommendations (always guaranteed 6 items)
+  // Fetch live trending movies from TMDB on mount (3 ready, 3 in theaters, 3 upcoming)
+  useEffect(() => {
+    let isCancelled = false;
+    fetchTrendingMovies(9)
+      .then((trending) => {
+        if (!isCancelled && trending && trending.length > 0) {
+          setLiveTrending(trending);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  // Base list generated from user watchlist + trending/curated recommendations (9 items)
   const baseList = useMemo(() => {
-    return buildRecommendedList(watchlistItems || [], globalMinQuality || '1080p', 6);
-  }, [watchlistItems, globalMinQuality]);
+    return buildRecommendedList(watchlistItems || [], globalMinQuality || '1080p', 9, liveTrending);
+  }, [watchlistItems, globalMinQuality, liveTrending]);
 
   // Enriched movies state (holds banners/descriptions that might be fetched on the fly)
   const [movies, setMovies] = useState<RecommendedMovie[]>(baseList);
@@ -70,9 +86,7 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({ className 
       }
 
       if (!isCancelled && Object.keys(updates).length > 0) {
-        setMovies((prev) =>
-          prev.map((m) => (updates[m.id] ? { ...m, ...updates[m.id] } : m))
-        );
+        setMovies((prev) => prev.map((m) => (updates[m.id] ? { ...m, ...updates[m.id] } : m)));
       }
     };
 
@@ -153,8 +167,7 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({ className 
         {movies.map((movie, idx) => {
           const isActive = idx === currentIndex;
           const bannerUrl =
-            movie.banner ||
-            `https://images.metahub.space/background/medium/${movie.id}/img.jpg`;
+            movie.banner || `https://images.metahub.space/background/medium/${movie.id}/img.jpg`;
 
           return (
             <div
@@ -225,12 +238,17 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({ className 
             {currentMovie.isReady ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wide bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 backdrop-blur-md">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Ready to Watch{currentMovie.qualityBadge && currentMovie.qualityBadge !== 'Ready to Watch' ? ` • ${currentMovie.qualityBadge}` : ''}</span>
+                <span>
+                  Ready to Watch
+                  {currentMovie.qualityBadge && currentMovie.qualityBadge !== 'Ready to Watch'
+                    ? ` • ${currentMovie.qualityBadge}`
+                    : ''}
+                </span>
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wide bg-amber-500/20 border border-amber-400/30 text-amber-300 backdrop-blur-md">
                 <Clock size={11} className="text-amber-400" />
-                <span>Coming Soon</span>
+                <span>{currentMovie.qualityBadge || 'Coming Soon'}</span>
               </span>
             )}
 
@@ -250,6 +268,16 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({ className 
           {/* Minimalist Metadata Line: Year • Genres • Rating */}
           <div className="flex items-center gap-2 text-xs text-gray-300 mb-2.5 font-medium">
             {currentMovie.year && <span>{currentMovie.year}</span>}
+
+            {currentMovie.releaseDate && (
+              <>
+                <span className="text-gray-500">•</span>
+                <span className="text-gray-400 font-mono text-[11px]">
+                  {currentMovie.isReady ? 'Released: ' : 'Premiere: '}
+                  {currentMovie.releaseDate}
+                </span>
+              </>
+            )}
 
             {currentMovie.genres && currentMovie.genres.length > 0 && (
               <>

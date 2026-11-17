@@ -5,6 +5,8 @@ export interface RecommendedMovie {
   id: string;
   name: string;
   year?: string | number;
+  releaseDate?: string;
+  category?: 'ready' | 'in_theaters' | 'upcoming';
   poster?: string;
   banner?: string;
   genres?: string[];
@@ -29,7 +31,8 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
     imdbRating: '8.4',
     qualityBadge: '1080p FHD',
     isReady: true,
-    description: "Direct continuation of Takashi Yamazaki's Godzilla saga, following postwar Japan as a cataclysmic atomic menace reemerges from the ocean depths.",
+    description:
+      "Direct continuation of Takashi Yamazaki's Godzilla saga, following postwar Japan as a cataclysmic atomic menace reemerges from the ocean depths.",
   },
   {
     id: 'tt15799564',
@@ -41,7 +44,8 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
     imdbRating: 'Upcoming',
     qualityBadge: 'Coming Soon • CAM Only',
     isReady: false,
-    description: 'CIA agents Chris and Lee face a trust-testing mission from Santiago to Easter Island during 1973 in Chile.',
+    description:
+      'CIA agents Chris and Lee face a trust-testing mission from Santiago to Easter Island during 1973 in Chile.',
   },
   {
     id: 'tt34206385',
@@ -53,7 +57,8 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
     imdbRating: '7.0',
     qualityBadge: '4K UHD • WEB-DL',
     isReady: true,
-    description: 'In 2006, To Catch a Predator host Chris Hansen sets out to make television history in an escalating, high-stakes media investigation.',
+    description:
+      'In 2006, To Catch a Predator host Chris Hansen sets out to make television history in an escalating, high-stakes media investigation.',
   },
   {
     id: 'tt2056785',
@@ -65,7 +70,8 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
     imdbRating: '8.7',
     qualityBadge: 'Coming Soon • CAM Only',
     isReady: false,
-    description: 'The adventures of Prue McKeel as she sets off to the magical forests outside Portland to find her kidnapped brother in Laika’s stop-motion epic.',
+    description:
+      'The adventures of Prue McKeel as she sets off to the magical forests outside Portland to find her kidnapped brother in Laika’s stop-motion epic.',
   },
   {
     id: 'tt45368240',
@@ -77,7 +83,8 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
     imdbRating: '9.0',
     qualityBadge: 'Coming Soon • Theater Rip',
     isReady: false,
-    description: 'Thirty-four days before she is sent to prison, notorious Theranos founder Elizabeth Holmes invites a skeptical film crew to document her every move in an intimate portrait.',
+    description:
+      'Thirty-four days before she is sent to prison, notorious Theranos founder Elizabeth Holmes invites a skeptical film crew to document her every move in an intimate portrait.',
   },
   {
     id: 'tt35538033',
@@ -89,21 +96,24 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
     imdbRating: '7.2',
     qualityBadge: '4K UHD • WEB-DL',
     isReady: true,
-    description: 'Follows a courier tasked with delivering a package to a remote hospital who finds himself caught in the middle of a catastrophic biological outbreak.',
+    description:
+      'Follows a courier tasked with delivering a package to a remote hospital who finds himself caught in the middle of a catastrophic biological outbreak.',
   },
 ];
 
 /**
- * Builds the recommended movies list (Top 6 Popular on Letterboxd 2026).
+ * Builds the recommended movies list (from TMDB trending or curated fallback).
  * Annotates each movie with isInWatchlist: true/false according to the user's watchlist,
  * and reflects real-time tracker quality if already present in the user's watchlist.
  */
 export function buildRecommendedList(
   watchlistItems: WatchlistItem[] = [],
   globalMinQuality: '1080p' | '4k' = '1080p',
-  maxTotal: number = 6
+  maxTotal: number = 6,
+  sourceList: RecommendedMovie[] = CURATED_RECOMMENDED_MOVIES
 ): RecommendedMovie[] {
-  return CURATED_RECOMMENDED_MOVIES.slice(0, maxTotal).map((curated) => {
+  const pool = sourceList && sourceList.length > 0 ? sourceList : CURATED_RECOMMENDED_MOVIES;
+  return pool.slice(0, maxTotal).map((curated) => {
     const userItem = (watchlistItems || []).find((w) => w.id === curated.id);
     if (!userItem) {
       return {
@@ -122,4 +132,18 @@ export function buildRecommendedList(
       isInWatchlist: true,
     };
   });
+}
+
+/**
+ * Fetches popular trending movies from the backend /api/trending endpoint (TMDB with Cinemeta fallback).
+ */
+export async function fetchTrendingMovies(limit = 6): Promise<RecommendedMovie[]> {
+  try {
+    const res = await fetch(`/api/trending?limit=${limit}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.movies || [];
+  } catch {
+    return [];
+  }
 }

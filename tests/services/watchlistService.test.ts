@@ -23,7 +23,9 @@ describe('watchlistService', () => {
         },
       ];
 
-      const cinemetaSpy = jest.spyOn(cinemetaService, 'searchMovies').mockResolvedValue(mockResults);
+      const cinemetaSpy = jest
+        .spyOn(cinemetaService, 'searchMovies')
+        .mockResolvedValue(mockResults);
       const apiSpy = jest.spyOn(api, 'searchMovies');
 
       const results = await watchlistService.searchMovies('Inception');
@@ -56,7 +58,9 @@ describe('watchlistService', () => {
     });
 
     test('deve recorrer a api.searchMovies se cinemetaService lançar exceção', async () => {
-      jest.spyOn(cinemetaService, 'searchMovies').mockRejectedValue(new Error('Network Cinemeta down'));
+      jest
+        .spyOn(cinemetaService, 'searchMovies')
+        .mockRejectedValue(new Error('Network Cinemeta down'));
       const apiSpy = jest.spyOn(api, 'searchMovies').mockResolvedValue([]);
 
       const results = await watchlistService.searchMovies('Some Movie');
@@ -178,7 +182,10 @@ describe('watchlistService', () => {
     });
 
     test('createCustomList deve delegar para api.createCustomList', async () => {
-      const mockResult = { success: true, list: { id: 'l1', name: 'Favoritos', emoji: '⭐' } as any };
+      const mockResult = {
+        success: true,
+        list: { id: 'l1', name: 'Favoritos', emoji: '⭐' } as any,
+      };
       const spy = jest.spyOn(api, 'createCustomList').mockResolvedValue(mockResult);
 
       const res = await watchlistService.createCustomList('Favoritos', '⭐');

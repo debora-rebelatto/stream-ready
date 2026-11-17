@@ -3,7 +3,19 @@ import type { WatchlistItem } from '../types';
 import { formatQualityLabel, isItemReady, isItemNewRelease, isItemUnreleased } from '../lib/utils';
 import { useWatchlist } from '../context/useAppContext';
 import { Badge } from './Badge';
-import { Trash2, Star, CheckCircle, Clock, Calendar, Eye, Flame, SlidersHorizontal, RotateCcw, Folder, Check } from 'lucide-react';
+import {
+  Trash2,
+  Star,
+  CheckCircle,
+  Clock,
+  Calendar,
+  Eye,
+  Flame,
+  SlidersHorizontal,
+  RotateCcw,
+  Folder,
+  Check,
+} from 'lucide-react';
 
 interface MovieCardProps {
   item: WatchlistItem;
@@ -11,7 +23,8 @@ interface MovieCardProps {
 }
 
 export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
-  const { markWatched, setItemMinQuality, globalMinQuality, customLists, toggleItemCustomList } = useWatchlist();
+  const { markWatched, setItemMinQuality, globalMinQuality, customLists, toggleItemCustomList } =
+    useWatchlist();
   const [isListMenuOpen, setIsListMenuOpen] = useState(false);
 
   // Fecha menu ao clicar fora
@@ -69,8 +82,8 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
         isWatched
           ? 'border-white/5 opacity-75 hover:opacity-100 hover:border-purple-500/30'
           : isNew
-          ? 'border-amber-500/50 hover:border-amber-400 shadow-amber-500/10'
-          : 'border-white/10 hover:border-white/25'
+            ? 'border-amber-500/50 hover:border-amber-400 shadow-amber-500/10'
+            : 'border-white/10 hover:border-white/25'
       }`}
       title="Click to open in Stremio Web"
     >
@@ -185,7 +198,9 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
             <span className="font-semibold text-gray-300 bg-white/5 px-1.5 py-0.5 rounded text-[11px] border border-white/5">
               {item.year || 'No year'}
             </span>
-            {item.imdbRating && String(item.imdbRating) !== 'N/A' && String(item.imdbRating).trim() !== '' ? (
+            {item.imdbRating &&
+            String(item.imdbRating) !== 'N/A' &&
+            String(item.imdbRating).trim() !== '' ? (
               <Badge
                 variant="amber"
                 size="xs"
@@ -195,7 +210,10 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
                 {item.imdbRating}
               </Badge>
             ) : (
-              <span className="inline-flex items-center gap-1 text-gray-500 text-[11px]" title="No rating yet">
+              <span
+                className="inline-flex items-center gap-1 text-gray-500 text-[11px]"
+                title="No rating yet"
+              >
                 <Star size={11} className="text-gray-500" />
                 <span>N/A</span>
               </span>
@@ -211,8 +229,8 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
               isWatched
                 ? 'bg-purple-900/20 text-purple-300 border-purple-500/30'
                 : ready
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
             }`}
           >
             {isWatched ? (
@@ -235,13 +253,18 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
                 item.minQuality === '4k'
                   ? 'bg-purple-900/30 text-purple-300 border-purple-500/40 hover:bg-purple-900/50'
                   : item.minQuality === '1080p'
-                  ? 'bg-blue-900/30 text-blue-300 border-blue-500/40 hover:bg-blue-900/50'
-                  : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-gray-200'
+                    ? 'bg-blue-900/30 text-blue-300 border-blue-500/40 hover:bg-blue-900/50'
+                    : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-gray-200'
               }`}
               title="Click to toggle minimum quality target (Auto / 1080p / 4K)"
             >
               <SlidersHorizontal size={9} />
-              <span>Target: {item.minQuality ? item.minQuality.toUpperCase() : `Auto (${activeTargetQuality.toUpperCase()})`}</span>
+              <span>
+                Target:{' '}
+                {item.minQuality
+                  ? item.minQuality.toUpperCase()
+                  : `Auto (${activeTargetQuality.toUpperCase()})`}
+              </span>
             </button>
           )}
 
