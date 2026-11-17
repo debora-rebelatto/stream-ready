@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { pollService } from '../services';
-import { trackEvent } from '../lib/analytics';
+import { trackEvent } from '../utils';
 import { Check, X, Send, Vote } from 'lucide-react';
 
 export const POLL_DISMISS_KEY = 'stremio_dismiss_poll_until';

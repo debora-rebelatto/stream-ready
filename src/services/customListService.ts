@@ -1,5 +1,5 @@
-import { api } from '../lib/api';
-import type { CustomList, CuratedList, WatchlistItem } from '../types';
+import { api } from '../utils';
+import type { CustomList, CuratedList, WatchlistItem } from '../models';
 
 export const customListService = {
   /**

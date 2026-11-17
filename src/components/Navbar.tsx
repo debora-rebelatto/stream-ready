@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, useToast } from '../context/useAppContext';
 import { systemService } from '../services';
-import { trackEvent } from '../lib/analytics';
+import { trackEvent } from '../utils';
 import {
   Settings,
   Copy,

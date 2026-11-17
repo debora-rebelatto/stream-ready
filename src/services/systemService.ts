@@ -1,5 +1,5 @@
-import { api } from '../lib/api';
-import type { ServerInfo, AppSettings } from '../types';
+import { api } from '../utils';
+import type { ServerInfo, AppSettings } from '../models';
 
 export const systemService = {
   /**

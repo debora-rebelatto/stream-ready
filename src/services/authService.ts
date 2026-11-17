@@ -1,5 +1,5 @@
-import { api, getAuthKey, setAuthKey, clearAuth } from '../lib/api';
-import type { StremioUser } from '../types';
+import { api, getAuthKey, setAuthKey, clearAuth } from '../utils';
+import type { StremioUser } from '../models';
 
 export const authService = {
   getAuthKey,

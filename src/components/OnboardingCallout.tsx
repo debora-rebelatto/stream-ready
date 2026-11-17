@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Plus, X, Film, ChevronRight, Tv, Compass, Search } from 'lucide-react';
-import { CURATED_RECOMMENDED_MOVIES } from '../lib/recommendations';
+import { CURATED_RECOMMENDED_MOVIES, trackEvent } from '../utils';
 import { useWatchlist, useToast } from '../context/useAppContext';
-import { trackEvent } from '../lib/analytics';
 import { Button } from './Button';
 
 export const ONBOARDING_DISMISS_KEY = 'stremio_onboarding_dismissed';

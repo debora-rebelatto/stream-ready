@@ -12,7 +12,7 @@ import {
   QrCode,
   BookOpen,
 } from 'lucide-react';
-import { trackEvent } from '../lib/analytics';
+import { trackEvent } from '../utils';
 import { useAuth } from '../context/useAppContext';
 
 interface InstallGuideModalProps {

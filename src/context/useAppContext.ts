@@ -6,7 +6,7 @@ import type {
   ToastMessage,
   CustomList,
   CuratedList,
-} from '../types';
+} from '../models';
 
 export interface AuthContextType {
   user: StremioUser | null;

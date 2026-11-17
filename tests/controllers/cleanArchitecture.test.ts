@@ -6,11 +6,14 @@ import {
 } from '../../src/utils';
 import {
   useAppController,
+  useAuthController,
+  useCustomListsController,
   useDashboardController,
   useLandingController,
   useManageListsController,
   useSearchController,
   useSettingsController,
+  useWatchlistController,
   LANDING_FAQS,
   EMOJI_OPTIONS,
 } from '../../src/controllers';
@@ -19,9 +22,24 @@ import {
   UserDashboardView,
   SettingsPageView,
 } from '../../src/views';
+import {
+  ModalShell,
+  QualitySettingsCard,
+  SyncSettingsCard,
+  BackupSettingsCard,
+  AccountDangerCard,
+  LandingHeroSection,
+  QualityComparisonSection,
+  FeaturesGridSection,
+  HowItWorksSection,
+  LandingFaqSection,
+} from '../../src/components';
 import type { WatchlistItem } from '../../src/models';
 
-describe('Clean Architecture Layers (models, utils, controllers, views)', () => {
+const repositories = require('../../server/repositories');
+const serverControllers = require('../../server/controllers');
+
+describe('Clean Architecture Layers (models, utils, controllers, views, server repositories & controllers)', () => {
   const sampleItems: WatchlistItem[] = [
     {
       id: 'tt001',
@@ -116,28 +134,62 @@ describe('Clean Architecture Layers (models, utils, controllers, views)', () => 
     });
   });
 
-  describe('controllers & views barrel exports', () => {
+  describe('frontend controllers, views, and minimal components barrel exports', () => {
     test('exports all custom controller hooks and constants', () => {
       expect(typeof useAppController).toBe('function');
+      expect(typeof useAuthController).toBe('function');
+      expect(typeof useCustomListsController).toBe('function');
       expect(typeof useDashboardController).toBe('function');
       expect(typeof useLandingController).toBe('function');
       expect(typeof useManageListsController).toBe('function');
       expect(typeof useSearchController).toBe('function');
       expect(typeof useSettingsController).toBe('function');
+      expect(typeof useWatchlistController).toBe('function');
       expect(Array.isArray(LANDING_FAQS)).toBe(true);
       expect(LANDING_FAQS.length).toBeGreaterThan(0);
       expect(Array.isArray(EMOJI_OPTIONS)).toBe(true);
     });
 
-    test('exports all page views', () => {
+    test('exports all page views and minimal section components', () => {
       expect(typeof LandingPageView).toBe('function');
       expect(typeof UserDashboardView).toBe('function');
       expect(typeof SettingsPageView).toBe('function');
+      expect(typeof ModalShell).toBe('function');
+      expect(typeof QualitySettingsCard).toBe('function');
+      expect(typeof SyncSettingsCard).toBe('function');
+      expect(typeof BackupSettingsCard).toBe('function');
+      expect(typeof AccountDangerCard).toBe('function');
+      expect(typeof LandingHeroSection).toBe('function');
+      expect(typeof QualityComparisonSection).toBe('function');
+      expect(typeof FeaturesGridSection).toBe('function');
+      expect(typeof HowItWorksSection).toBe('function');
+      expect(typeof LandingFaqSection).toBe('function');
     });
 
     test('exports quality adapter helpers via utils barrel', () => {
       expect(formatQualityLabel('ainda não lançado')).toBe('Unreleased');
       expect(isItemReady({ has1080pPlus: true, bestQuality: '1080p' }, '1080p')).toBe(true);
+    });
+  });
+
+  describe('backend repositories & controllers', () => {
+    test('exports all domain repositories', () => {
+      expect(repositories.userRepository).toBeDefined();
+      expect(repositories.watchlistRepository).toBeDefined();
+      expect(repositories.customListRepository).toBeDefined();
+      expect(repositories.pollRepository).toBeDefined();
+      expect(repositories.analyticsRepository).toBeDefined();
+      expect(typeof repositories.watchlistRepository.getItems).toBe('function');
+      expect(typeof repositories.userRepository.resolveUser).toBe('function');
+    });
+
+    test('exports all Express route controllers', () => {
+      expect(typeof serverControllers.registerControllers).toBe('function');
+      expect(typeof serverControllers.registerAddonRoutes).toBe('function');
+      expect(typeof serverControllers.registerAuthRoutes).toBe('function');
+      expect(typeof serverControllers.registerWatchlistRoutes).toBe('function');
+      expect(typeof serverControllers.registerCustomListRoutes).toBe('function');
+      expect(typeof serverControllers.registerSystemRoutes).toBe('function');
     });
   });
 });
