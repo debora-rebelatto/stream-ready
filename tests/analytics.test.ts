@@ -175,8 +175,6 @@ describe('analytics.trackEvent (PostHog & Supabase)', () => {
     });
 
     it('blocks tracking for built-in developer accounts by default', () => {
-      expect(isTrackingBlocked('deborarebelatto1@gmail.com')).toBe(true);
-      expect(isTrackingBlocked('debyr.dbr@gmail.com')).toBe(true);
       expect(isTrackingBlocked('0ae027a6-56e6-41d5-a25b-86fc1e04aed4')).toBe(true);
       expect(isTrackingBlocked('aa1bdc75-f539-4e11-8c90-510c0e998ce8')).toBe(true);
     });

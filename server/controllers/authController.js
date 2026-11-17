@@ -133,6 +133,7 @@ function registerAuthRoutes(app) {
         user: {
           id: user.id,
           email: user.email,
+          isAdmin: Boolean(user.isAdmin),
         },
         itemsCount: watchlistRepository.getItems(userId).length,
         supabaseConfigured: userRepository.isSupabaseConfigured(),
