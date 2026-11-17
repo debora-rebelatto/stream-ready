@@ -335,7 +335,7 @@ export const UserDashboard: React.FC = () => {
                 : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
             }`}
           >
-            🌐 All Lists
+            All Lists
           </button>
 
           {customLists.map((l) => {

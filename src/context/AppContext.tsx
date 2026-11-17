@@ -256,9 +256,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await authService.login({ email, password: pass });
       if (res.success && res.authKey && res.user) {
-        if (authService.getAuthKey() && user?.id !== res.user.id) resetPostHog();
+        if (authService.getAuthKey() && user?.id !== res.user.id) resetAnalyticsUser();
         identifyUser(res.user);
-        capturePostHog('stremio_login_completed', { login_method: 'credentials' });
         authService.setAuthKey(res.authKey, res.user.email);
         setUser(res.user);
         trackEvent('auth_login_success', { method: 'credentials' });
@@ -275,9 +274,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await authService.login({ authKey });
       if (res.success && res.authKey && res.user) {
-        if (authService.getAuthKey() && user?.id !== res.user.id) resetPostHog();
+        if (authService.getAuthKey() && user?.id !== res.user.id) resetAnalyticsUser();
         identifyUser(res.user);
-        capturePostHog('stremio_login_completed', { login_method: 'auth_key' });
         authService.setAuthKey(res.authKey, res.user.email);
         setUser(res.user);
         trackEvent('auth_login_success', { method: 'authKey' });
@@ -305,10 +303,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       trackEvent('auth_logout', {});
     } catch {}
     try {
-      resetUser();
-    } catch {}
-    try {
-      resetPostHog();
+      resetAnalyticsUser();
     } catch {}
     try {
       await authService.logout();
@@ -362,12 +357,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return;
       }
       const item = res.item;
-      capturePostHog('watchlist_item_added', { is_ready: Boolean(item.has1080pPlus) });
       trackEvent('movie_added', {
         title: item.name,
         year: item.year ? String(item.year) : undefined,
         imdbId: id,
-        source
+        source,
+        isReady: Boolean(item.has1080pPlus)
       });
       if (item.has1080pPlus) {
         showToast(`🎉 "${item.name}" added! Already READY in good quality (${item.bestQuality})!`, 'success');
@@ -384,7 +379,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.removeItem(id);
       if (res.success) {
-        capturePostHog('watchlist_item_removed', {});
         trackEvent('movie_removed', { title: name, imdbId: id });
         showToast(`"${name}" removed from watchlist.`, 'info');
         setItems((prev) => prev.filter((i) => i.id !== id));
@@ -422,7 +416,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.recheckAll(true);
       if (res.success) {
-        capturePostHog('watchlist_recheck_completed', { newly_ready: res.newlyReady || 0 });
+        trackEvent('recheck_all_triggered', { totalItems: items.length, newlyReady: res.newlyReady || 0 });
         if (res.newlyReady > 0) {
           showToast(`🎉 ${res.newlyReady} movie(s) are now ready in good quality!`, 'success');
         } else {
@@ -438,11 +432,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const setGlobalMinQuality = async (quality: '1080p' | '4k') => {
-    trackEvent('quality_setting_updated', { minQuality: quality });
+    trackEvent('quality_setting_updated', { minQuality: quality, scope: 'global' });
     setGlobalMinQualityState(quality);
     try {
       await api.saveSettings({ minQuality: quality });
-      capturePostHog('watchlist_quality_target_updated', { scope: 'global', quality_target: quality });
       showToast(`🎯 Quality preference set to ${quality.toUpperCase()}!`, 'success');
       await refreshWatchlist();
     } catch {
