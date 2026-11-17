@@ -122,15 +122,22 @@ describe('analytics.trackEvent (PostHog & Supabase)', () => {
     });
 
     it('blocks tracking for accounts in the excluded list', () => {
+      expect(isTrackingBlocked('debyr.dbr@gmail.com')).toBe(true);
+      expect(isTrackingBlocked('deborarebelatto1@gmail.com')).toBe(true);
+      expect(isTrackingBlocked('aa1bdc75-f539-4e11-8c90-510c0e998ce8')).toBe(true);
+      expect(isTrackingBlocked('0ae027a6-56e6-41d5-a25b-86fc1e04aed4')).toBe(true);
+
       setExcludedTrackingEmails(['myaccount1@gmail.com', 'myaccount2@gmail.com']);
-      expect(getExcludedTrackingEmails()).toEqual(['myaccount1@gmail.com', 'myaccount2@gmail.com']);
+      expect(getExcludedTrackingEmails()).toEqual(
+        expect.arrayContaining(['myaccount1@gmail.com', 'myaccount2@gmail.com', 'debyr.dbr@gmail.com', 'deborarebelatto1@gmail.com'])
+      );
 
       expect(isTrackingBlocked('myaccount1@gmail.com')).toBe(true);
       expect(isTrackingBlocked('myaccount2@gmail.com')).toBe(true);
       expect(isTrackingBlocked('otheruser@gmail.com')).toBe(false);
 
       // When logged in as an excluded user
-      localStorage.setItem('stremioEmail', 'myaccount1@gmail.com');
+      localStorage.setItem('stremioEmail', 'debyr.dbr@gmail.com');
       expect(isTrackingBlocked()).toBe(true);
 
       // trackEvent must not send anything to fetch or posthog
@@ -139,7 +146,7 @@ describe('analytics.trackEvent (PostHog & Supabase)', () => {
       expect(posthog.capture).not.toHaveBeenCalled();
 
       // identifyUser must trigger opt-out instead of identifying
-      identifyUser('myaccount1@gmail.com', { email: 'myaccount1@gmail.com' });
+      identifyUser('debyr.dbr@gmail.com', { email: 'debyr.dbr@gmail.com' });
       expect(posthog.opt_out_capturing).toHaveBeenCalled();
       expect(posthog.identify).not.toHaveBeenCalled();
     });

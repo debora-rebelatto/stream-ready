@@ -160,7 +160,7 @@ app.get(['/manifest.json', '/:authKey/manifest.json'], async (req, res) => {
 
 // Configure redirect (Stremio configure button)
 app.get(['/configure', '/:authKey/configure'], (req, res) => {
-  res.redirect('/');
+  res.redirect('/?source=stremio_configure');
 });
 
 // Catalog routes
@@ -169,12 +169,23 @@ const catalogHandler = async (req, res) => {
   try {
     await db.ensureLoaded();
     const { type, id } = req.params;
+    const cleanId = id.replace(/\.json$/, '');
     const { authKey, userId, userData } = await getRequestUser(req);
 
-    // Se NÃO estiver autenticado com uma conta válida, retorna catálogo vazio
+    let extra = {};
+    if (req.params.extra) {
+      const parts = req.params.extra.replace(/\.json$/, '').split('&');
+      for (const part of parts) {
+        const [k, v] = part.split('=');
+        if (k && v) extra[k] = decodeURIComponent(v);
+      }
+    }
+
+    // Se NÃO estiver autenticado com uma conta válida, delega para handleCatalog retornar o card de setup explicativo
     if (!userId) {
+      const data = await handleCatalog(type, cleanId, extra, '');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      return res.json({ metas: [] });
+      return res.json(data);
     }
 
     // Atualização inteligente sob demanda ao abrir o catálogo no Stremio (com throttle de 10 min)
@@ -220,16 +231,6 @@ const catalogHandler = async (req, res) => {
       }
     }
 
-    let extra = {};
-    if (req.params.extra) {
-      const parts = req.params.extra.replace(/\.json$/, '').split('&');
-      for (const part of parts) {
-        const [k, v] = part.split('=');
-        if (k && v) extra[k] = decodeURIComponent(v);
-      }
-    }
-
-    const cleanId = id.replace(/\.json$/, '');
     const data = await handleCatalog(type, cleanId, extra, userId);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.json(data);
@@ -1080,17 +1081,20 @@ app.post('/api/events', async (req, res) => {
     const userId = user?.userId || user?.id || null;
     const userEmail = (user?.userEmail || user?.email || '').toLowerCase().trim();
 
-    // Check excluded accounts configured via environment
+    // Check excluded accounts configured via environment or built-in defaults
     const excludedEnv = process.env.EXCLUDED_TRACKING_EMAILS || process.env.VITE_EXCLUDED_TRACKING_EMAILS || '';
-    if (excludedEnv) {
-      const excludedList = excludedEnv
-        .split(',')
-        .map(s => s.trim().toLowerCase())
-        .filter(Boolean);
+    const excludedList = new Set([
+      'debyr.dbr@gmail.com',
+      'deborarebelatto1@gmail.com',
+      ...excludedEnv.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+    ]);
+    const excludedUserIds = new Set([
+      'aa1bdc75-f539-4e11-8c90-510c0e998ce8',
+      '0ae027a6-56e6-41d5-a25b-86fc1e04aed4'
+    ]);
 
-      if ((userEmail && excludedList.includes(userEmail)) || (userId && excludedList.includes(userId))) {
-        return res.json({ success: true, ignored: true });
-      }
+    if ((userEmail && excludedList.has(userEmail)) || (userId && (excludedUserIds.has(userId) || excludedList.has(userId)))) {
+      return res.json({ success: true, ignored: true });
     }
 
     await db.recordAnalyticsEvent(event, data, userId);

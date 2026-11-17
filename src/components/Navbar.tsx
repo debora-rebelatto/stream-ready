@@ -8,11 +8,18 @@ import { GitHubSponsorButton } from './GitHubSponsorButton';
 interface NavbarProps {
   onOpenSettings: () => void;
   onOpenLogin: () => void;
+  onOpenInstallGuide?: () => void;
   onOpenLists?: () => void;
   onOpenDeleteAccount?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onOpenLists, onOpenDeleteAccount }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  onOpenSettings,
+  onOpenLogin,
+  onOpenInstallGuide,
+  onOpenLists,
+  onOpenDeleteAccount
+}) => {
   const { user, logout, isLoading: isAuthLoading } = useAuth();
   const { showToast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -37,12 +44,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
     trackEvent('addon_manifest_copied', { location: 'navbar' });
     navigator.clipboard
       .writeText(manifestUrl)
-      .then(() => showToast('Manifest link copied! Paste into Stremio Addons search bar.', 'success'))
+      .then(() => {
+        if (!user) {
+          showToast('Manifest copied! Note: Connect your Stremio account to enable movie tracking and sync.', 'info');
+        } else {
+          showToast('Manifest link copied! Paste into Stremio Addons search bar.', 'success');
+        }
+      })
       .catch(() => window.prompt('Copy addon link:', manifestUrl));
   };
 
   const handleInstallClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (!user && onOpenInstallGuide) {
+      onOpenInstallGuide();
+      return;
+    }
     if (installUrl) {
       trackEvent('addon_install_clicked', { location: 'navbar' });
       showToast('🎬 Reminder: After installing in Stremio, use the search bar on this site to add movies!', 'info');

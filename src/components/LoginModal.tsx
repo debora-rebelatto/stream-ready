@@ -74,6 +74,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
         {/* Scrollable Body */}
         <div className="p-4 sm:p-6 overflow-y-auto overscroll-contain flex-1">
+          {/* Why Account is Required Banner */}
+          <div className="mb-4 p-3 rounded-xl bg-purple-500/10 border border-purple-500/25 text-purple-200 text-xs leading-relaxed flex items-start gap-2.5">
+            <span className="text-base shrink-0 mt-0.5">💡</span>
+            <div>
+              <strong className="block text-white font-semibold mb-0.5">
+                Why connect your Stremio account?
+              </strong>
+              <span>
+                Stremio addons are read-only inside the player. Connecting your account links this website to your Stremio library so you can search and add cinema movies here. Our 24/7 cloud scanner will automatically push 1080p FHD &amp; 4K UHD releases straight to your TV!
+              </span>
+            </div>
+          </div>
+
           {/* Tab switch */}
           <div className="grid grid-cols-2 gap-1.5 mb-4 p-1 rounded-xl bg-white/5 border border-white/5 shrink-0">
             <button
@@ -222,8 +235,21 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             </form>
           )}
 
+          {/* Registration Helper Link */}
+          <div className="mt-3 text-center text-xs text-gray-400">
+            <span>Don't have a Stremio account yet? </span>
+            <a
+              href="https://www.stremio.com/register"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-purple-400 hover:text-purple-300 font-semibold underline"
+            >
+              Sign up free on Stremio.com
+            </a>
+          </div>
+
           {/* Notice */}
-          <div className="mt-4 p-3 rounded-xl bg-black/30 border border-white/5 text-[11px] text-gray-400 leading-relaxed flex items-start gap-2">
+          <div className="mt-3 p-3 rounded-xl bg-black/30 border border-white/5 text-[11px] text-gray-400 leading-relaxed flex items-start gap-2">
             <span className="text-sm shrink-0">🔒</span>
             <span>
               <strong>Security:</strong> Authentication connects directly with the official Stremio API (<code>api.strem.io</code>) over encrypted TLS.

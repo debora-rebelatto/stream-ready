@@ -31,18 +31,41 @@ export type EventName = keyof EventDataMap;
 export const TRACKING_DISABLED_KEY = 'stremio_tracking_disabled';
 export const EXCLUDED_EMAILS_KEY = 'stremio_excluded_tracking_emails';
 
+export const BUILTIN_EXCLUDED_EMAILS = [
+  'debyr.dbr@gmail.com',
+  'deborarebelatto1@gmail.com'
+];
+
+export const BUILTIN_EXCLUDED_USER_IDS = [
+  'aa1bdc75-f539-4e11-8c90-510c0e998ce8',
+  '0ae027a6-56e6-41d5-a25b-86fc1e04aed4'
+];
+
 let isPostHogInitialized = false;
+
+function getEnvVar(key: string): string {
+  try {
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+      return process.env[key] || '';
+    }
+  } catch {}
+  try {
+    const meta = (new Function('return typeof import.meta !== "undefined" ? import.meta : undefined'))();
+    if (meta && meta.env && meta.env[key]) {
+      return meta.env[key] || '';
+    }
+  } catch {}
+  return '';
+}
 
 /**
  * Parses and returns the list of excluded emails from environment variables and localStorage.
  */
 export function getExcludedTrackingEmails(): string[] {
-  const emailsSet = new Set<string>();
+  const emailsSet = new Set<string>(BUILTIN_EXCLUDED_EMAILS);
 
   // 1. From Vite / process environment
-  const envVal = (typeof process !== 'undefined'
-    ? process.env.VITE_EXCLUDED_TRACKING_EMAILS || process.env.EXCLUDED_TRACKING_EMAILS
-    : '') || (typeof window !== 'undefined' ? (window as any).__EXCLUDED_EMAILS__ : '') || '';
+  const envVal = getEnvVar('VITE_EXCLUDED_TRACKING_EMAILS') || getEnvVar('EXCLUDED_TRACKING_EMAILS');
 
   if (envVal) {
     envVal.split(',').forEach((email) => {
@@ -115,7 +138,7 @@ export function isTrackingBlocked(targetEmailOrId?: string): boolean {
     // 2. Target email or ID check
     if (targetEmailOrId) {
       const target = String(targetEmailOrId).trim().toLowerCase();
-      if (excluded.includes(target)) {
+      if (excluded.includes(target) || BUILTIN_EXCLUDED_USER_IDS.includes(target)) {
         return true;
       }
     }

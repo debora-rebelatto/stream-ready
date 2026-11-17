@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { isItemReady, isItemUnreleased } from './lib/utils';
 import { trackEvent } from './lib/analytics';
-import { useAuth, useWatchlist } from './context/useAppContext';
+import { useAuth, useWatchlist, useToast } from './context/useAppContext';
+import { api } from './lib/api';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { RecommendedBanner } from './components/RecommendedBanner';
@@ -9,6 +10,7 @@ import { SearchSection } from './components/SearchSection';
 import { FeaturePollCard } from './components/FeaturePollCard';
 import { MovieCard } from './components/MovieCard';
 import { LoginModal } from './components/LoginModal';
+import { InstallGuideModal } from './components/InstallGuideModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ManageListsModal } from './components/ManageListsModal';
 import { DeleteMovieModal } from './components/DeleteMovieModal';
@@ -36,13 +38,31 @@ export const App: React.FC = () => {
     recheckAll,
   } = useWatchlist();
 
+  const { showToast } = useToast();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isManageListsOpen, setIsManageListsOpen] = useState(false);
   const [manageListsTab, setManageListsTab] = useState<'standard' | 'custom'>('standard');
+  const [manifestInfo, setManifestInfo] = useState<{ manifestUrl?: string; stremioInstallUrl?: string }>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const listTopRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Detect redirect from Stremio Configure button
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('source') === 'stremio_configure' && !user) {
+      setIsLoginOpen(true);
+      showToast('👋 Welcome from Stremio! Connect your Stremio account to configure the addon.', 'info');
+    }
+  }, [user, showToast]);
+
+  useEffect(() => {
+    api.getInfo()
+      .then((info) => setManifestInfo(info))
+      .catch(() => {});
+  }, [user]);
 
   // Delete movie confirmation modal state
   const [movieToDelete, setMovieToDelete] = useState<{
@@ -289,6 +309,7 @@ export const App: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-[#0c0d14]">
       <Navbar
         onOpenLogin={() => setIsLoginOpen(true)}
+        onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenLists={() => setIsManageListsOpen(true)}
         onOpenDeleteAccount={() => setIsDeleteAccountOpen(true)}
@@ -649,12 +670,22 @@ export const App: React.FC = () => {
             )}
           </>
         ) : (
-          <LandingPage onOpenLogin={() => setIsLoginOpen(true)} />
+          <LandingPage
+            onOpenLogin={() => setIsLoginOpen(true)}
+            onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
+          />
         )}
       </main>
 
       {/* Modals & Toast */}
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      <InstallGuideModal
+        isOpen={isInstallGuideOpen}
+        onClose={() => setIsInstallGuideOpen(false)}
+        onOpenLogin={() => setIsLoginOpen(true)}
+        installUrl={manifestInfo.stremioInstallUrl}
+        manifestUrl={manifestInfo.manifestUrl}
+      />
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

@@ -22,7 +22,8 @@ import {
   Flame,
   Search,
   SlidersHorizontal,
-  RotateCcw
+  RotateCcw,
+  Info
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { trackEvent } from '../lib/analytics';
@@ -31,9 +32,10 @@ import { RecommendedBanner } from './RecommendedBanner';
 
 interface LandingPageProps {
   onOpenLogin: () => void;
+  onOpenInstallGuide?: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin, onOpenInstallGuide }) => {
   const { showToast } = useToast();
   const [manifestUrl, setManifestUrl] = useState('');
   const [installUrl, setInstallUrl] = useState('');
@@ -63,6 +65,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
 
   const handleInstallClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (onOpenInstallGuide) {
+      onOpenInstallGuide();
+      return;
+    }
     if (installUrl) {
       trackEvent('addon_install_clicked', { location: 'landing_page' });
       showToast('🎬 Reminder: After installing in Stremio, use the search bar on this site to add movies!', 'info');
@@ -71,6 +77,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
   };
 
   const faqs = [
+    {
+      q: 'Do I need to create an account or sign in to use this?',
+      a: 'Yes, connecting your Stremio account is required. Stremio addons are strictly read-only inside the player app and cannot display search bars or "add to watchlist" buttons inside Stremio. By connecting your Stremio account on this website, you can search and add cinema movies here, and our 24/7 cloud engine will automatically synchronize 1080p FHD & 4K UHD releases directly to your Stremio home screen across all your devices.'
+    },
+    {
+      q: 'Why can\'t I just install the addon in Stremio and add movies there?',
+      a: 'Stremio\'s addon protocol does not allow addons to create new database records or provide interactive search forms inside the video player. This website serves as your watchlist control center: you add movies here, and our background engine tracks stream sources continuously and pushes ready releases straight to your TV.'
+    },
+    {
+      q: 'What happens if I install the addon without connecting my account?',
+      a: 'If you install the generic addon directly in Stremio without connecting your account on this website, your Stremio catalog will display a setup notice card. The addon cannot know what movies you want to track until your account is linked.'
+    },
     {
       q: 'What is Good Quality Tracker?',
       a: 'It is an automated Stremio release companion. You add movies you want to see, and our cloud engine continuously monitors stream providers every 30 minutes. It filters out fuzzy cinema phone recordings (CAM / Telesync). The moment a clean 1080p FHD or 4K UHD copy drops, it automatically promotes the film to your Stremio library with direct TV home row integration.'
@@ -120,11 +138,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
         </h1>
 
         {/* Subtitle */}
-        <p className="text-base sm:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed mb-8 font-normal">
+        <p className="text-base sm:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed mb-6 font-normal">
           Track upcoming cinema releases and let our cloud engine scan stream sources 24/7. 
           When pristine <strong className="text-white font-semibold">1080p FHD & 4K UHD</strong> arrives, 
           it lands straight on your Smart TV home screen.
         </p>
+
+        {/* Important Account Requirement Notice Banner */}
+        <div className="mx-auto max-w-2xl mb-8 p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-200 text-xs sm:text-sm text-left flex items-start gap-3 shadow-lg">
+          <Info size={18} className="text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <strong className="text-white block font-semibold mb-0.5">
+              ⚠️ Account Connection Required to Track Movies
+            </strong>
+            <span className="text-xs text-amber-200/90 leading-relaxed block">
+              Stremio addons are read-only inside the media player. To track movies, you must <strong>connect your Stremio account</strong> below so you can search and add movies on this website. Our system automatically installs the addon to your cloud account and syncs across all your devices!
+            </span>
+          </div>
+        </div>
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-10">
@@ -365,9 +396,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             <div className="w-8 h-8 rounded-full bg-[#7b42f6] text-white font-bold text-xs flex items-center justify-center mb-4 shadow-md">
               1
             </div>
-            <h4 className="text-sm font-bold text-white mb-1.5">Sign In with Stremio</h4>
+            <h4 className="text-sm font-bold text-white mb-1.5">Connect Stremio (Required)</h4>
             <p className="text-xs text-gray-400 leading-relaxed">
-              Connect your account with 1-click so the tracker can automatically sync catalog rows directly to your Stremio library.
+              Connect your Stremio account with 1-click. Since player addons are read-only, linking your account enables cloud synchronization across all your TV and mobile devices.
             </p>
           </div>
 
@@ -376,9 +407,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             <div className="w-8 h-8 rounded-full bg-[#7b42f6] text-white font-bold text-xs flex items-center justify-center mb-4 shadow-md">
               2
             </div>
-            <h4 className="text-sm font-bold text-white mb-1.5">Add Movies to Watch</h4>
+            <h4 className="text-sm font-bold text-white mb-1.5">Add Movies on Website</h4>
             <p className="text-xs text-gray-400 leading-relaxed">
-              Search for any movie currently in cinemas or upcoming. Add it to your watchlist in one click, and optionally set 4K target quality.
+              Search for any cinema or upcoming movie directly on this dashboard. Adding movies happens here on the site because Stremio does not permit adding movies inside the player.
             </p>
           </div>
 
