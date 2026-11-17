@@ -28,7 +28,129 @@ export interface EventDataMap {
 
 export type EventName = keyof EventDataMap;
 
+export const TRACKING_DISABLED_KEY = 'stremio_tracking_disabled';
+export const EXCLUDED_EMAILS_KEY = 'stremio_excluded_tracking_emails';
+
 let isPostHogInitialized = false;
+
+/**
+ * Parses and returns the list of excluded emails from environment variables and localStorage.
+ */
+export function getExcludedTrackingEmails(): string[] {
+  const emailsSet = new Set<string>();
+
+  // 1. From Vite / process environment
+  const envVal = (typeof process !== 'undefined'
+    ? process.env.VITE_EXCLUDED_TRACKING_EMAILS || process.env.EXCLUDED_TRACKING_EMAILS
+    : '') || (typeof window !== 'undefined' ? (window as any).__EXCLUDED_EMAILS__ : '') || '';
+
+  if (envVal) {
+    envVal.split(',').forEach((email) => {
+      const clean = email.trim().toLowerCase();
+      if (clean) emailsSet.add(clean);
+    });
+  }
+
+  // 2. From localStorage
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem(EXCLUDED_EMAILS_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((e) => {
+              const clean = String(e).trim().toLowerCase();
+              if (clean) emailsSet.add(clean);
+            });
+          }
+        } catch {
+          stored.split(',').forEach((e) => {
+            const clean = e.trim().toLowerCase();
+            if (clean) emailsSet.add(clean);
+          });
+        }
+      }
+    }
+  } catch {}
+
+  return Array.from(emailsSet);
+}
+
+/**
+ * Saves list of excluded emails to localStorage.
+ */
+export function setExcludedTrackingEmails(emails: string[]): void {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const cleanList = emails.map((e) => e.trim().toLowerCase()).filter(Boolean);
+      localStorage.setItem(EXCLUDED_EMAILS_KEY, JSON.stringify(cleanList));
+
+      // If current user is in the list, opt out immediately
+      const currentEmail = localStorage.getItem('stremioEmail')?.toLowerCase().trim();
+      if (currentEmail && cleanList.includes(currentEmail)) {
+        try {
+          posthog.opt_out_capturing?.();
+        } catch {}
+      }
+    }
+  } catch {}
+}
+
+/**
+ * Checks whether tracking/telemetry is completely blocked.
+ */
+export function isTrackingBlocked(targetEmailOrId?: string): boolean {
+  try {
+    // 1. Explicit global opt-out toggle in localStorage
+    if (typeof localStorage !== 'undefined') {
+      if (localStorage.getItem(TRACKING_DISABLED_KEY) === 'true') {
+        return true;
+      }
+    }
+
+    const excluded = getExcludedTrackingEmails();
+    if (excluded.length === 0) return false;
+
+    // 2. Target email or ID check
+    if (targetEmailOrId) {
+      const target = String(targetEmailOrId).trim().toLowerCase();
+      if (excluded.includes(target)) {
+        return true;
+      }
+    }
+
+    // 3. Current authenticated user in localStorage
+    if (typeof localStorage !== 'undefined') {
+      const currentEmail = localStorage.getItem('stremioEmail')?.trim().toLowerCase();
+      if (currentEmail && excluded.includes(currentEmail)) {
+        return true;
+      }
+    }
+  } catch {}
+
+  return false;
+}
+
+/**
+ * Sets the global tracking disabled opt-out state.
+ */
+export function setTrackingDisabled(disabled: boolean): void {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(TRACKING_DISABLED_KEY, disabled ? 'true' : 'false');
+    }
+    if (disabled) {
+      try {
+        posthog.opt_out_capturing?.();
+      } catch {}
+    } else {
+      try {
+        posthog.opt_in_capturing?.();
+      } catch {}
+    }
+  } catch {}
+}
 
 /**
  * Initializes PostHog with API key from environment or parameter.
@@ -36,6 +158,12 @@ let isPostHogInitialized = false;
  */
 export function initPostHog(apiKey?: string, host?: string): void {
   if (typeof window === 'undefined') return;
+  if (isTrackingBlocked()) {
+    try {
+      posthog.opt_out_capturing?.();
+    } catch {}
+    return;
+  }
 
   const key = apiKey || (typeof process !== 'undefined' ? process.env.VITE_POSTHOG_KEY : '') || (window as any).__POSTHOG_KEY__;
   const apiHost = host || (typeof process !== 'undefined' ? process.env.VITE_POSTHOG_HOST : '') || (window as any).__POSTHOG_HOST__ || 'https://us.i.posthog.com';
@@ -62,8 +190,15 @@ export function initPostHog(apiKey?: string, host?: string): void {
  * Identifies a logged-in user in PostHog.
  */
 export function identifyUser(userId: string, traits?: Record<string, any>): void {
+  if (isTrackingBlocked(userId) || (traits?.email && isTrackingBlocked(traits.email))) {
+    try {
+      posthog.opt_out_capturing?.();
+    } catch {}
+    return;
+  }
+
   try {
-    if (isPostHogInitialized) {
+    if (isPostHogInitialized || (posthog as any).__loaded) {
       posthog.identify(userId, traits);
     }
   } catch {}
@@ -74,7 +209,7 @@ export function identifyUser(userId: string, traits?: Record<string, any>): void
  */
 export function resetUser(): void {
   try {
-    if (isPostHogInitialized) {
+    if (isPostHogInitialized || (posthog as any).__loaded) {
       posthog.reset();
     }
   } catch {}
@@ -90,11 +225,16 @@ export function trackEvent<T extends EventName>(
   name: T,
   data?: EventDataMap[T]
 ): void {
+  // If user/account is excluded or opted out, block all tracking completely
+  if (isTrackingBlocked()) {
+    return;
+  }
+
   const payload = (data || {}) as Record<string, any>;
 
   // 1. PostHog
   try {
-    if (isPostHogInitialized) {
+    if (isPostHogInitialized || (posthog as any).__loaded) {
       posthog.capture(name, payload);
     }
   } catch {}

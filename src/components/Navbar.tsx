@@ -151,23 +151,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
                 {user.email}
               </span>
               <button
-                onClick={logout}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  logout();
+                }}
                 className="p-1 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer ml-0.5"
                 title="Sign Out"
                 aria-label="Sign Out"
               >
                 <LogOut size={13} />
               </button>
-              {onOpenDeleteAccount && (
-                <button
-                  onClick={onOpenDeleteAccount}
-                  className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
-                  title="Delete Account & Wipe Data"
-                  aria-label="Delete Account & Wipe Data"
-                >
-                  <Trash2 size={13} />
-                </button>
-              )}
+              
             </div>
           ) : (
             <button
@@ -193,9 +189,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
-                  onClick={() => {
-                    logout();
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     setMobileMenuOpen(false);
+                    logout();
                   }}
                   className="text-xs font-semibold text-gray-400 hover:text-gray-200 px-2 py-1 rounded hover:bg-white/5 transition-colors cursor-pointer"
                 >
@@ -203,7 +202,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
                 </button>
                 {onOpenDeleteAccount && (
                   <button
-                    onClick={() => {
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       setMobileMenuOpen(false);
                       onOpenDeleteAccount();
                     }}

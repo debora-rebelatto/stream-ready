@@ -1070,8 +1070,29 @@ app.post('/api/events', async (req, res) => {
     if (!event || typeof event !== 'string') {
       return res.status(400).json({ success: false, error: 'Event name is required' });
     }
+
+    // Check opt-out request header
+    if (req.headers['x-opt-out-tracking'] === 'true') {
+      return res.json({ success: true, ignored: true });
+    }
+
     const user = await getRequestUser(req).catch(() => null);
     const userId = user?.userId || user?.id || null;
+    const userEmail = (user?.userEmail || user?.email || '').toLowerCase().trim();
+
+    // Check excluded accounts configured via environment
+    const excludedEnv = process.env.EXCLUDED_TRACKING_EMAILS || process.env.VITE_EXCLUDED_TRACKING_EMAILS || '';
+    if (excludedEnv) {
+      const excludedList = excludedEnv
+        .split(',')
+        .map(s => s.trim().toLowerCase())
+        .filter(Boolean);
+
+      if ((userEmail && excludedList.includes(userEmail)) || (userId && excludedList.includes(userId))) {
+        return res.json({ success: true, ignored: true });
+      }
+    }
+
     await db.recordAnalyticsEvent(event, data, userId);
     res.json({ success: true });
   } catch (err) {

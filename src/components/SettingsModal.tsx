@@ -1,8 +1,30 @@
 import React from 'react';
 import { useWatchlist, useToast, useAuth } from '../context/useAppContext';
 import { watchlistService } from '../services/watchlistService';
-import { X, BookOpen, Download, Upload, Sliders, Tv, Eye, RefreshCw, Info, Heart, AlertTriangle, Trash2 } from 'lucide-react';
+import {
+  X,
+  BookOpen,
+  Download,
+  Upload,
+  Sliders,
+  Tv,
+  Eye,
+  RefreshCw,
+  Info,
+  Heart,
+  AlertTriangle,
+  Trash2,
+  Shield,
+  EyeOff,
+  Plus
+} from 'lucide-react';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
+import {
+  getExcludedTrackingEmails,
+  setExcludedTrackingEmails,
+  setTrackingDisabled,
+  TRACKING_DISABLED_KEY
+} from '../lib/analytics';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -28,6 +50,50 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const { user } = useAuth();
   const { showToast } = useToast();
   const [isExporting, setIsExporting] = React.useState(false);
+
+  const [isOptedOut, setIsOptedOut] = React.useState<boolean>(() => {
+    try {
+      return localStorage.getItem(TRACKING_DISABLED_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const [excludedEmails, setExcludedEmails] = React.useState<string[]>(() => {
+    return getExcludedTrackingEmails();
+  });
+
+  const [newEmailInput, setNewEmailInput] = React.useState('');
+
+  const handleToggleOptOut = (val: boolean) => {
+    setIsOptedOut(val);
+    setTrackingDisabled(val);
+    showToast(val ? 'Telemetry and analytics disabled.' : 'Telemetry re-enabled.', 'info');
+  };
+
+  const handleAddExcludedEmail = (emailToAdd: string) => {
+    const clean = emailToAdd.trim().toLowerCase();
+    if (!clean || !clean.includes('@')) {
+      showToast('Please enter a valid email address.', 'error');
+      return;
+    }
+    if (excludedEmails.includes(clean)) {
+      showToast('This email is already in the exclusion list.', 'info');
+      return;
+    }
+    const updated = [...excludedEmails, clean];
+    setExcludedEmails(updated);
+    setExcludedTrackingEmails(updated);
+    setNewEmailInput('');
+    showToast(`Account "${clean}" will never be tracked.`, 'success');
+  };
+
+  const handleRemoveExcludedEmail = (emailToRemove: string) => {
+    const updated = excludedEmails.filter((e) => e !== emailToRemove);
+    setExcludedEmails(updated);
+    setExcludedTrackingEmails(updated);
+    showToast(`Removed "${emailToRemove}" from exclusion list.`, 'info');
+  };
 
   if (!isOpen) return null;
 
@@ -346,6 +412,127 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   className="hidden"
                 />
               </label>
+            </div>
+          </div>
+
+          {/* Privacy & Tracking Opt-Out */}
+          <div className="p-4 rounded-xl bg-[#1f2438] border border-white/10 space-y-3.5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-white flex items-center gap-2">
+                <Shield size={16} className="text-emerald-400" />
+                Privacy & Telemetry Opt-Out
+              </span>
+              {isOptedOut && (
+                <span className="text-[10px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-semibold px-2 py-0.5 rounded-full">
+                  All Tracking Off
+                </span>
+              )}
+            </div>
+
+            <p className="text-[10.5px] text-gray-400 leading-relaxed">
+              Exclude specific accounts from PostHog, Vercel Analytics, and server database telemetry. No actions performed by excluded accounts will ever be tracked.
+            </p>
+
+            {/* Global Opt-Out Switch */}
+            <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-[#151824] border border-white/5 transition-colors hover:border-white/10">
+              <div className="flex-1 min-w-0 pr-2">
+                <div className="flex items-center gap-1.5">
+                  <EyeOff size={13} className="text-gray-300" />
+                  <span className="text-xs font-semibold text-gray-200">Disable All Tracking on this Browser</span>
+                </div>
+                <p className="text-[10.5px] text-gray-400 leading-relaxed mt-1">
+                  Stops all telemetry across all accounts on this device.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isOptedOut}
+                onClick={() => handleToggleOptOut(!isOptedOut)}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden mt-0.5 ${
+                  isOptedOut ? 'bg-emerald-600' : 'bg-white/10'
+                }`}
+                title="Toggle global telemetry opt-out"
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    isOptedOut ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Excluded Accounts Manager */}
+            <div className="space-y-2 pt-1">
+              <span className="text-xs font-semibold text-gray-300 block">
+                Excluded Accounts ({excludedEmails.length}):
+              </span>
+
+              {excludedEmails.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {excludedEmails.map((email) => (
+                    <span
+                      key={email}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#151824] border border-white/10 text-gray-200 text-xs font-mono"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                      <span>{email}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveExcludedEmail(email)}
+                        className="text-gray-400 hover:text-red-400 rounded-sm p-0.5 cursor-pointer ml-0.5"
+                        title={`Remove ${email}`}
+                        aria-label={`Remove ${email}`}
+                      >
+                        <X size={11} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[11px] text-gray-500 italic">No specific accounts excluded yet.</p>
+              )}
+
+              {/* Quick Add Current Account Button */}
+              {user?.email && !excludedEmails.includes(user.email.toLowerCase().trim()) && (
+                <button
+                  type="button"
+                  onClick={() => handleAddExcludedEmail(user.email)}
+                  className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 text-xs font-medium cursor-pointer transition-colors"
+                >
+                  <Plus size={12} />
+                  <span>Exclude current account ({user.email})</span>
+                </button>
+              )}
+
+              {/* Add Custom Email Input */}
+              <div className="flex gap-2 pt-1">
+                <input
+                  type="email"
+                  value={newEmailInput}
+                  onChange={(e) => setNewEmailInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddExcludedEmail(newEmailInput);
+                    }
+                  }}
+                  placeholder="Enter account email to exclude..."
+                  className="flex-1 px-3 py-1.5 rounded-lg bg-[#151824] border border-white/10 text-white placeholder-gray-500 text-xs focus:outline-hidden focus:border-purple-500 transition-all font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAddExcludedEmail(newEmailInput)}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-gray-200 text-xs font-semibold cursor-pointer transition-colors"
+                >
+                  <Plus size={12} />
+                  <span>Add</span>
+                </button>
+              </div>
+
+              <p className="text-[10px] text-gray-500 leading-normal pt-0.5">
+                💡 Tip: You can also define <code className="text-gray-400 bg-white/5 px-1 py-0.5 rounded font-mono">EXCLUDED_TRACKING_EMAILS</code> in your <code className="text-gray-400 bg-white/5 px-1 py-0.5 rounded font-mono">.env</code> file.
+              </p>
             </div>
           </div>
 

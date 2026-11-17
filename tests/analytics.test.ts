@@ -1,4 +1,13 @@
-import { trackEvent, initPostHog, identifyUser, resetUser } from '../src/lib/analytics';
+import {
+  trackEvent,
+  initPostHog,
+  identifyUser,
+  resetUser,
+  isTrackingBlocked,
+  setTrackingDisabled,
+  setExcludedTrackingEmails,
+  getExcludedTrackingEmails
+} from '../src/lib/analytics';
 import posthog from 'posthog-js';
 
 jest.mock('posthog-js', () => ({
@@ -8,6 +17,8 @@ jest.mock('posthog-js', () => ({
     capture: jest.fn(),
     identify: jest.fn(),
     reset: jest.fn(),
+    opt_out_capturing: jest.fn(),
+    opt_in_capturing: jest.fn(),
   },
 }));
 
@@ -89,5 +100,48 @@ describe('analytics.trackEvent (PostHog & Supabase)', () => {
     expect(() => {
       trackEvent('auth_login_success', { method: 'credentials' });
     }).not.toThrow();
+  });
+
+  describe('Tracking Exclusion & Opt-Out', () => {
+    beforeEach(() => {
+      localStorage.clear();
+      jest.clearAllMocks();
+    });
+
+    it('blocks tracking when global opt-out is enabled', () => {
+      setTrackingDisabled(true);
+      expect(isTrackingBlocked()).toBe(true);
+      expect(posthog.opt_out_capturing).toHaveBeenCalled();
+
+      trackEvent('addon_manifest_copied', { location: 'navbar' });
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(posthog.capture).not.toHaveBeenCalled();
+
+      setTrackingDisabled(false);
+      expect(isTrackingBlocked()).toBe(false);
+    });
+
+    it('blocks tracking for accounts in the excluded list', () => {
+      setExcludedTrackingEmails(['myaccount1@gmail.com', 'myaccount2@gmail.com']);
+      expect(getExcludedTrackingEmails()).toEqual(['myaccount1@gmail.com', 'myaccount2@gmail.com']);
+
+      expect(isTrackingBlocked('myaccount1@gmail.com')).toBe(true);
+      expect(isTrackingBlocked('myaccount2@gmail.com')).toBe(true);
+      expect(isTrackingBlocked('otheruser@gmail.com')).toBe(false);
+
+      // When logged in as an excluded user
+      localStorage.setItem('stremioEmail', 'myaccount1@gmail.com');
+      expect(isTrackingBlocked()).toBe(true);
+
+      // trackEvent must not send anything to fetch or posthog
+      trackEvent('movie_added', { title: 'Dune', imdbId: 'tt1160419' });
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(posthog.capture).not.toHaveBeenCalled();
+
+      // identifyUser must trigger opt-out instead of identifying
+      identifyUser('myaccount1@gmail.com', { email: 'myaccount1@gmail.com' });
+      expect(posthog.opt_out_capturing).toHaveBeenCalled();
+      expect(posthog.identify).not.toHaveBeenCalled();
+    });
   });
 });

@@ -27,9 +27,24 @@ export function clearAuth(): void {
 
 export function getAuthHeaders(): HeadersInit {
   const key = getAuthKey();
+  let isOptOut = false;
+  try {
+    if (typeof localStorage !== 'undefined') {
+      if (localStorage.getItem('stremio_tracking_disabled') === 'true') {
+        isOptOut = true;
+      }
+      const email = localStorage.getItem('stremioEmail')?.toLowerCase().trim();
+      const excluded = localStorage.getItem('stremio_excluded_tracking_emails');
+      if (email && excluded && excluded.toLowerCase().includes(email)) {
+        isOptOut = true;
+      }
+    }
+  } catch {}
+
   return {
     'Content-Type': 'application/json',
     ...(key ? { 'x-stremio-auth': key } : {}),
+    ...(isOptOut ? { 'x-opt-out-tracking': 'true' } : {}),
   };
 }
 

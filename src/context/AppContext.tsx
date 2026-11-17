@@ -6,26 +6,47 @@ import { cinemetaService } from '../services/cinemetaService';
 import { api } from '../lib/api';
 import { isItemReady, isItemUnreleased } from '../lib/utils';
 import posthog from '../lib/posthog';
-import { trackEvent, identifyUser as identifyAnalyticsUser, resetUser as resetAnalyticsUser, type EventSource } from '../lib/analytics';
+import {
+  trackEvent,
+  identifyUser as identifyAnalyticsUser,
+  resetUser as resetAnalyticsUser,
+  isTrackingBlocked,
+  type EventSource
+} from '../lib/analytics';
 import { AuthContext, WatchlistContext, ToastContext, useToast } from './useAppContext';
 
 const RATINGS_CACHE_KEY = 'stremio_ratings_cache';
 const isPostHogConfigured = Boolean(import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST);
 
 function identifyUser(user: StremioUser) {
-  if (isPostHogConfigured && user.id) {
-    posthog.identify(user.id, { email: user.email });
-  }
-  identifyAnalyticsUser(user.id || user.email, { email: user.email });
+  try {
+    if (isTrackingBlocked(user.id) || isTrackingBlocked(user.email)) {
+      try {
+        posthog.opt_out_capturing?.();
+      } catch {}
+      return;
+    }
+    if (isPostHogConfigured && user.id) {
+      posthog.identify?.(user.id, { email: user.email });
+    }
+    identifyAnalyticsUser(user.id || user.email, { email: user.email });
+  } catch {}
 }
 
 function resetPostHog() {
-  if (isPostHogConfigured) posthog.reset();
-  resetAnalyticsUser();
+  try {
+    if (isPostHogConfigured) posthog.reset?.();
+  } catch {}
+  try {
+    resetAnalyticsUser();
+  } catch {}
 }
 
 function capturePostHog(event: string, properties: Record<string, string | number | boolean> = {}) {
-  if (isPostHogConfigured) posthog.capture(event, properties);
+  try {
+    if (isTrackingBlocked()) return;
+    if (isPostHogConfigured) posthog.capture?.(event, properties);
+  } catch {}
 }
 
 function getStoredRatings(): Record<string, string> {
@@ -132,7 +153,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (res.loggedIn && res.user) {
         identifyUser(res.user);
         setUser(res.user);
-        identifyUser(res.user.email, { email: res.user.email });
         try {
           const settings = await api.getSettings();
           if (settings?.minQuality === '4k' || settings?.minQuality === '1080p') {
@@ -269,7 +289,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         capturePostHog('stremio_login_completed', { login_method: 'credentials' });
         authService.setAuthKey(res.authKey, res.user.email);
         setUser(res.user);
-        identifyUser(res.user.email, { email: res.user.email });
         trackEvent('auth_login_success', { method: 'credentials' });
         showToast(`🎉 Welcome, ${res.user.email}!`, 'success');
         return { success: true };
@@ -289,7 +308,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         capturePostHog('stremio_login_completed', { login_method: 'auth_key' });
         authService.setAuthKey(res.authKey, res.user.email);
         setUser(res.user);
-        identifyUser(res.user.email, { email: res.user.email });
         trackEvent('auth_login_success', { method: 'authKey' });
         showToast(`🎉 Connected as ${res.user.email}!`, 'success');
         return { success: true };
@@ -301,15 +319,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = async () => {
-    trackEvent('auth_logout', {});
-    resetUser();
-    await authService.logout();
-    resetPostHog();
+    // 1. Immediately clear authentication keys and user state so the UI logs out instantly
+    authService.clearAuth();
     setUser(null);
     setItems([]);
     setCustomLists([]);
+    setActiveCustomListId(null);
     setStats({ total: 0, ready: 0, pending: 0, unreleased: 0, watched: 0 });
     showToast('Signed out successfully.', 'info');
+
+    // 2. Safely perform background cleanup, analytics reset and server session invalidation
+    try {
+      trackEvent('auth_logout', {});
+    } catch {}
+    try {
+      resetUser();
+    } catch {}
+    try {
+      resetPostHog();
+    } catch {}
+    try {
+      await authService.logout();
+    } catch {}
   };
 
   const deleteAccount = async () => {
