@@ -393,6 +393,47 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ success: true });
 });
 
+// Delete account & bulldoze all user data from database and cache
+app.delete(['/api/auth/account', '/api/account'], async (req, res) => {
+  try {
+    await db.ensureLoaded();
+    const { authKey, userId, userEmail } = await getRequestUser(req);
+
+    if (!userId && !userEmail) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Session invalid or user not found' });
+    }
+
+    // Try to remove community watchlist addon from official Stremio account if authKey is present
+    if (authKey) {
+      try {
+        const { removeAccountAddon } = require('./lib/stremioAuth');
+        if (typeof removeAccountAddon === 'function') {
+          await removeAccountAddon(authKey);
+        }
+      } catch (addonErr) {
+        console.warn('[DeleteAccount] Notice when removing addon from Stremio account:', addonErr.message);
+      }
+    }
+
+    // Clear throttle cache for this user
+    if (userId) {
+      userSyncThrottle.delete(userId);
+    }
+
+    // Bulldoze all user data in Supabase & memory cache
+    await db.deleteUser(userId || userEmail);
+
+    console.log(`[DeleteAccount] Account and all related database data purged for user: ${userEmail || userId}`);
+    res.json({
+      success: true,
+      message: 'Account and all related data have been permanently deleted.'
+    });
+  } catch (err) {
+    console.error('[DeleteAccount Error]', err);
+    res.status(500).json({ success: false, error: err.message || 'Failed to delete account' });
+  }
+});
+
 // 1-Click Install Addon into user's Stremio account via API
 app.post('/api/auth/install-account', async (req, res) => {
   try {
@@ -1018,6 +1059,82 @@ app.post('/api/import', async (req, res) => {
     res.json({ success: true, addedCount, stats: db.getStats(userId) });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Record analytics event (First-party, privacy-preserving, anti-adblock)
+app.post('/api/events', async (req, res) => {
+  try {
+    const { event, data } = req.body || {};
+    if (!event || typeof event !== 'string') {
+      return res.status(400).json({ success: false, error: 'Event name is required' });
+    }
+    const user = await getRequestUser(req).catch(() => null);
+    const userId = user?.userId || user?.id || null;
+    await db.recordAnalyticsEvent(event, data, userId);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Get analytics events summary
+app.get('/api/events/stats', async (req, res) => {
+  try {
+    const stats = await db.getAnalyticsStats();
+    res.json({ success: true, stats });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// -------------------------------------------------------------
+// FEATURE ROADMAP POLL
+// -------------------------------------------------------------
+
+// Submit vote to roadmap poll
+app.post('/api/poll/vote', async (req, res) => {
+  try {
+    const { userId } = await getRequestUser(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Please sign in to vote in the poll' });
+    }
+    const { option, customText } = req.body || {};
+    if (!option || typeof option !== 'string') {
+      return res.status(400).json({ success: false, error: 'Option is required' });
+    }
+    const result = await db.savePollVote(userId, option, customText);
+    if (result.success) {
+      db.recordAnalyticsEvent('poll_voted', { option, hasCustomText: Boolean(customText) }, userId).catch(() => {});
+      return res.json({ success: true, vote: result.vote });
+    }
+    return res.status(400).json(result);
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Check if user has already voted
+app.get('/api/poll/status', async (req, res) => {
+  try {
+    const { userId } = await getRequestUser(req);
+    if (!userId) {
+      return res.json({ hasVoted: false, vote: null });
+    }
+    const vote = await db.getPollVote(userId);
+    return res.json({ hasVoted: Boolean(vote), vote });
+  } catch (err) {
+    return res.status(500).json({ hasVoted: false, error: err.message });
+  }
+});
+
+// Get aggregated poll results for roadmap review
+app.get('/api/poll/results', async (req, res) => {
+  try {
+    const results = await db.getPollResults();
+    return res.json({ success: true, results });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 

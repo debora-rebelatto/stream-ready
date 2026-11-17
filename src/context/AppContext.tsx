@@ -5,6 +5,7 @@ import { watchlistService } from '../services/watchlistService';
 import { cinemetaService } from '../services/cinemetaService';
 import { api } from '../lib/api';
 import { isItemReady, isItemUnreleased } from '../lib/utils';
+import { trackEvent, identifyUser, resetUser, type EventSource } from '../lib/analytics';
 import { AuthContext, WatchlistContext, ToastContext, useToast } from './useAppContext';
 
 const RATINGS_CACHE_KEY = 'stremio_ratings_cache';
@@ -111,6 +112,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await authService.getStatus();
       if (res.loggedIn && res.user) {
         setUser(res.user);
+        identifyUser(res.user.email, { email: res.user.email });
         try {
           const settings = await api.getSettings();
           if (settings?.minQuality === '4k' || settings?.minQuality === '1080p') {
@@ -242,6 +244,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (res.success && res.authKey && res.user) {
         authService.setAuthKey(res.authKey, res.user.email);
         setUser(res.user);
+        identifyUser(res.user.email, { email: res.user.email });
+        trackEvent('auth_login_success', { method: 'credentials' });
         showToast(`🎉 Welcome, ${res.user.email}!`, 'success');
         return { success: true };
       }
@@ -257,6 +261,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (res.success && res.authKey && res.user) {
         authService.setAuthKey(res.authKey, res.user.email);
         setUser(res.user);
+        identifyUser(res.user.email, { email: res.user.email });
+        trackEvent('auth_login_success', { method: 'authKey' });
         showToast(`🎉 Connected as ${res.user.email}!`, 'success');
         return { success: true };
       }
@@ -267,17 +273,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = async () => {
+    trackEvent('auth_logout', {});
+    resetUser();
     await authService.logout();
     setUser(null);
     setItems([]);
-    setStats({ total: 0, ready: 0, pending: 0, unreleased: 0 });
+    setCustomLists([]);
+    setStats({ total: 0, ready: 0, pending: 0, unreleased: 0, watched: 0 });
     showToast('Signed out successfully.', 'info');
+  };
+
+  const deleteAccount = async () => {
+    try {
+      const res = await authService.deleteAccount();
+      if (res.success) {
+        trackEvent('account_deleted' as any, {});
+        resetUser();
+        authService.clearAuth();
+        setUser(null);
+        setItems([]);
+        setCustomLists([]);
+        setStats({ total: 0, ready: 0, pending: 0, unreleased: 0, watched: 0 });
+        showToast('Your account and all associated data have been permanently deleted.', 'success');
+        return { success: true };
+      }
+      showToast(res.error || 'Failed to delete account.', 'error');
+      return { success: false, error: res.error };
+    } catch (err: any) {
+      showToast('Error communicating with server.', 'error');
+      return { success: false, error: err.message };
+    }
   };
 
   const installToAccount = async () => {
     try {
       const res = await authService.installToAccount();
       if (res.success) {
+        trackEvent('addon_install_clicked', { location: 'navbar' });
         showToast('🎉 Addon installed to Stremio! Remember to search and add your movies here on the website.', 'success');
         return { success: true };
       }
@@ -289,7 +321,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const addItem = async (id: string) => {
+  const addItem = async (id: string, source: EventSource = 'manual') => {
     showToast('Adding movie and checking quality...', 'info');
     try {
       const res = await watchlistService.addItem(id);
@@ -298,6 +330,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return;
       }
       const item = res.item;
+      trackEvent('movie_added', {
+        title: item.name,
+        year: item.year ? String(item.year) : undefined,
+        imdbId: id,
+        source
+      });
       if (item.has1080pPlus) {
         showToast(`🎉 "${item.name}" added! Already READY in good quality (${item.bestQuality})!`, 'success');
       } else {
@@ -313,6 +351,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.removeItem(id);
       if (res.success) {
+        trackEvent('movie_removed', { title: name, imdbId: id });
         showToast(`"${name}" removed from watchlist.`, 'info');
         setItems((prev) => prev.filter((i) => i.id !== id));
         setStats(res.stats);
@@ -343,6 +382,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const recheckAll = async () => {
+    trackEvent('recheck_all_triggered', { totalItems: items.length });
     setIsCheckingAll(true);
     showToast('Rechecking sources for all watchlist movies...', 'info');
     try {
@@ -363,6 +403,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const setGlobalMinQuality = async (quality: '1080p' | '4k') => {
+    trackEvent('quality_setting_updated', { minQuality: quality });
     setGlobalMinQualityState(quality);
     try {
       await api.saveSettings({ minQuality: quality });
@@ -374,6 +415,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const setAutoSyncWatched = async (enabled: boolean) => {
+    trackEvent('sync_setting_updated', { setting: 'autoSyncWatched', enabled });
     setAutoSyncWatchedState(enabled);
     try {
       await api.saveSettings({ autoSyncWatched: enabled });
@@ -389,6 +431,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const setTrackWatchlistWatched = async (enabled: boolean) => {
+    trackEvent('sync_setting_updated', { setting: 'trackWatchlistWatched', enabled });
     setTrackWatchlistWatchedState(enabled);
     try {
       await api.saveSettings({ trackWatchlistWatched: enabled });
@@ -404,6 +447,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const setSyncPreviouslyWatched = async (enabled: boolean) => {
+    trackEvent('sync_setting_updated', { setting: 'syncPreviouslyWatched', enabled });
     setSyncPreviouslyWatchedState(enabled);
     try {
       await api.saveSettings({ syncPreviouslyWatched: enabled });
@@ -422,6 +466,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.setWatched(id, watched);
       if (res.success) {
+        trackEvent('movie_watched_toggled', { isWatched: watched, imdbId: id });
         setItems((prev) =>
           prev.map((i) =>
             i.id === id ? { ...i, isWatched: watched, watchedAt: watched ? new Date().toISOString() : null } : i
@@ -482,6 +527,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.createCustomList(name, emoji);
       if (res.success && res.list) {
+        trackEvent('custom_list_created', { listName: res.list.name });
         setCustomLists((prev) => [...prev, res.list]);
         showToast(`📁 List "${res.list.name}" created successfully!`, 'success');
         return true;
@@ -591,6 +637,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.addCuratedList(id);
       if (res.success && res.list) {
+        trackEvent('curated_list_added', { listName: res.list.name || id });
         showToast(`Added "${res.list.name || 'Standard List'}" (${res.addedMoviesCount ?? 0} new movies)!`, 'success');
 
         // Optimistically update customLists and curatedLists immediately for instant UI response
@@ -631,6 +678,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         loginWithCreds,
         loginWithKey,
         logout,
+        deleteAccount,
         installToAccount,
       }}
     >

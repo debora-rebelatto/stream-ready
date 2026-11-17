@@ -79,6 +79,14 @@ export const api = {
     clearAuth();
   },
 
+  async deleteAccount(): Promise<{ success: boolean; message?: string; error?: string }> {
+    const res = await fetch('/api/auth/account', {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return res.json();
+  },
+
   async installToAccount(): Promise<{ success: boolean; message?: string; error?: string }> {
     const res = await fetch('/api/auth/install-account', {
       method: 'POST',
@@ -322,6 +330,30 @@ export const api = {
           ? 'Cannot connect to backend server. Please verify the server is running on port 7000.'
           : (err.message || 'Error connecting to server.')
       };
+    }
+  },
+
+  async submitPollVote(option: string, customText?: string): Promise<{ success: boolean; vote?: any; error?: string }> {
+    try {
+      const res = await fetch('/api/poll/vote', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ option, customText }),
+      });
+      return await res.json();
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error submitting vote' };
+    }
+  },
+
+  async getPollStatus(): Promise<{ hasVoted: boolean; vote?: any }> {
+    try {
+      const res = await fetch('/api/poll/status', {
+        headers: getAuthHeaders(),
+      });
+      return await res.json();
+    } catch {
+      return { hasVoted: false };
     }
   },
 };

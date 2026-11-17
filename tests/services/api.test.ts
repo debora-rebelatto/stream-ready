@@ -284,5 +284,22 @@ describe('API Client (src/lib/api.ts)', () => {
       expect(failRes.success).toBe(false);
       expect(failRes.error).toBeDefined();
     });
+
+    test('deleteAccount calls DELETE /api/auth/account with auth headers', async () => {
+      setAuthKey('token_to_delete');
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true, message: 'Account deleted' }),
+      });
+
+      const res = await api.deleteAccount();
+      expect(global.fetch).toHaveBeenCalledWith('/api/auth/account', expect.objectContaining({
+        method: 'DELETE',
+        headers: expect.objectContaining({
+          'x-stremio-auth': 'token_to_delete',
+        }),
+      }));
+      expect(res.success).toBe(true);
+    });
   });
 });

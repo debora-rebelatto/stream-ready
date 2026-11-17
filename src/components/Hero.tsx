@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AlertTriangle, X, ExternalLink, MessageSquare } from 'lucide-react';
+import { trackEvent } from '../lib/analytics';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
 
 const DISMISS_KEY = 'dismiss_beta_notice_until';
@@ -51,6 +52,7 @@ export const Hero: React.FC = () => {
               href="https://tally.so/r/dbazxA"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent('feedback_link_clicked', { location: 'hero_text' })}
               className="font-bold text-amber-300 underline hover:text-white transition-colors inline-flex items-center gap-0.5"
             >
               share your feedback
@@ -67,6 +69,7 @@ export const Hero: React.FC = () => {
             href="https://tally.so/r/dbazxA"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackEvent('feedback_link_clicked', { location: 'hero_button' })}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 hover:text-white font-semibold text-xs border border-amber-400/40 transition-all cursor-pointer min-h-[30px] h-[30px]"
           >
             <MessageSquare size={12} />

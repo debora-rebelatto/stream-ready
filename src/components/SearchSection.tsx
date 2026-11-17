@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useWatchlist, useToast } from '../context/useAppContext';
 import { watchlistService } from '../services/watchlistService';
 import { cinemetaService } from '../services/cinemetaService';
+import { trackEvent } from '../lib/analytics';
 import type { SearchMovieResult } from '../types';
 import { Search, X, Plus, Check } from 'lucide-react';
 
@@ -26,6 +27,7 @@ export const SearchSection: React.FC = () => {
       try {
         const data = await watchlistService.searchMovies(query);
         const moviesOnly = (data || []).filter((m) => !m.type || m.type === 'movie');
+        trackEvent('search_query_performed', { resultsCount: moviesOnly.length });
         setResults(moviesOnly);
         setIsOpen(true);
       } catch {
@@ -61,7 +63,7 @@ export const SearchSection: React.FC = () => {
     } catch {
       // proceed to add
     }
-    await addItem(id);
+    await addItem(id, 'search');
   };
 
   return (

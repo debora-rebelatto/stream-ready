@@ -7,6 +7,7 @@ export interface AuthContextType {
   loginWithCreds: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   loginWithKey: (authKey: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
   installToAccount: () => Promise<{ success: boolean; message?: string; error?: string }>;
 }
 
@@ -39,7 +40,7 @@ export interface WatchlistContextType {
   isLoading: boolean;
   isCheckingAll: boolean;
   refreshWatchlist: () => Promise<void>;
-  addItem: (id: string) => Promise<void>;
+  addItem: (id: string, source?: 'search' | 'recommendations' | 'curated_list' | 'manual') => Promise<void>;
   removeItem: (id: string, name: string) => Promise<boolean>;
   markWatched: (id: string, watched: boolean) => Promise<void>;
   setItemMinQuality: (id: string, minQuality: '1080p' | '4k' | null) => Promise<void>;

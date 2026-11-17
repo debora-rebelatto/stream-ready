@@ -1,0 +1,48 @@
+import { api } from '../src/lib/api';
+
+describe('Feature Roadmap Poll Client API', () => {
+  const originalFetch = global.fetch;
+
+  beforeEach(() => {
+    localStorage.clear();
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true }),
+    });
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    jest.clearAllMocks();
+  });
+
+  it('submits a poll vote without custom text', async () => {
+    const res = await api.submitPollVote('notifications');
+    expect(global.fetch).toHaveBeenCalledWith('/api/poll/vote', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ option: 'notifications', customText: undefined }),
+    }));
+    expect(res.success).toBe(true);
+  });
+
+  it('submits a poll vote with custom text for other option', async () => {
+    const res = await api.submitPollVote('other', 'Audio track selector');
+    expect(global.fetch).toHaveBeenCalledWith('/api/poll/vote', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ option: 'other', customText: 'Audio track selector' }),
+    }));
+    expect(res.success).toBe(true);
+  });
+
+  it('fetches poll status for user', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ hasVoted: true, vote: { selected_option: 'tv_shows' } }),
+    });
+
+    const status = await api.getPollStatus();
+    expect(global.fetch).toHaveBeenCalledWith('/api/poll/status', expect.anything());
+    expect(status.hasVoted).toBe(true);
+    expect(status.vote?.selected_option).toBe('tv_shows');
+  });
+});

@@ -71,5 +71,14 @@ describe('authService', () => {
       expect(spy).toHaveBeenCalled();
       expect(result).toEqual(mockResponse);
     });
+
+    test('deleteAccount deve chamar api.deleteAccount', async () => {
+      const mockResponse = { success: true, message: 'Account deleted' };
+      const spy = jest.spyOn(api, 'deleteAccount').mockResolvedValue(mockResponse);
+
+      const result = await authService.deleteAccount();
+      expect(spy).toHaveBeenCalled();
+      expect(result).toEqual(mockResponse);
+    });
   });
 });

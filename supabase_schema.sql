@@ -36,12 +36,55 @@ CREATE TABLE IF NOT EXISTS public.watchlist_items (
 CREATE INDEX IF NOT EXISTS idx_watchlist_items_user_id ON public.watchlist_items (user_id, added_at DESC);
 CREATE INDEX IF NOT EXISTS idx_watchlist_items_ready ON public.watchlist_items (has_1080p_plus);
 
--- 3. PERMISSÕES E ROW LEVEL SECURITY (RLS)
+-- 3. TABELA DE LISTAS PERSONALIZADAS DO USUÁRIO
+CREATE TABLE IF NOT EXISTS public.watchlist_custom_lists (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.watchlist_users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  emoji TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_watchlist_custom_lists_user_id ON public.watchlist_custom_lists (user_id, created_at ASC);
+
+-- 4. TABELA DE EVENTOS DE ANALYTICS (FIRST-PARTY / ANTI-ADBLOCK)
+CREATE TABLE IF NOT EXISTS public.analytics_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES public.watchlist_users(id) ON DELETE CASCADE,
+  event_name TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_analytics_events_name_created ON public.analytics_events (event_name, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_user_id ON public.analytics_events (user_id);
+
+-- 5. TABELA DE VOTOS DA ENQUETE DE FEATURES (ROADMAP POLL)
+CREATE TABLE IF NOT EXISTS public.poll_votes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.watchlist_users(id) ON DELETE CASCADE,
+  selected_option TEXT NOT NULL,
+  custom_text TEXT DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT uq_poll_user UNIQUE (user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_poll_votes_option ON public.poll_votes (selected_option);
+CREATE INDEX IF NOT EXISTS idx_poll_votes_user ON public.poll_votes (user_id);
+
+-- 6. PERMISSÕES E ROW LEVEL SECURITY (RLS)
 GRANT ALL ON TABLE public.watchlist_users TO anon, authenticated, service_role;
 GRANT ALL ON TABLE public.watchlist_items TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.watchlist_custom_lists TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.analytics_events TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.poll_votes TO anon, authenticated, service_role;
 
 ALTER TABLE public.watchlist_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.watchlist_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.watchlist_custom_lists ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.poll_votes ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "watchlist_users_all"
   ON public.watchlist_users
@@ -52,6 +95,27 @@ CREATE POLICY "watchlist_users_all"
 
 CREATE POLICY "watchlist_items_all"
   ON public.watchlist_items
+  FOR ALL
+  TO anon, authenticated
+  USING (true)
+  WITH CHECK (true);
+
+CREATE POLICY "poll_votes_all"
+  ON public.poll_votes
+  FOR ALL
+  TO anon, authenticated
+  USING (true)
+  WITH CHECK (true);
+
+CREATE POLICY "watchlist_custom_lists_all"
+  ON public.watchlist_custom_lists
+  FOR ALL
+  TO anon, authenticated
+  USING (true)
+  WITH CHECK (true);
+
+CREATE POLICY "analytics_events_all"
+  ON public.analytics_events
   FOR ALL
   TO anon, authenticated
   USING (true)

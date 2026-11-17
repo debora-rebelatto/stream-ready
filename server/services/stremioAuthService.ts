@@ -295,12 +295,47 @@ export async function getStremioWatchedMovies(authKey: string): Promise<StremioW
   }
 }
 
+/**
+ * Remove o addon da conta oficial do Stremio ao deletar a conta
+ */
+export async function removeAccountAddon(authKey: string): Promise<boolean> {
+  if (!authKey) return false;
+  try {
+    const res = await fetch(`${STREMIO_API}/addonCollectionGet`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authKey })
+    });
+    const data: any = await res.json();
+    if (data.error || !data.result || !Array.isArray(data.result.addons)) {
+      return false;
+    }
+
+    const filteredAddons = data.result.addons.filter((a: any) =>
+      a.manifest?.id !== 'community.watchlist.quality.tracker' &&
+      !(a.transportUrl && (a.transportUrl.includes('stremiowatchlist') || a.transportUrl.includes('community.watchlist')))
+    );
+
+    const setRes = await fetch(`${STREMIO_API}/addonCollectionSet`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authKey, addons: filteredAddons })
+    });
+    const setData: any = await setRes.json();
+    return !setData.error;
+  } catch (err: any) {
+    console.warn('[StremioAuth] Could not remove addon on account deletion:', err.message);
+    return false;
+  }
+}
+
 export const stremioAuthService = {
   loginStremio,
   getUserInfo,
   installAddonToAccount,
   getAccountWatchlist,
   saveAccountWatchlist,
+  removeAccountAddon,
   getStremioWatchedMovies
 };
 

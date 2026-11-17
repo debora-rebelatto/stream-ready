@@ -25,6 +25,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { api } from '../lib/api';
+import { trackEvent } from '../lib/analytics';
 import { useToast } from '../context/useAppContext';
 import { RecommendedBanner } from './RecommendedBanner';
 
@@ -53,6 +54,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
 
   const handleCopy = () => {
     if (!manifestUrl) return;
+    trackEvent('addon_manifest_copied', { location: 'landing_page' });
     navigator.clipboard
       .writeText(manifestUrl)
       .then(() => showToast('Manifest link copied! Paste into Stremio Addons search bar.', 'success'))
@@ -62,6 +64,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
   const handleInstallClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (installUrl) {
+      trackEvent('addon_install_clicked', { location: 'landing_page' });
       showToast('🎬 Reminder: After installing in Stremio, use the search bar on this site to add movies!', 'info');
       window.location.href = installUrl;
     }

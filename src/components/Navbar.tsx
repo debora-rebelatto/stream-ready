@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, useToast } from '../context/useAppContext';
 import { api } from '../lib/api';
-import { Settings, Copy, LogIn, LogOut, Menu, X, Play, MessageSquare, Folder } from 'lucide-react';
+import { trackEvent } from '../lib/analytics';
+import { Settings, Copy, LogIn, LogOut, Menu, X, Play, MessageSquare, Folder, Trash2 } from 'lucide-react';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
 
 interface NavbarProps {
   onOpenSettings: () => void;
   onOpenLogin: () => void;
   onOpenLists?: () => void;
+  onOpenDeleteAccount?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onOpenLists }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onOpenLists, onOpenDeleteAccount }) => {
   const { user, logout, isLoading: isAuthLoading } = useAuth();
   const { showToast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -32,6 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
 
   const handleCopy = () => {
     if (!manifestUrl) return;
+    trackEvent('addon_manifest_copied', { location: 'navbar' });
     navigator.clipboard
       .writeText(manifestUrl)
       .then(() => showToast('Manifest link copied! Paste into Stremio Addons search bar.', 'success'))
@@ -41,6 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
   const handleInstallClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (installUrl) {
+      trackEvent('addon_install_clicked', { location: 'navbar' });
       showToast('🎬 Reminder: After installing in Stremio, use the search bar on this site to add movies!', 'info');
       window.location.href = installUrl;
     }
@@ -154,6 +158,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
               >
                 <LogOut size={13} />
               </button>
+              {onOpenDeleteAccount && (
+                <button
+                  onClick={onOpenDeleteAccount}
+                  className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
+                  title="Delete Account & Wipe Data"
+                  aria-label="Delete Account & Wipe Data"
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
             </div>
           ) : (
             <button
@@ -173,19 +187,34 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
           {/* User Profile / Login row */}
           {user ? (
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#151824] border border-white/10">
-              <div className="flex items-center gap-2 truncate">
+              <div className="flex items-center gap-2 truncate max-w-[170px]">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
                 <span className="text-xs text-gray-200 truncate font-medium">{user.email}</span>
               </div>
-              <button
-                onClick={() => {
-                  logout();
-                  setMobileMenuOpen(false);
-                }}
-                className="text-xs font-semibold text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 transition-colors"
-              >
-                Sign Out
-              </button>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => {
+                    logout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-xs font-semibold text-gray-400 hover:text-gray-200 px-2 py-1 rounded hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  Sign Out
+                </button>
+                {onOpenDeleteAccount && (
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenDeleteAccount();
+                    }}
+                    className="text-xs font-semibold text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 transition-colors flex items-center gap-1 cursor-pointer"
+                    title="Delete Account & Wipe Data"
+                  >
+                    <Trash2 size={12} />
+                    <span>Delete</span>
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <button

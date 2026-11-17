@@ -128,7 +128,7 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({ className 
     }
     setIsAddingId(movieId);
     try {
-      await addItem(movieId);
+      await addItem(movieId, 'recommendations');
       showToast(`🎬 "${movieName}" added to your watchlist!`, 'success');
     } catch {
       showToast(`Failed to add "${movieName}"`, 'error');

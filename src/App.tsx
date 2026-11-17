@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { isItemReady, isItemUnreleased } from './lib/utils';
+import { trackEvent } from './lib/analytics';
 import { useAuth, useWatchlist } from './context/useAppContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { RecommendedBanner } from './components/RecommendedBanner';
 import { SearchSection } from './components/SearchSection';
+import { FeaturePollCard } from './components/FeaturePollCard';
 import { MovieCard } from './components/MovieCard';
 import { LoginModal } from './components/LoginModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ManageListsModal } from './components/ManageListsModal';
 import { DeleteMovieModal } from './components/DeleteMovieModal';
+import { DeleteAccountModal } from './components/DeleteAccountModal';
 import { LandingPage } from './components/LandingPage';
 import { GitHubSponsorButton } from './components/GitHubSponsorButton';
 import { ToastContainer } from './components/ToastContainer';
@@ -17,7 +20,7 @@ import { Pagination } from './components/Pagination';
 import { RotateCw, Film, Eye, Folder, FolderPlus, Search, ArrowUpDown, Filter, X, Sparkles } from 'lucide-react';
 
 export const App: React.FC = () => {
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, deleteAccount, isLoading: isAuthLoading } = useAuth();
   const {
     items,
     stats,
@@ -71,6 +74,24 @@ export const App: React.FC = () => {
     }
   };
 
+  // Delete account confirmation modal state
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+  const handleConfirmDeleteAccount = async () => {
+    if (isDeletingAccount) return;
+    setIsDeletingAccount(true);
+    try {
+      const res = await deleteAccount();
+      if (res.success) {
+        setIsDeleteAccountOpen(false);
+        setIsSettingsOpen(false);
+      }
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
   // New Filters & Sort states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedQuality, setSelectedQuality] = useState<string>('all');
@@ -78,6 +99,16 @@ export const App: React.FC = () => {
   const [sortBy, setSortBy] = useState<
     'added_desc' | 'added_asc' | 'rating_desc' | 'rating_asc' | 'year_desc' | 'year_asc' | 'title_asc' | 'title_desc' | 'streams_desc'
   >('added_desc');
+
+  const handleTabChange = (tab: typeof currentTab) => {
+    setCurrentTab(tab);
+    trackEvent('filter_tab_switched', { tab });
+  };
+
+  const handleSortChange = (newSort: typeof sortBy) => {
+    setSortBy(newSort);
+    trackEvent('sort_changed', { sortBy: newSort });
+  };
 
   // Filter items
   const filtered = items.filter((item) => {
@@ -260,6 +291,7 @@ export const App: React.FC = () => {
         onOpenLogin={() => setIsLoginOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenLists={() => setIsManageListsOpen(true)}
+        onOpenDeleteAccount={() => setIsDeleteAccountOpen(true)}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
@@ -275,6 +307,7 @@ export const App: React.FC = () => {
             <Hero onOpenSettings={() => setIsSettingsOpen(true)} />
             <RecommendedBanner />
             <SearchSection />
+            <FeaturePollCard watchlistCount={items.length} userEmail={user?.email} />
 
             {/* Custom Lists Bar */}
             <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none">
@@ -367,7 +400,7 @@ export const App: React.FC = () => {
             <div ref={listTopRef} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
               <div className="flex items-center gap-1 bg-[#151824] p-1 rounded-xl border border-white/5 overflow-x-auto">
                 <button
-                  onClick={() => setCurrentTab('all')}
+                  onClick={() => handleTabChange('all')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                     currentTab === 'all'
                       ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 shadow-sm'
@@ -377,7 +410,7 @@ export const App: React.FC = () => {
                   📋 All ({stats.total})
                 </button>
                 <button
-                  onClick={() => setCurrentTab('ready')}
+                  onClick={() => handleTabChange('ready')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                     currentTab === 'ready'
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm'
@@ -387,7 +420,7 @@ export const App: React.FC = () => {
                   🟢 Ready ({stats.ready})
                 </button>
                 <button
-                  onClick={() => setCurrentTab('pending')}
+                  onClick={() => handleTabChange('pending')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                     currentTab === 'pending'
                       ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-sm'
@@ -397,7 +430,7 @@ export const App: React.FC = () => {
                   ⏳ Waiting ({stats.pending})
                 </button>
                 <button
-                  onClick={() => setCurrentTab('unreleased')}
+                  onClick={() => handleTabChange('unreleased')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                     currentTab === 'unreleased'
                       ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-sm'
@@ -407,7 +440,7 @@ export const App: React.FC = () => {
                   📅 Unreleased ({stats.unreleased})
                 </button>
                 <button
-                  onClick={() => setCurrentTab('watched')}
+                  onClick={() => handleTabChange('watched')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                     currentTab === 'watched'
                       ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-sm'
@@ -500,7 +533,7 @@ export const App: React.FC = () => {
                   <div className="relative flex items-center">
                     <select
                       value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as any)}
+                      onChange={(e) => handleSortChange(e.target.value as any)}
                       className="bg-[#1e2235] border border-white/10 rounded-xl px-3 py-2 text-xs text-purple-300 font-medium focus:outline-none focus:border-purple-500/60 cursor-pointer hover:border-white/20 transition-colors"
                     >
                       <option value="added_desc">↕️ Added: Newest First</option>
@@ -622,7 +655,11 @@ export const App: React.FC = () => {
 
       {/* Modals & Toast */}
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onOpenDeleteAccount={() => setIsDeleteAccountOpen(true)}
+      />
       <ManageListsModal
         isOpen={isManageListsOpen}
         onClose={() => setIsManageListsOpen(false)}
@@ -636,6 +673,13 @@ export const App: React.FC = () => {
         onConfirm={handleConfirmDelete}
         onClose={() => setMovieToDelete(null)}
         isDeleting={isDeletingMovie}
+      />
+      <DeleteAccountModal
+        isOpen={isDeleteAccountOpen}
+        userEmail={user?.email}
+        onConfirm={handleConfirmDeleteAccount}
+        onClose={() => setIsDeleteAccountOpen(false)}
+        isDeleting={isDeletingAccount}
       />
       <ToastContainer />
 

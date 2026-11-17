@@ -1,15 +1,16 @@
 import React from 'react';
 import { useWatchlist, useToast, useAuth } from '../context/useAppContext';
 import { watchlistService } from '../services/watchlistService';
-import { X, BookOpen, Download, Upload, Sliders, Tv, Eye, RefreshCw, Info, Heart } from 'lucide-react';
+import { X, BookOpen, Download, Upload, Sliders, Tv, Eye, RefreshCw, Info, Heart, AlertTriangle, Trash2 } from 'lucide-react';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenDeleteAccount?: () => void;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onOpenDeleteAccount }) => {
   const {
     refreshWatchlist,
     globalMinQuality,
@@ -347,6 +348,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               </label>
             </div>
           </div>
+
+          {/* Danger Zone: Delete Account */}
+          {user && (
+            <div className="p-4 rounded-xl bg-red-950/20 border border-red-500/20 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-red-400 flex items-center gap-2">
+                  <AlertTriangle size={16} />
+                  Danger Zone
+                </span>
+                <span className="text-[11px] text-gray-400 truncate max-w-[180px]" title={user.email}>
+                  {user.email}
+                </span>
+              </div>
+              <p className="text-[10.5px] text-gray-400 leading-relaxed">
+                Permanently delete your account and bulldoze all stored movies, custom lists, and watch history from the database. This action is irreversible.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  if (onOpenDeleteAccount) {
+                    onOpenDeleteAccount();
+                  }
+                }}
+                className="w-full inline-flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-red-600/15 hover:bg-red-600/25 text-red-300 hover:text-red-200 border border-red-500/30 text-xs font-semibold cursor-pointer transition-all"
+              >
+                <Trash2 size={13} />
+                Delete Account & Wipe Data
+              </button>
+            </div>
+          )}
 
           {/* Support / GitHub Sponsors */}
           <div className="p-4 rounded-xl bg-gradient-to-r from-purple-950/30 to-[#1f2438] border border-purple-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">

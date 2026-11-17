@@ -18,6 +18,10 @@ export const authService = {
     return api.logout();
   },
 
+  async deleteAccount(): Promise<{ success: boolean; message?: string; error?: string }> {
+    return api.deleteAccount();
+  },
+
   async installToAccount(): Promise<{ success: boolean; message?: string; error?: string }> {
     return api.installToAccount();
   },
