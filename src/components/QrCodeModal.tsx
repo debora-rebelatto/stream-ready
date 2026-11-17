@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
-import { X, QrCode, Smartphone, Tv, Copy, Check, ExternalLink, Download, Sparkles } from 'lucide-react';
+import { X, QrCode, Smartphone, Tv, Copy, Check, ExternalLink, Download } from 'lucide-react';
 import { useToast } from '../context/useAppContext';
 import { trackEvent } from '../lib/analytics';
 

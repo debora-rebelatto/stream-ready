@@ -15,7 +15,6 @@ import {
   Check,
   Eye,
   Flame,
-  Search,
   SlidersHorizontal,
   Info,
   QrCode
@@ -150,7 +149,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* 1. HERO SECTION */}
       <section className="relative text-center max-w-4xl mx-auto pt-4 sm:pt-10 px-4">
         {/* Ambient background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-87.5 bg-gradient-to-tr from-purple-600/25 via-indigo-600/15 to-transparent blur-[140px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-87.5 bg-linear-to-tr from-purple-600/25 via-indigo-600/15 to-transparent blur-[140px] rounded-full pointer-events-none -z-10" />
 
         {/* Top Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/25 text-purple-300 text-xs font-semibold mb-6 shadow-sm">
@@ -161,7 +160,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {/* Main Headline */}
         <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.08] mb-6">
           Never watch a blurry <br className="hidden sm:inline" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-rose-300 to-amber-300 line-through decoration-red-500/80 mr-3">
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-red-400 via-rose-300 to-amber-300 line-through decoration-red-500/80 mr-3">
             CAM recording
           </span>
           again.
@@ -191,7 +190,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-10">
           <button
             onClick={handleOpenLogin}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-gradient-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white font-bold text-sm shadow-[0_0_30px_rgba(123,66,246,0.55)] hover:shadow-[0_0_40px_rgba(123,66,246,0.75)] transition-all cursor-pointer transform hover:-translate-y-0.5"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-linear-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white font-bold text-sm shadow-[0_0_30px_rgba(123,66,246,0.55)] hover:shadow-[0_0_40px_rgba(123,66,246,0.75)] transition-all cursor-pointer transform hover:-translate-y-0.5"
           >
             <Sparkles size={17} />
             <span>Connect Stremio & Start Tracking</span>
@@ -245,7 +244,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* RECOMMENDED TO WATCH BANNER */}
       <section className="max-w-5xl mx-auto px-4 -mt-10 sm:-mt-14">
-        <RecommendedBanner onOpenLogin={onOpenLogin} />
+        <RecommendedBanner onOpenLogin={handleOpenLogin} />
       </section>
 
       {/* 2. THE PROBLEM & SOLUTION (BEFORE VS AFTER) */}
@@ -483,7 +482,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div key={idx} className="transition-colors">
                 <button
                   onClick={() => setOpenFaq(isOpen ? null : idx)}
-                  className="w-full p-4 sm:p-5 flex items-center justify-between gap-4 text-left hover:bg-white/[0.02] cursor-pointer"
+                  className="w-full p-4 sm:p-5 flex items-center justify-between gap-4 text-left hover:bg-white/2 cursor-pointer"
                 >
                   <span className="text-sm font-semibold text-white">{faq.q}</span>
                   <span className="text-gray-400 shrink-0">
@@ -503,7 +502,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* 8. BOTTOM CONVERSION CTA */}
       <section className="max-w-4xl mx-auto px-4 pb-12">
-        <div className="relative rounded-3xl bg-gradient-to-r from-purple-900/60 via-[#181a28] to-indigo-900/60 border border-purple-500/30 p-8 sm:p-12 text-center shadow-2xl overflow-hidden">
+        <div className="relative rounded-3xl bg-linear-to-r from-purple-900/60 via-[#181a28] to-indigo-900/60 border border-purple-500/30 p-8 sm:p-12 text-center shadow-2xl overflow-hidden">
           <div className="absolute inset-0 bg-radial-gradient from-purple-500/10 via-transparent to-transparent pointer-events-none" />
 
           <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-4">
@@ -516,7 +515,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={handleOpenLogin}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white font-bold text-sm shadow-[0_0_25px_rgba(123,66,246,0.6)] transition-all cursor-pointer transform hover:-translate-y-0.5"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-linear-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white font-bold text-sm shadow-[0_0_25px_rgba(123,66,246,0.6)] transition-all cursor-pointer transform hover:-translate-y-0.5"
             >
               <Sparkles size={16} />
               <span>Get Started Now — It's Free</span>
@@ -583,8 +582,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <QrCodeModal
         isOpen={isQrModalOpen}
         onClose={() => setIsQrModalOpen(false)}
-        installUrl={installUrl}
         manifestUrl={manifestUrl}
+        installUrl={installUrl}
       />
     </div>
   );

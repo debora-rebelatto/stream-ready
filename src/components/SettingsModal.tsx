@@ -10,7 +10,6 @@ import {
   Tv,
   Eye,
   RefreshCw,
-  Info,
   Heart,
   AlertTriangle,
   Trash2,

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import type { WatchlistItem } from '../types';
 import { formatQualityLabel, isItemReady, isItemNewRelease, isItemUnreleased } from '../lib/utils';
 import { useWatchlist } from '../context/useAppContext';
-import { Trash2, Star, CheckCircle, Clock, Calendar, Eye, EyeOff, Flame, SlidersHorizontal, RotateCcw, Folder, Check } from 'lucide-react';
+import { Badge } from './Badge';
+import { Trash2, Star, CheckCircle, Clock, Calendar, Eye, Flame, SlidersHorizontal, RotateCcw, Folder, Check } from 'lucide-react';
 
 interface MovieCardProps {
   item: WatchlistItem;
@@ -90,25 +91,56 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
         {/* Status Badge (Top-Left) */}
         <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start">
           {isWatched ? (
-            <div className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-md flex items-center gap-1 bg-purple-900/90 text-purple-200 border border-purple-500/40">
-              <Eye size={10} /> Watched
-            </div>
+            <Badge
+              variant="purple"
+              size="sm"
+              uppercase
+              icon={<Eye size={10} />}
+              className="backdrop-blur-md shadow-md bg-purple-900/90 text-purple-200 border-purple-500/40"
+            >
+              Watched
+            </Badge>
           ) : isNew ? (
-            <div className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-lg flex items-center gap-1 bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 text-white border border-amber-300 animate-pulse">
-              <Flame size={11} className="fill-current text-yellow-200" /> NEW RELEASE
-            </div>
+            <Badge
+              variant="gradient"
+              size="sm"
+              uppercase
+              icon={<Flame size={11} className="fill-current text-yellow-200" />}
+              pulse
+              className="backdrop-blur-md"
+            >
+              NEW RELEASE
+            </Badge>
           ) : ready ? (
-            <div className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-md flex items-center gap-1 bg-emerald-500/90 text-white border border-emerald-400/40">
-              <CheckCircle size={10} /> Good Quality
-            </div>
+            <Badge
+              variant="emerald"
+              size="sm"
+              uppercase
+              icon={<CheckCircle size={10} />}
+              className="backdrop-blur-md shadow-md bg-emerald-500/90 text-white border-emerald-400/40"
+            >
+              Good Quality
+            </Badge>
           ) : unreleased ? (
-            <div className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-md flex items-center gap-1 bg-blue-600/90 text-white border border-blue-400/40">
-              <Calendar size={10} /> Unreleased
-            </div>
+            <Badge
+              variant="blue"
+              size="sm"
+              uppercase
+              icon={<Calendar size={10} />}
+              className="backdrop-blur-md shadow-md bg-blue-600/90 text-white border-blue-400/40"
+            >
+              Unreleased
+            </Badge>
           ) : (
-            <div className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-md flex items-center gap-1 bg-amber-500/90 text-black border border-amber-300/40">
-              <Clock size={10} /> Waiting
-            </div>
+            <Badge
+              variant="amber"
+              size="sm"
+              uppercase
+              icon={<Clock size={10} />}
+              className="backdrop-blur-md shadow-md bg-amber-500/90 text-black border-amber-300/40"
+            >
+              Waiting
+            </Badge>
           )}
         </div>
 
@@ -154,13 +186,14 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
               {item.year || 'No year'}
             </span>
             {item.imdbRating && String(item.imdbRating) !== 'N/A' && String(item.imdbRating).trim() !== '' ? (
-              <span
-                className="inline-flex items-center gap-1 text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded text-[11px] border border-amber-500/20 shadow-xs"
+              <Badge
+                variant="amber"
+                size="xs"
+                icon={<Star size={11} className="fill-amber-400 text-amber-400" />}
                 title={`IMDb Rating: ${item.imdbRating}/10`}
               >
-                <Star size={11} className="fill-amber-400 text-amber-400" />
-                <span>{item.imdbRating}</span>
-              </span>
+                {item.imdbRating}
+              </Badge>
             ) : (
               <span className="inline-flex items-center gap-1 text-gray-500 text-[11px]" title="No rating yet">
                 <Star size={11} className="text-gray-500" />

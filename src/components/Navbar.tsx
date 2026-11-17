@@ -4,6 +4,8 @@ import { api } from '../lib/api';
 import { trackEvent } from '../lib/analytics';
 import { Settings, Copy, LogIn, LogOut, Menu, X, Play, MessageSquare, Folder, QrCode } from 'lucide-react';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
+import { Button } from './Button';
+import { Badge } from './Badge';
 
 interface NavbarProps {
   onOpenSettings?: () => void;
@@ -19,7 +21,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenLogin,
   onOpenInstallGuide,
   onOpenLists,
-  onOpenDeleteAccount,
   onOpenQrModal
 }) => {
   const { user, logout, isLoading: isAuthLoading } = useAuth();
@@ -79,9 +80,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <h1 className="text-base sm:text-lg font-bold tracking-tight text-white whitespace-nowrap">
               Stremio Watchlist
             </h1>
-            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30">
+            <Badge variant="amber" size="xs" uppercase>
               BETA
-            </span>
+            </Badge>
           </div>
         </div>
 
@@ -118,39 +119,43 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* QR Code Modal Trigger */}
           {onOpenQrModal && (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onOpenQrModal}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white border border-white/10 transition-all cursor-pointer"
+              icon={<QrCode size={13} className="text-purple-400" />}
               title="Scan QR Code to open on Mobile or TV"
             >
-              <QrCode size={13} className="text-purple-400" />
-              <span>QR Code</span>
-            </button>
+              QR Code
+            </Button>
           )}
 
           {/* User Custom Lists (if authenticated) */}
           {user && onOpenLists && (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-white border-purple-500/25"
               onClick={onOpenLists}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-white border border-purple-500/25 transition-all cursor-pointer"
+              icon={<Folder size={13} />}
               title="Manage custom lists"
             >
-              <Folder size={13} />
-              <span>Lists</span>
-            </button>
+              Lists
+            </Button>
           )}
 
           {/* Quick Utility Icon Buttons (Settings & Feedback) */}
           <div className="flex items-center gap-1">
             {onOpenSettings && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
+                isIconOnly
                 onClick={onOpenSettings}
-                className="p-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 border border-white/10 transition-colors cursor-pointer"
+                icon={<Settings size={15} />}
                 title="Settings & Guide"
                 aria-label="Settings & Guide"
-              >
-                <Settings size={15} />
-              </button>
+              />
             )}
 
             <a
@@ -199,13 +204,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               
             </div>
           ) : (
-            <button
+            <Button
+              variant="primary"
+              size="sm"
               onClick={onOpenLogin}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-linear-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white shadow-sm border border-white/15 transition-all cursor-pointer"
+              icon={<LogIn size={13} />}
             >
-              <LogIn size={13} />
-              <span>Sign In</span>
-            </button>
+              Sign In
+            </Button>
           )}
         </div>
       </div>
@@ -238,7 +244,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           ) : (
             <button
               onClick={() => {
-                onOpenLogin();
+                onOpenLogin?.();
                 setMobileMenuOpen(false);
               }}
               className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-xl from-[#7b42f6] to-indigo-600 text-white"

@@ -20,6 +20,7 @@ export interface EventDataMap {
   curated_list_added: { listName: string; addedMoviesCount?: number };
   auth_login_success: { method: 'credentials' | 'authKey' };
   auth_logout: { reason?: string } | Record<string, never>;
+  account_deleted: Record<string, never>;
   feedback_link_clicked: { location: string };
   sponsor_clicked: { location: string };
   poll_voted: { option: string; hasCustomText: boolean };
@@ -34,15 +35,9 @@ export type EventName = keyof EventDataMap;
 export const TRACKING_DISABLED_KEY = 'stremio_tracking_disabled';
 export const EXCLUDED_EMAILS_KEY = 'stremio_excluded_tracking_emails';
 
-export const BUILTIN_EXCLUDED_EMAILS = [
-  'debyr.dbr@gmail.com',
-  'deborarebelatto1@gmail.com'
-];
-
-export const BUILTIN_EXCLUDED_USER_IDS = [
-  'aa1bdc75-f539-4e11-8c90-510c0e998ce8',
-  '0ae027a6-56e6-41d5-a25b-86fc1e04aed4'
-];
+// Built-in excluded accounts (empty by default; configure via EXCLUDED_TRACKING_* env vars)
+export const BUILTIN_EXCLUDED_EMAILS: string[] = [];
+export const BUILTIN_EXCLUDED_USER_IDS: string[] = [];
 
 let isPostHogInitialized = false;
 
@@ -119,6 +114,23 @@ export function getExcludedTrackingEmails(): string[] {
 }
 
 /**
+ * Parses and returns the list of excluded user IDs from environment variables.
+ */
+export function getExcludedTrackingUserIds(): string[] {
+  const idsSet = new Set<string>(BUILTIN_EXCLUDED_USER_IDS.map((id) => id.toLowerCase()));
+
+  const envVal = getEnvVar('VITE_EXCLUDED_TRACKING_USER_IDS') || getEnvVar('EXCLUDED_TRACKING_USER_IDS');
+  if (envVal) {
+    envVal.split(',').forEach((id) => {
+      const clean = id.trim().toLowerCase();
+      if (clean) idsSet.add(clean);
+    });
+  }
+
+  return Array.from(idsSet);
+}
+
+/**
  * Saves list of excluded emails to localStorage and immediately opts out if current user is excluded.
  */
 export function setExcludedTrackingEmails(emails: string[]): void {
@@ -143,19 +155,20 @@ export function isTrackingBlocked(targetEmailOrId?: string): boolean {
     return true;
   }
 
-  const excluded = getExcludedTrackingEmails();
+  const excludedEmails = getExcludedTrackingEmails();
+  const excludedIds = getExcludedTrackingUserIds();
 
   // 2. Target email or user ID check
   if (targetEmailOrId) {
     const target = String(targetEmailOrId).trim().toLowerCase();
-    if (excluded.includes(target) || BUILTIN_EXCLUDED_USER_IDS.includes(target)) {
+    if (excludedEmails.includes(target) || excludedIds.includes(target)) {
       return true;
     }
   }
 
   // 3. Current authenticated user in localStorage
   const currentEmail = safeStorage.get('stremioEmail')?.trim().toLowerCase();
-  if (currentEmail && excluded.includes(currentEmail)) {
+  if (currentEmail && excludedEmails.includes(currentEmail)) {
     return true;
   }
 

@@ -141,14 +141,6 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({ className 
     return null;
   }
 
-  // Clean Quality Badge text: Avoid redundant "Coming Soon" or "Unreleased" repetitions
-  const getQualityText = () => {
-    if (currentMovie.isReady) {
-      return currentMovie.qualityBadge || 'Ready to Watch';
-    }
-    return 'Coming Soon';
-  };
-
   return (
     <div
       id="recommended-banner"
@@ -188,8 +180,8 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({ className 
         })}
 
         {/* Cinematic Vignette & Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0c0d14] via-[#0c0d14]/75 sm:via-[#0c0d14]/40 to-transparent z-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0c0d14] via-[#0c0d14]/90 sm:via-[#0c0d14]/70 md:via-[#0c0d14]/40 to-transparent z-10" />
+        <div className="absolute inset-0 bg-linear-to-t from-[#0c0d14] via-[#0c0d14]/75 sm:via-[#0c0d14]/40 to-transparent z-10" />
+        <div className="absolute inset-0 bg-linear-to-r from-[#0c0d14] via-[#0c0d14]/90 sm:via-[#0c0d14]/70 md:via-[#0c0d14]/40 to-transparent z-10" />
 
         {/* Top Controls: Minimal Header + Slide Switcher */}
         <div className="absolute top-4 left-4 sm:left-6 right-4 sm:right-6 flex items-center justify-between z-20">
@@ -262,7 +254,7 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({ className 
             {currentMovie.genres && currentMovie.genres.length > 0 && (
               <>
                 <span className="text-gray-500">•</span>
-                <span className="text-gray-300 truncate max-w-50 sm:max-w-none">
+                <span className="text-gray-300 truncate max-w-[200px] sm:max-w-none">
                   {currentMovie.genres.slice(0, 3).join(', ')}
                 </span>
               </>

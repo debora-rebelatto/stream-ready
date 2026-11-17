@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Plus, Check, X, Film, ChevronRight, Tv, Compass, QrCode } from 'lucide-react';
+import { Sparkles, Plus, X, Film, ChevronRight, Tv, Compass, QrCode, Search } from 'lucide-react';
 import { CURATED_RECOMMENDED_MOVIES } from '../lib/recommendations';
 import { useWatchlist, useToast } from '../context/useAppContext';
 import { trackEvent } from '../lib/analytics';
+import { Button } from './Button';
 
 export const ONBOARDING_DISMISS_KEY = 'stremio_onboarding_dismissed';
 const COOLDOWN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -15,8 +16,8 @@ interface OnboardingCalloutProps {
 
 export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
   onScrollToRecommendations,
-  onFocusSearch,
   onOpenQrModal,
+  onFocusSearch,
 }) => {
   const { items: watchlistItems, addItem } = useWatchlist();
   const { showToast } = useToast();
@@ -209,6 +210,28 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
                 <span>Browse All</span>
                 <ChevronRight size={13} />
               </button>
+
+              {onFocusSearch && (
+                <button
+                  onClick={onFocusSearch}
+                  className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer"
+                  title="Search movies to add"
+                >
+                  <Search size={13} className="text-purple-400" />
+                  <span>Search</span>
+                </button>
+              )}
+
+              {onOpenQrModal && (
+                <button
+                  onClick={onOpenQrModal}
+                  className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer"
+                  title="Scan QR Code to open on mobile"
+                >
+                  <QrCode size={13} className="text-purple-400" />
+                  <span>Mobile QR</span>
+                </button>
+              )}
             </div>
           </div>
 

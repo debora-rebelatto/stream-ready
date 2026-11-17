@@ -314,8 +314,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await authService.deleteAccount();
       if (res.success) {
-        trackEvent('account_deleted' as any, {});
-        resetUser();
+        trackEvent('account_deleted', {});
+        resetAnalyticsUser();
         authService.clearAuth();
         setUser(null);
         setItems([]);
@@ -502,7 +502,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           )
         );
         if (res.stats) setStats(res.stats);
-        capturePostHog('watchlist_item_watched', { status: watched ? 'watched' : 'active' });
         showToast(
           watched ? '👁️ Movie moved to Watched History.' : '↩️ Movie restored to active watchlist.',
           'success'
@@ -521,9 +520,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           prev.map((i) => (i.id === id ? { ...i, minQuality } : i))
         );
         if (res.stats) setStats(res.stats);
-        capturePostHog('watchlist_quality_target_updated', {
+        trackEvent('quality_setting_updated', {
+          minQuality: minQuality || 'default',
           scope: 'item',
-          quality_target: minQuality || 'default',
+          imdbId: id
         });
         showToast(`Target quality set to ${minQuality ? minQuality.toUpperCase() : 'Default'}.`, 'success');
       }
@@ -561,7 +561,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.createCustomList(name, emoji);
       if (res.success && res.list) {
-        capturePostHog('custom_list_created', {});
         trackEvent('custom_list_created', { listName: res.list.name });
         setCustomLists((prev) => [...prev, res.list]);
         showToast(`📁 List "${res.list.name}" created successfully!`, 'success');
@@ -672,16 +671,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.addCuratedList(id);
       if (res.success && res.list) {
-        capturePostHog('curated_list_added', { added_movies_count: res.addedMoviesCount ?? 0 });
-        trackEvent('curated_list_added', { listName: res.list.name || id });
-        showToast(`Added "${res.list.name || 'Standard List'}" (${res.addedMoviesCount ?? 0} new movies)!`, 'success');
+        const addedList = res.list;
+        trackEvent('curated_list_added', { listName: addedList.name || id, addedMoviesCount: res.addedMoviesCount ?? 0 });
+        showToast(`Added "${addedList.name || 'Standard List'}" (${res.addedMoviesCount ?? 0} new movies)!`, 'success');
 
         // Optimistically update customLists and curatedLists immediately for instant UI response
         setCustomLists((prev) => {
-          if (prev.some((cl) => cl.id === res.list.id || cl.name.trim().toLowerCase() === res.list.name.trim().toLowerCase())) {
+          if (prev.some((cl) => cl.id === addedList.id || cl.name.trim().toLowerCase() === addedList.name.trim().toLowerCase())) {
             return prev;
           }
-          return [...prev, res.list];
+          return [...prev, addedList];
         });
 
         setCuratedLists((prev) =>

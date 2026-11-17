@@ -18,6 +18,8 @@ import { DeleteMovieModal } from './DeleteMovieModal';
 import { DeleteAccountModal } from './DeleteAccountModal';
 import { InstallGuideModal } from './InstallGuideModal';
 import { QrCodeModal } from './QrCodeModal';
+import { Button } from './Button';
+import { Badge } from './Badge';
 import { RotateCw, Eye, Folder, FolderPlus, Search, X, Sparkles } from 'lucide-react';
 
 export const UserDashboard: React.FC = () => {
@@ -327,16 +329,13 @@ export const UserDashboard: React.FC = () => {
             <span>Lists:</span>
           </div>
 
-          <button
+          <Button
+            variant="pill"
+            active={activeCustomListId === null}
             onClick={() => setActiveCustomListId(null)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
-              activeCustomListId === null
-                ? 'bg-purple-600 text-white shadow-md shadow-purple-900/30'
-                : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
-            }`}
           >
             All Lists
-          </button>
+          </Button>
 
           {customLists.map((l) => {
             const count = items.filter(
@@ -344,49 +343,44 @@ export const UserDashboard: React.FC = () => {
             ).length;
             const isSelected = activeCustomListId === l.id;
             return (
-              <button
+              <Button
                 key={l.id}
+                variant="pill"
+                active={isSelected}
                 onClick={() => setActiveCustomListId(isSelected ? null : l.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
-                  isSelected
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-900/30'
-                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
-                }`}
+                icon={<span>{l.emoji || '📁'}</span>}
+                badge={count}
               >
-                <span>{l.emoji || '📁'}</span>
-                <span>{l.name}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  isSelected ? 'bg-purple-800 text-purple-200' : 'bg-white/10 text-gray-400'
-                }`}>
-                  {count}
-                </span>
-              </button>
+                {l.name}
+              </Button>
             );
           })}
 
-          <button
+          <Button
+            variant="indigo"
+            className="rounded-xl shrink-0"
             onClick={() => {
               setManageListsTab('standard');
               setIsManageListsOpen(true);
             }}
-            className="px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 flex items-center gap-1.5 shrink-0"
+            icon={<Sparkles size={13} />}
             title="Explore and add standard streaming lists (Netflix, Disney+, HBO Max, etc.)"
           >
-            <Sparkles size={13} />
-            <span>⭐ Standard Lists</span>
-          </button>
+            ⭐ Standard Lists
+          </Button>
 
-          <button
+          <Button
+            variant="outline"
+            className="rounded-xl text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20 shrink-0"
             onClick={() => {
               setManageListsTab('custom');
               setIsManageListsOpen(true);
             }}
-            className="px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 flex items-center gap-1.5 shrink-0"
+            icon={<FolderPlus size={13} />}
             title="Create and manage custom lists"
           >
-            <FolderPlus size={13} />
-            <span>+ Custom List</span>
-          </button>
+            + Custom List
+          </Button>
         </div>
 
         {/* Active List Indicator Banner */}
@@ -410,69 +404,60 @@ export const UserDashboard: React.FC = () => {
         {/* Filter Tabs & Header */}
         <div ref={listTopRef} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-1 bg-[#151824] p-1 rounded-xl border border-white/5 overflow-x-auto">
-            <button
+            <Button
+              variant="tab"
+              tabTheme="blue"
+              active={currentTab === 'all'}
               onClick={() => handleTabChange('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                currentTab === 'all'
-                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
             >
               📋 All ({stats.total})
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="tab"
+              tabTheme="emerald"
+              active={currentTab === 'ready'}
               onClick={() => handleTabChange('ready')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                currentTab === 'ready'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
             >
               🟢 Ready ({stats.ready})
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="tab"
+              tabTheme="amber"
+              active={currentTab === 'pending'}
               onClick={() => handleTabChange('pending')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                currentTab === 'pending'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
             >
               ⏳ Waiting ({stats.pending})
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="tab"
+              tabTheme="rose"
+              active={currentTab === 'unreleased'}
               onClick={() => handleTabChange('unreleased')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                currentTab === 'unreleased'
-                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
             >
               📅 Unreleased ({stats.unreleased})
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="tab"
+              tabTheme="purple"
+              active={currentTab === 'watched'}
               onClick={() => handleTabChange('watched')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                currentTab === 'watched'
-                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
             >
               👁️ Watched ({stats.watched})
-            </button>
+            </Button>
           </div>
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="secondary"
               onClick={recheckAll}
               disabled={isCheckingAll}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#1f2438] hover:bg-[#252b42] text-gray-200 border border-white/10 transition-all cursor-pointer disabled:opacity-50"
+              isLoading={isCheckingAll}
+              icon={<RotateCw size={13} />}
               title="Check Torrentio sources for all movies right now"
             >
-              <RotateCw size={13} className={isCheckingAll ? 'animate-spin text-purple-400' : ''} />
-              {isCheckingAll ? 'Checking...' : 'Check All Now'}
-            </button>
+              Check All Now
+            </Button>
           </div>
         </div>
 
@@ -521,23 +506,24 @@ export const UserDashboard: React.FC = () => {
 
               {/* Include Watched toggle (only shown in 'All' tab) */}
               {currentTab === 'all' && (
-                <button
+                <Button
                   type="button"
-                  onClick={() => setIncludeWatchedInAll(!includeWatchedInAll)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                  variant="outline"
+                  className={`rounded-xl px-3 py-2 font-semibold ${
                     includeWatchedInAll
                       ? 'bg-purple-600/20 text-purple-300 border-purple-500/40 hover:bg-purple-600/30'
                       : 'bg-[#1e2235] text-gray-400 border-white/10 hover:text-gray-200'
                   }`}
+                  onClick={() => setIncludeWatchedInAll(!includeWatchedInAll)}
+                  icon={<Eye size={13} className={includeWatchedInAll ? 'text-purple-400' : 'text-gray-400'} />}
                   title={
                     includeWatchedInAll
                       ? 'Hide watched movies in All view'
                       : 'Include watched movies in All view'
                   }
                 >
-                  <Eye size={13} className={includeWatchedInAll ? 'text-purple-400' : 'text-gray-400'} />
-                  <span>{includeWatchedInAll ? 'With Watched' : 'Hide Watched'}</span>
-                </button>
+                  {includeWatchedInAll ? 'With Watched' : 'Hide Watched'}
+                </Button>
               )}
 
               {/* Sort By */}
@@ -561,14 +547,15 @@ export const UserDashboard: React.FC = () => {
 
               {/* Clear Filters Button */}
               {hasActiveFilters && (
-                <button
+                <Button
+                  variant="danger"
+                  className="rounded-xl px-2.5 py-2 font-semibold"
                   onClick={clearFilters}
-                  className="px-2.5 py-2 rounded-xl text-xs font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-colors flex items-center gap-1 cursor-pointer"
+                  icon={<X size={12} />}
                   title="Reset all filters"
                 >
-                  <X size={12} />
-                  <span>Clear</span>
-                </button>
+                  Clear
+                </Button>
               )}
             </div>
           </div>
@@ -580,9 +567,9 @@ export const UserDashboard: React.FC = () => {
               {hasActiveFilters && ' (filtered)'}
             </span>
             {hasActiveFilters && (
-              <span className="text-purple-400 text-[10px]">
+              <Badge variant="purple" size="xs">
                 Filters applied
-              </span>
+              </Badge>
             )}
           </div>
         </div>
@@ -632,37 +619,40 @@ export const UserDashboard: React.FC = () => {
             </p>
             {items.length === 0 && !hasActiveFilters && (
               <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
-                <button
+                <Button
+                  variant="primary"
+                  className="font-bold shadow-lg shadow-purple-900/30"
                   onClick={() => {
                     const el = document.getElementById('recommended-banner');
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-900/30 transition-all cursor-pointer inline-flex items-center gap-1.5"
+                  icon={<Sparkles size={14} />}
                 >
-                  <Sparkles size={14} />
-                  <span>Explore Recommendations</span>
-                </button>
-                <button
+                  Explore Recommendations
+                </Button>
+                <Button
+                  variant="outline"
+                  className="hover:text-white"
                   onClick={() => {
                     window.scrollTo({ top: 350, behavior: 'smooth' });
                     const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
                     if (searchInput) searchInput.focus();
                   }}
-                  className="px-4 py-2 rounded-xl text-xs font-medium bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                  icon={<Search size={14} />}
                 >
-                  <Search size={14} />
-                  <span>Search Movies</span>
-                </button>
+                  Search Movies
+                </Button>
               </div>
             )}
             {hasActiveFilters && (
-              <button
+              <Button
+                variant="solid"
+                className="font-semibold px-3.5"
                 onClick={clearFilters}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                icon={<X size={12} />}
               >
-                <X size={12} />
-                <span>Clear all filters</span>
-              </button>
+                Clear all filters
+              </Button>
             )}
           </div>
         ) : (
@@ -723,8 +713,8 @@ export const UserDashboard: React.FC = () => {
       <QrCodeModal
         isOpen={isQrModalOpen}
         onClose={() => setIsQrModalOpen(false)}
-        installUrl={manifestInfo.stremioInstallUrl}
         manifestUrl={manifestInfo.manifestUrl}
+        installUrl={manifestInfo.stremioInstallUrl}
       />
 
       {/* Footer for authenticated users */}

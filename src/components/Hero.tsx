@@ -179,7 +179,7 @@ export const Hero: React.FC<HeroProps> = () => {
       </div>
 
       {/* 2. Feature Poll / Contribution Section */}
-      <div className="p-4 sm:p-5 bg-gradient-to-br from-[#181a2b] via-[#141624] to-[#0f111a]">
+      <div className="p-4 sm:p-5 bg-linear-to-br from-[#181a2b] via-[#141624] to-[#0f111a]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-300 shrink-0 mt-0.5">
@@ -250,7 +250,7 @@ export const Hero: React.FC<HeroProps> = () => {
                         className={`text-left p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 group relative ${
                           isSelected
                             ? 'bg-purple-600/20 border-purple-500 text-white shadow-sm shadow-purple-900/40'
-                            : 'bg-white/[0.03] hover:bg-white/[0.07] border-white/10 text-gray-300 hover:border-purple-500/40 hover:text-white'
+                            : 'bg-white/3 hover:bg-white/[0.07] border-white/10 text-gray-300 hover:border-purple-500/40 hover:text-white'
                         }`}
                       >
                         <div

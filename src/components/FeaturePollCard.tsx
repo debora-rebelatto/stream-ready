@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { trackEvent } from '../lib/analytics';
-import { Check, X, Send, Vote, Sparkles, MessageSquare } from 'lucide-react';
+import { Check, X, Send, Vote } from 'lucide-react';
 
 export const POLL_DISMISS_KEY = 'stremio_dismiss_poll_until';
 export const POLL_VOTED_KEY = 'stremio_poll_voted';
@@ -160,7 +160,7 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({ watchlistCount
   if (!isVisible) return null;
 
   return (
-    <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a1c2e] via-[#141624] to-[#0f111a] border border-purple-500/25 shadow-lg shadow-purple-950/20 p-4 sm:p-6 transition-all duration-300">
+    <div className="relative mb-6 overflow-hidden rounded-2xl bg-linear-to-br from-[#1a1c2e] via-[#141624] to-[#0f111a] border border-purple-500/25 shadow-lg shadow-purple-950/20 p-4 sm:p-6 transition-all duration-300">
       {/* Background glow accent */}
       <div className="absolute -top-12 -right-12 w-48 h-48 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -219,7 +219,7 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({ watchlistCount
                   className={`text-left p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-3 group relative ${
                     isSelected
                       ? 'bg-purple-600/20 border-purple-500 text-white shadow-sm shadow-purple-900/40'
-                      : 'bg-white/[0.02] hover:bg-white/[0.06] border-white/10 text-gray-300 hover:border-purple-500/40 hover:text-white'
+                      : 'bg-white/2 hover:bg-white/6 border-white/10 text-gray-300 hover:border-purple-500/40 hover:text-white'
                   }`}
                 >
                   <div
