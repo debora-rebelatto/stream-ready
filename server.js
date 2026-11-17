@@ -1321,24 +1321,28 @@ app.post('/api/events', async (req, res) => {
     const userId = user?.userId || user?.id || null;
     const userEmail = (user?.userEmail || user?.email || '').toLowerCase().trim();
 
-    // Check excluded accounts configured via environment
+    // Check excluded accounts configured via environment or defaults
     const excludedEnvEmails =
       process.env.EXCLUDED_TRACKING_EMAILS || process.env.VITE_EXCLUDED_TRACKING_EMAILS || '';
     const excludedEnvIds =
       process.env.EXCLUDED_TRACKING_USER_IDS || process.env.VITE_EXCLUDED_TRACKING_USER_IDS || '';
 
-    const excludedList = new Set(
-      excludedEnvEmails
+    const excludedList = new Set([
+      'deborarebelatto1@gmail.com',
+      'debyr.dbr@gmail.com',
+      ...excludedEnvEmails
         .split(',')
         .map((s) => s.trim().toLowerCase())
-        .filter(Boolean)
-    );
-    const excludedUserIds = new Set(
-      excludedEnvIds
+        .filter(Boolean),
+    ]);
+    const excludedUserIds = new Set([
+      '0ae027a6-56e6-41d5-a25b-86fc1e04aed4',
+      'aa1bdc75-f539-4e11-8c90-510c0e998ce8',
+      ...excludedEnvIds
         .split(',')
         .map((s) => s.trim().toLowerCase())
-        .filter(Boolean)
-    );
+        .filter(Boolean),
+    ]);
 
     if (
       (userEmail && excludedList.has(userEmail)) ||
