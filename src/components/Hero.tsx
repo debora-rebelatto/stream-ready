@@ -14,30 +14,23 @@ import {
 import { api } from '../lib/api';
 import { trackEvent } from '../lib/analytics';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
-import { FEATURE_OPTIONS, POLL_VOTED_KEY } from './FeaturePollCard';
+import {
+  FEATURE_OPTIONS,
+  POLL_VOTED_KEY,
+  BETA_NOTICE_DISMISS_KEY,
+  isBetaNoticeDismissed,
+} from './FeaturePollCard';
 
-const DISMISS_KEY = 'dismiss_beta_notice_until';
+const DISMISS_KEY = BETA_NOTICE_DISMISS_KEY;
 const DISMISS_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-interface HeroProps {
+export interface HeroProps {
   onOpenSettings?: () => void;
+  onDismiss?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = () => {
-  const [dismissBetaBanner, setDismissBetaBanner] = useState<boolean>(() => {
-    try {
-      const dismissUntil = localStorage.getItem(DISMISS_KEY);
-      if (dismissUntil) {
-        const expiry = parseInt(dismissUntil, 10);
-        if (!isNaN(expiry) && Date.now() < expiry) {
-          return true;
-        }
-      }
-      return false;
-    } catch {
-      return false;
-    }
-  });
+export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
+  const [dismissBetaBanner, setDismissBetaBanner] = useState<boolean>(() => isBetaNoticeDismissed());
 
   const [isPollExpanded, setIsPollExpanded] = useState<boolean>(true);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -75,6 +68,9 @@ export const Hero: React.FC<HeroProps> = () => {
       localStorage.setItem(DISMISS_KEY, String(expiry));
       localStorage.removeItem('dismiss_beta_notice');
     } catch {}
+    if (onDismiss) {
+      onDismiss();
+    }
   };
 
   const handleSelect = async (optionId: string) => {

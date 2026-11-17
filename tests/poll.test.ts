@@ -1,5 +1,10 @@
 import { api } from '../src/lib/api';
-import { FEATURE_OPTIONS, POLL_VOTED_KEY } from '../src/components/FeaturePollCard';
+import {
+  FEATURE_OPTIONS,
+  POLL_VOTED_KEY,
+  BETA_NOTICE_DISMISS_KEY,
+  isBetaNoticeDismissed,
+} from '../src/components/FeaturePollCard';
 
 describe('Feature Roadmap Poll Client API', () => {
   const originalFetch = global.fetch;
@@ -27,6 +32,22 @@ describe('Feature Roadmap Poll Client API', () => {
     expect(ids).toContain('share_lists');
     expect(ids).toContain('other');
     expect(POLL_VOTED_KEY).toBe('stremio_poll_voted');
+    expect(BETA_NOTICE_DISMISS_KEY).toBe('dismiss_beta_notice_until');
+  });
+
+  it('correctly detects if the Beta Notice is dismissed or active', () => {
+    // When nothing is set, it is not dismissed (i.e. active)
+    expect(isBetaNoticeDismissed()).toBe(false);
+
+    // When dismissed until a future time, it returns true
+    const futureTime = Date.now() + 1000 * 60 * 60;
+    localStorage.setItem(BETA_NOTICE_DISMISS_KEY, String(futureTime));
+    expect(isBetaNoticeDismissed()).toBe(true);
+
+    // When dismissed until a past time, it returns false
+    const pastTime = Date.now() - 1000 * 60;
+    localStorage.setItem(BETA_NOTICE_DISMISS_KEY, String(pastTime));
+    expect(isBetaNoticeDismissed()).toBe(false);
   });
 
   it('submits a poll vote without custom text', async () => {

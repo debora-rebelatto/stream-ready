@@ -5,7 +5,23 @@ import { Check, X, Send, Vote } from 'lucide-react';
 
 export const POLL_DISMISS_KEY = 'stremio_dismiss_poll_until';
 export const POLL_VOTED_KEY = 'stremio_poll_voted';
+export const BETA_NOTICE_DISMISS_KEY = 'dismiss_beta_notice_until';
 const COOLDOWN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function isBetaNoticeDismissed(): boolean {
+  try {
+    const dismissUntil = localStorage.getItem(BETA_NOTICE_DISMISS_KEY);
+    if (dismissUntil) {
+      const expiry = parseInt(dismissUntil, 10);
+      if (!isNaN(expiry) && Date.now() < expiry) {
+        return true;
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
 
 export interface FeatureOption {
   id: string;
@@ -46,12 +62,16 @@ export const FEATURE_OPTIONS: FeatureOption[] = [
   },
 ];
 
-interface FeaturePollCardProps {
+export interface FeaturePollCardProps {
   watchlistCount: number;
   userEmail?: string;
+  isBetaNoticeVisible?: boolean;
 }
 
-export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({ watchlistCount }) => {
+export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({
+  watchlistCount,
+  isBetaNoticeVisible,
+}) => {
   const [isVisible, setIsVisible] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [customText, setCustomText] = useState('');
@@ -59,6 +79,13 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({ watchlistCount
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   useEffect(() => {
+    // If the poll banner appears in the beta notice, do not show it in other places
+    const betaNoticeActive = isBetaNoticeVisible ?? !isBetaNoticeDismissed();
+    if (betaNoticeActive) {
+      setIsVisible(false);
+      return;
+    }
+
     // Only display to users who have actually engaged with the product (at least 1 movie tracked)
     if (watchlistCount < 1) {
       setIsVisible(false);
@@ -96,7 +123,7 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({ watchlistCount
       .catch(() => {
         setIsVisible(true);
       });
-  }, [watchlistCount]);
+  }, [watchlistCount, isBetaNoticeVisible]);
 
   const handleDismiss = () => {
     setIsVisible(false);

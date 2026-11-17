@@ -8,7 +8,7 @@ import { Hero } from './Hero';
 import { OnboardingCallout } from './OnboardingCallout';
 import { RecommendedBanner } from './RecommendedBanner';
 import { SearchSection } from './SearchSection';
-import { FeaturePollCard } from './FeaturePollCard';
+import { FeaturePollCard, isBetaNoticeDismissed } from './FeaturePollCard';
 import { MovieCard } from './MovieCard';
 import { Pagination } from './Pagination';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
@@ -51,6 +51,7 @@ export const UserDashboard: React.FC = () => {
   }>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [isBetaNoticeVisible, setIsBetaNoticeVisible] = useState<boolean>(() => !isBetaNoticeDismissed());
   const listTopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -345,7 +346,10 @@ export const UserDashboard: React.FC = () => {
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <Hero onOpenSettings={() => setIsSettingsOpen(true)} />
+        <Hero
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onDismiss={() => setIsBetaNoticeVisible(false)}
+        />
         <OnboardingCallout
           onScrollToRecommendations={() => {
             const el = document.getElementById('recommended-banner');
@@ -359,7 +363,13 @@ export const UserDashboard: React.FC = () => {
         />
         <RecommendedBanner />
         <SearchSection />
-        <FeaturePollCard watchlistCount={items.length} userEmail={user?.email} />
+        {!isBetaNoticeVisible && (
+          <FeaturePollCard
+            watchlistCount={items.length}
+            userEmail={user?.email}
+            isBetaNoticeVisible={isBetaNoticeVisible}
+          />
+        )}
 
         {/* Custom Lists Bar */}
         <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none">
