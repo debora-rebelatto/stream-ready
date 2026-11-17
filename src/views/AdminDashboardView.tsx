@@ -138,11 +138,24 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
         )}
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-5 text-center space-y-3">
-            <AlertTriangle size={24} className="text-red-400 mx-auto" />
-            <p className="text-sm font-semibold text-red-200">{error}</p>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 text-center space-y-4 max-w-xl mx-auto">
+            <AlertTriangle size={28} className="text-red-400 mx-auto" />
+            <div>
+              <h3 className="text-base font-bold text-red-200">Admin Authorization Required</h3>
+              <p className="text-xs text-gray-300 mt-1">{error}</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 text-left text-xs font-mono text-gray-300 space-y-2">
+              <span className="text-[11px] text-purple-300 block font-sans font-semibold">
+                To grant admin access, run this command in your Supabase SQL Editor:
+              </span>
+              <code className="block select-all text-emerald-400 bg-white/5 p-2 rounded-lg break-all">
+                ALTER TABLE watchlist_users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
+                <br />
+                UPDATE watchlist_users SET is_admin = TRUE WHERE email = 'your-stremio-email';
+              </code>
+            </div>
             <Button variant="outline" size="sm" onClick={handleRefresh}>
-              Retry Loading
+              Retry Verification
             </Button>
           </div>
         )}

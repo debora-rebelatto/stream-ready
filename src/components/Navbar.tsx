@@ -176,11 +176,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={onOpenAdmin}
-                icon={<Shield size={14} className="text-purple-400" />}
-                className="border-purple-500/30 text-purple-200 hover:bg-purple-600/15 mr-1"
+                icon={<Shield size={14} className="text-purple-300" />}
+                className="bg-purple-600/15 border-purple-500/40 text-purple-200 hover:bg-purple-600/30 hover:text-white mr-1.5 shadow-sm font-semibold"
                 title="Admin Analytics Dashboard"
               >
-                <span className="hidden xl:inline">Admin Analytics</span>
+                <span className="hidden sm:inline">Admin Analytics</span>
               </Button>
             )}
 

@@ -1,5 +1,7 @@
 import React from 'react';
+import { Shield } from 'lucide-react';
 import { useDashboardController } from '../controllers/useDashboardController';
+import { Button } from '../components/Button';
 import { Navbar } from '../components/Navbar';
 import { Hero } from '../components/Hero';
 import { OnboardingCallout } from '../components/OnboardingCallout';
@@ -129,6 +131,32 @@ export const UserDashboardView: React.FC = () => {
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {user?.isAdmin && (
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-purple-900/25 to-indigo-950/30 border border-purple-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg shadow-purple-950/20">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-300 shrink-0">
+                <Shield size={20} />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-white block">
+                  Admin Analytics &amp; Service Adoption Available
+                </span>
+                <span className="text-[11px] text-gray-300">
+                  Track platform conversion funnels, active user retention, and feature usage.
+                </span>
+              </div>
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleOpenAdmin}
+              icon={<Shield size={14} />}
+              className="shrink-0 w-full sm:w-auto font-semibold"
+            >
+              Open Admin Dashboard
+            </Button>
+          </div>
+        )}
         <Hero onOpenSettings={handleOpenSettings} onDismiss={() => setIsBetaNoticeVisible(false)} />
         <OnboardingCallout
           onScrollToRecommendations={() => {
