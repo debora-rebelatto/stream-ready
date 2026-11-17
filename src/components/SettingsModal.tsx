@@ -1,7 +1,8 @@
 import React from 'react';
 import { useWatchlist, useToast, useAuth } from '../context/useAppContext';
 import { watchlistService } from '../services/watchlistService';
-import { X, BookOpen, Download, Upload, Sliders, Tv, Eye, RefreshCw, Info } from 'lucide-react';
+import { X, BookOpen, Download, Upload, Sliders, Tv, Eye, RefreshCw, Info, Heart } from 'lucide-react';
+import { GitHubSponsorButton } from './GitHubSponsorButton';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -344,6 +345,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   className="hidden"
                 />
               </label>
+            </div>
+          </div>
+
+          {/* Support / GitHub Sponsors */}
+          <div className="p-4 rounded-xl bg-gradient-to-r from-purple-950/30 to-[#1f2438] border border-purple-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span className="text-sm font-bold text-white flex items-center gap-2">
+                <Heart size={16} className="text-pink-400 fill-pink-400" />
+                Support the Project
+              </span>
+              <p className="text-[10.5px] text-gray-400 leading-relaxed mt-1">
+                Help keep the background servers and trackers running 24/7 by sponsoring on GitHub.
+              </p>
+            </div>
+            <div className="shrink-0">
+              <GitHubSponsorButton size="md" />
             </div>
           </div>
         </div>

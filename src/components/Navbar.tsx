@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth, useToast } from '../context/useAppContext';
 import { api } from '../lib/api';
 import { Settings, Copy, LogIn, LogOut, Menu, X, Play, MessageSquare, Folder } from 'lucide-react';
+import { GitHubSponsorButton } from './GitHubSponsorButton';
 
 interface NavbarProps {
   onOpenSettings: () => void;
@@ -125,6 +126,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
             >
               <MessageSquare size={15} />
             </a>
+          </div>
+
+          {/* GitHub Sponsors Button */}
+          <div className="hidden lg:flex items-center shrink-0">
+            <GitHubSponsorButton size="md" />
           </div>
 
           <div className="h-4 w-px bg-white/10 mx-0.5" />
@@ -254,6 +260,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
               <MessageSquare size={13} />
               <span>Feedback</span>
             </a>
+          </div>
+
+          {/* GitHub Sponsor row */}
+          <div className="pt-2 flex flex-col items-center justify-center p-3 rounded-xl bg-purple-500/5 border border-purple-500/20 text-center">
+            <span className="text-[11px] text-gray-300 font-medium mb-2">Support this project on GitHub</span>
+            <GitHubSponsorButton size="md" />
           </div>
         </div>
       )}

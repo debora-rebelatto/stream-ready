@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { GitHubSponsorButton } from './GitHubSponsorButton';
 import {
   Sparkles,
   ShieldCheck,
-  Tv,
   Film,
   CheckCircle2,
   XCircle,
@@ -17,7 +17,6 @@ import {
   Star,
   Check,
   Eye,
-  Clock,
   Layers,
   Heart,
   Flame,
@@ -27,6 +26,7 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useToast } from '../context/useAppContext';
+import { RecommendedBanner } from './RecommendedBanner';
 
 interface LandingPageProps {
   onOpenLogin: () => void;
@@ -37,7 +37,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
   const [manifestUrl, setManifestUrl] = useState('');
   const [installUrl, setInstallUrl] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [demoFilter, setDemoFilter] = useState<'all' | 'ready' | 'pending' | 'watched'>('ready');
 
   useEffect(() => {
     api.getInfo()
@@ -67,77 +66,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
       window.location.href = installUrl;
     }
   };
-
-  // Mock demo items for the Stremio TV simulation
-  const mockTvItems = [
-    {
-      id: '1',
-      name: 'Gladiator II',
-      year: '2024',
-      badge: 'NEW RELEASE',
-      quality: '4K UHD • WEB-DL',
-      sources: 26,
-      ready: true,
-      isNew: true,
-      isWatched: false,
-      poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500&auto=format&fit=crop&q=80'
-    },
-    {
-      id: '2',
-      name: 'Dune: Part Two',
-      year: '2024',
-      badge: 'GOOD QUALITY',
-      quality: '4K UHD • BluRay',
-      sources: 34,
-      ready: true,
-      isNew: false,
-      isWatched: false,
-      poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=500&auto=format&fit=crop&q=80'
-    },
-    {
-      id: '3',
-      name: 'Deadpool & Wolverine',
-      year: '2024',
-      badge: 'GOOD QUALITY',
-      quality: '1080p FHD • WEB-DL',
-      sources: 19,
-      ready: true,
-      isNew: false,
-      isWatched: false,
-      poster: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=500&auto=format&fit=crop&q=80'
-    },
-    {
-      id: '4',
-      name: 'Avatar 3: Fire and Ash',
-      year: '2025',
-      badge: 'WAITING',
-      quality: 'Unreleased',
-      sources: 0,
-      ready: false,
-      isNew: false,
-      isWatched: false,
-      poster: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&auto=format&fit=crop&q=80'
-    },
-    {
-      id: '5',
-      name: 'Oppenheimer',
-      year: '2023',
-      badge: 'WATCHED',
-      quality: '4K UHD • BluRay',
-      sources: 42,
-      ready: true,
-      isNew: false,
-      isWatched: true,
-      poster: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=500&auto=format&fit=crop&q=80'
-    }
-  ];
-
-  const displayedDemoItems = mockTvItems.filter((item) => {
-    if (demoFilter === 'ready') return item.ready && !item.isWatched;
-    if (demoFilter === 'pending') return !item.ready && !item.isWatched;
-    if (demoFilter === 'watched') return item.isWatched;
-    return !item.isWatched;
-  });
 
   const faqs = [
     {
@@ -242,127 +170,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
         </div>
       </section>
 
-      {/* 2. STREMIO TV SIMULATION / INTERACTIVE PREVIEW */}
-      <section className="max-w-5xl mx-auto px-4">
-        <div className="relative rounded-3xl bg-gradient-to-b from-[#181a28] to-[#0f111a] border border-white/15 p-5 sm:p-8 shadow-2xl overflow-hidden">
-          {/* Header of the Stremio Mockup */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
-            <div>
-              <div className="flex items-center gap-2.5">
-                <span className="w-3 h-3 rounded-full bg-red-500/80 inline-block" />
-                <span className="w-3 h-3 rounded-full bg-yellow-500/80 inline-block" />
-                <span className="w-3 h-3 rounded-full bg-green-500/80 inline-block" />
-                <span className="text-xs font-mono text-gray-400 ml-2">Stremio • Discover / Catalog Preview</span>
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-white mt-3 flex items-center gap-2">
-                <span>🟢 Watchlist: Ready (Good Quality)</span>
-                <span className="text-xs font-normal text-gray-400 bg-white/5 px-2 py-0.5 rounded border border-white/10">
-                  Live Account Sync
-                </span>
-              </h3>
-            </div>
-
-            {/* Filter Tabs Preview */}
-            <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-xl border border-white/10 self-start sm:self-auto">
-              <button
-                onClick={() => setDemoFilter('ready')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  demoFilter === 'ready'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                🟢 Ready ({mockTvItems.filter(i => i.ready && !i.isWatched).length})
-              </button>
-              <button
-                onClick={() => setDemoFilter('pending')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  demoFilter === 'pending'
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                ⏳ Waiting ({mockTvItems.filter(i => !i.ready && !i.isWatched).length})
-              </button>
-              <button
-                onClick={() => setDemoFilter('watched')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  demoFilter === 'watched'
-                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                👁️ Watched ({mockTvItems.filter(i => i.isWatched).length})
-              </button>
-            </div>
-          </div>
-
-          {/* Catalog Row Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6 pt-6">
-            {displayedDemoItems.map((movie) => (
-              <div
-                key={movie.id}
-                className="group relative flex flex-col bg-[#141624] border border-white/10 hover:border-purple-500/40 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 shadow-lg"
-              >
-                {/* Poster Image */}
-                <div className="relative aspect-[2/3] w-full bg-[#1b1f30] overflow-hidden">
-                  <img
-                    src={movie.poster}
-                    alt={movie.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-
-                  {/* Badge */}
-                  <div className="absolute top-2.5 left-2.5">
-                    {movie.isNew ? (
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-md flex items-center gap-1 bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 text-white border border-amber-300 animate-pulse">
-                        <Flame size={10} className="fill-current text-yellow-200" /> NEW RELEASE
-                      </span>
-                    ) : movie.isWatched ? (
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-md flex items-center gap-1 bg-purple-900/90 text-purple-200 border border-purple-500/40">
-                        <Eye size={10} /> Watched
-                      </span>
-                    ) : movie.ready ? (
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-md flex items-center gap-1 bg-emerald-500/90 text-white border border-emerald-400/40">
-                        <CheckCircle2 size={10} /> Good Quality
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md backdrop-blur-md shadow-md flex items-center gap-1 bg-amber-500/90 text-black border border-amber-300/40">
-                        <Clock size={10} /> Waiting
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Info */}
-                <div className="p-3 flex flex-col justify-between flex-1 gap-1.5">
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-purple-300 transition-colors">
-                      {movie.name}
-                    </h4>
-                    <p className="text-[11px] text-gray-400">{movie.year}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[10px] pt-1 border-t border-white/5">
-                    <span className={movie.ready ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-semibold'}>
-                      {movie.quality}
-                    </span>
-                    <span className="text-gray-500">{movie.sources > 0 ? `${movie.sources} streams` : '0 sources'}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Hint */}
-          <div className="mt-6 pt-4 border-t border-white/10 text-center text-xs text-gray-400 flex items-center justify-center gap-2">
-            <Tv size={14} className="text-purple-400" />
-            <span>These rows appear directly on your Samsung, LG, Android TV or PC Stremio discover screen.</span>
-          </div>
-        </div>
+      {/* RECOMMENDED TO WATCH BANNER */}
+      <section className="max-w-5xl mx-auto px-4 -mt-10 sm:-mt-14">
+        <RecommendedBanner onOpenLogin={onOpenLogin} />
       </section>
 
-      {/* 3. THE PROBLEM & SOLUTION (BEFORE VS AFTER) */}
+      {/* 2. THE PROBLEM & SOLUTION (BEFORE VS AFTER) */}
       <section className="max-w-5xl mx-auto px-4">
         <div className="text-center max-w-xl mx-auto mb-10">
           <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight mb-2">
@@ -452,13 +265,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
         </div>
       </section>
 
-      {/* 4. NEW FEATURES SHOWCASE */}
+      {/* 3. NEW FEATURES SHOWCASE */}
       <section className="max-w-6xl mx-auto px-4">
         <div className="text-center max-w-xl mx-auto mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 text-xs font-semibold mb-3">
-            <Sparkles size={13} />
-            <span>Version 2.0 Features</span>
-          </div>
           <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight mb-3">
             Engineered for Serious Movie Lovers
           </h2>
@@ -486,7 +295,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             </div>
             <h3 className="text-base font-bold text-white mb-2">🔥 NEW RELEASE Badges</h3>
             <p className="text-xs text-gray-400 leading-relaxed">
-              Spot fresh arrivals instantly. Any movie that hit good quality within the last 48 hours gets highlighted with a flaming badge in Stremio and web.
+              Spot fresh arrivals instantly. Any movie released or available in good quality within the last 3 months gets highlighted with a flaming badge in Stremio and web.
             </p>
           </div>
 
@@ -653,17 +462,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
 
       {/* 9. FOOTER */}
       <footer className="border-t border-white/10 pt-8 pb-12 text-center text-xs text-gray-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-2 shrink-0">
             <span className="text-base">🎬</span>
             <span className="font-bold text-gray-300">Stremio Watchlist • Good Quality Tracker</span>
+          </div>
+
+          {/* GitHub Sponsors Button */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-gray-400 text-[11px] hidden sm:inline">Support the project:</span>
+            <GitHubSponsorButton size="sm" />
           </div>
 
           <p className="text-gray-500 text-[11px]">
             Community Stremio Addon. Not officially affiliated with Stremio or IMDb.
           </p>
 
-          <div className="flex items-center gap-4 text-gray-400">
+          <div className="flex items-center gap-4 text-gray-400 shrink-0">
             <button
               onClick={handleCopy}
               className="hover:text-white transition-colors cursor-pointer"

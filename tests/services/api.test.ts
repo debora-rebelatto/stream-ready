@@ -254,5 +254,35 @@ describe('API Client (src/lib/api.ts)', () => {
       await api.setItemCustomLists('tt123', ['l1']);
       expect(global.fetch).toHaveBeenCalledWith('/api/items/tt123/lists', expect.objectContaining({ method: 'POST' }));
     });
+
+    test('curated lists endpoints (getCuratedLists, addCuratedList)', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        text: async () => JSON.stringify({ success: true, lists: [{ id: 'new_netflix' }] }),
+      });
+
+      const listsRes = await api.getCuratedLists();
+      expect(global.fetch).toHaveBeenCalledWith('/api/curated-lists', expect.any(Object));
+      expect(listsRes.success).toBe(true);
+
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        text: async () => JSON.stringify({ success: true, list: { id: 'list_1', name: 'New on Netflix' } }),
+      });
+
+      const addRes = await api.addCuratedList('new_netflix');
+      expect(global.fetch).toHaveBeenCalledWith('/api/curated-lists/new_netflix/add', expect.objectContaining({ method: 'POST' }));
+      expect(addRes.success).toBe(true);
+
+      // Gracefully handles empty or network failure
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 504,
+        text: async () => '',
+      });
+      const failRes = await api.addCuratedList('new_netflix');
+      expect(failRes.success).toBe(false);
+      expect(failRes.error).toBeDefined();
+    });
   });
 });

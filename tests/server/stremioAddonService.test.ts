@@ -37,18 +37,30 @@ describe('Backend StremioAddonService (server/services/stremioAddonService.ts)',
   });
 
   describe('isItemNewRelease', () => {
-    test('deve identificar lançamento recente (< 48h)', () => {
+    test('deve identificar lançamento recente (< 3 meses)', () => {
       const recent = {
         has1080pPlus: true,
         readyAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 horas atrás
       };
       expect(isItemNewRelease(recent)).toBe(true);
+      expect(isItemNewRelease({ ...recent, year: 2026 })).toBe(true);
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      expect(isItemNewRelease({ released: thirtyDaysAgo, has1080pPlus: true })).toBe(true);
     });
 
-    test('deve retornar falso para lançamentos mais antigos (> 48h)', () => {
+    test('deve retornar falso para filmes antigos mesmo com readyAt recente', () => {
+      const oldYear = {
+        has1080pPlus: true,
+        year: '1995',
+        readyAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+      };
+      expect(isItemNewRelease(oldYear)).toBe(false);
+    });
+
+    test('deve retornar falso para lançamentos mais antigos (> 3 meses / 90 dias)', () => {
       const old = {
         has1080pPlus: true,
-        readyAt: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString() // 72 horas atrás
+        readyAt: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString() // 100 dias atrás
       };
       expect(isItemNewRelease(old)).toBe(false);
     });

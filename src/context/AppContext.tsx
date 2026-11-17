@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import type { WatchlistItem, WatchlistStats, StremioUser, ToastMessage, CustomList } from '../types';
+import type { WatchlistItem, WatchlistStats, StremioUser, ToastMessage, CustomList, CuratedList } from '../types';
 import { authService } from '../services/authService';
 import { watchlistService } from '../services/watchlistService';
 import { cinemetaService } from '../services/cinemetaService';
@@ -63,6 +63,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [customLists, setCustomLists] = useState<CustomList[]>([]);
   const [activeCustomListId, setActiveCustomListId] = useState<string | null>(null);
   const [isListsLoading, setIsListsLoading] = useState(false);
+  const [curatedLists, setCuratedLists] = useState<CuratedList[]>([]);
+  const [isCuratedListsLoading, setIsCuratedListsLoading] = useState(false);
   const [globalMinQuality, setGlobalMinQualityState] = useState<'1080p' | '4k'>('1080p');
   const [autoSyncWatched, setAutoSyncWatchedState] = useState<boolean>(false);
   const [trackWatchlistWatched, setTrackWatchlistWatchedState] = useState<boolean>(true);
@@ -88,6 +90,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIsListsLoading(false);
     }
   }, [user]);
+
+  const fetchCuratedLists = useCallback(async () => {
+    setIsCuratedListsLoading(true);
+    try {
+      const res = await watchlistService.getCuratedLists();
+      if (res.success && Array.isArray(res.lists)) {
+        setCuratedLists(res.lists);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setIsCuratedListsLoading(false);
+    }
+  }, []);
 
   const checkAuth = useCallback(async () => {
     setIsLoadingAuth(true);
@@ -208,6 +224,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [user, globalMinQuality, showToast]);
 
   useEffect(() => {
+    fetchCuratedLists();
     if (user) {
       refreshWatchlist();
       fetchCustomLists();
@@ -217,7 +234,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setActiveCustomListId(null);
       setStats({ total: 0, ready: 0, pending: 0, unreleased: 0, watched: 0 });
     }
-  }, [user, refreshWatchlist, fetchCustomLists]);
+  }, [user, refreshWatchlist, fetchCustomLists, fetchCuratedLists]);
 
   const loginWithCreds = async (email: string, pass: string) => {
     try {
@@ -292,17 +309,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const removeItem = async (id: string, name: string) => {
-    if (!window.confirm(`Remove "${name}" from your watchlist?`)) return;
+  const removeItem = async (id: string, name: string): Promise<boolean> => {
     try {
       const res = await watchlistService.removeItem(id);
       if (res.success) {
         showToast(`"${name}" removed from watchlist.`, 'info');
         setItems((prev) => prev.filter((i) => i.id !== id));
         setStats(res.stats);
+        return true;
       }
+      showToast('Error removing item.', 'error');
+      return false;
     } catch {
       showToast('Error removing item.', 'error');
+      return false;
     }
   };
 
@@ -500,13 +520,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (activeCustomListId === id) {
           setActiveCustomListId(null);
         }
+        const deletedSet = new Set(res.deletedItemIds || []);
+        // Remove movies that belonged to this deleted list from the watchlist
         setItems((prev) =>
-          prev.map((item) => ({
-            ...item,
-            customLists: (item.customLists || []).filter((lid) => lid !== id),
-          }))
+          prev
+            .filter((item) => {
+              if (deletedSet.has(item.id)) return false;
+              if (Array.isArray(item.customLists) && item.customLists.includes(id)) {
+                const remaining = item.customLists.filter((lid) => lid !== id);
+                return remaining.length > 0;
+              }
+              return true;
+            })
+            .map((item) => {
+              if (Array.isArray(item.customLists) && item.customLists.includes(id)) {
+                return {
+                  ...item,
+                  customLists: item.customLists.filter((lid) => lid !== id),
+                };
+              }
+              return item;
+            })
         );
-        showToast('List deleted successfully.', 'info');
+        showToast('List and its movies removed successfully.', 'info');
         return true;
       } else {
         showToast(res.error || 'Failed to delete list.', 'error');
@@ -547,6 +583,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await setItemCustomLists(itemId, updatedLists);
   };
 
+  const addCuratedList = async (id: string): Promise<boolean> => {
+    if (!user) {
+      showToast('Please sign in with Stremio to add standard lists.', 'error');
+      return false;
+    }
+    try {
+      const res = await watchlistService.addCuratedList(id);
+      if (res.success && res.list) {
+        showToast(`Added "${res.list.name || 'Standard List'}" (${res.addedMoviesCount ?? 0} new movies)!`, 'success');
+
+        // Optimistically update customLists and curatedLists immediately for instant UI response
+        setCustomLists((prev) => {
+          if (prev.some((cl) => cl.id === res.list.id || cl.name.trim().toLowerCase() === res.list.name.trim().toLowerCase())) {
+            return prev;
+          }
+          return [...prev, res.list];
+        });
+
+        setCuratedLists((prev) =>
+          prev.map((cl) => (cl.id === id ? { ...cl, isAdded: true } : cl))
+        );
+
+        // Refresh full data in the background without freezing the UI modal
+        Promise.all([
+          refreshWatchlist(),
+          fetchCustomLists(),
+          fetchCuratedLists()
+        ]).catch(() => {});
+
+        return true;
+      } else {
+        showToast(res.error || 'Failed to add standard list.', 'error');
+        return false;
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error adding standard list.', 'error');
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -573,6 +649,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setItemCustomLists,
           toggleItemCustomList,
           isListsLoading,
+          curatedLists,
+          fetchCuratedLists,
+          addCuratedList,
+          isCuratedListsLoading,
           globalMinQuality,
           setGlobalMinQuality,
           autoSyncWatched,

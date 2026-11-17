@@ -5,7 +5,8 @@ import type {
   AppSettings,
   ServerInfo,
   SearchMovieResult,
-  CustomList
+  CustomList,
+  CuratedList
 } from '../types';
 
 export function getAuthKey(): string | null {
@@ -233,7 +234,7 @@ export const api = {
     return res.json();
   },
 
-  async createCustomList(name: string, emoji = '🎬'): Promise<{ success: boolean; list: CustomList; error?: string }> {
+  async createCustomList(name: string, emoji = ''): Promise<{ success: boolean; list: CustomList; error?: string }> {
     const res = await fetch('/api/lists', {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -251,7 +252,12 @@ export const api = {
     return res.json();
   },
 
-  async deleteCustomList(id: string): Promise<{ success: boolean; error?: string }> {
+  async deleteCustomList(id: string): Promise<{
+    success: boolean;
+    deletedItemsCount?: number;
+    deletedItemIds?: string[];
+    error?: string;
+  }> {
     const res = await fetch(`/api/lists/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
@@ -266,5 +272,56 @@ export const api = {
       body: JSON.stringify({ listIds }),
     });
     return res.json();
+  },
+
+  async getCuratedLists(): Promise<{ success: boolean; lists: CuratedList[]; error?: string }> {
+    try {
+      const res = await fetch('/api/curated-lists', {
+        headers: getAuthHeaders(),
+      });
+      const text = await res.text();
+      return text ? JSON.parse(text) : { success: false, lists: [] };
+    } catch {
+      return { success: false, lists: [] };
+    }
+  },
+
+  async addCuratedList(id: string): Promise<{
+    success: boolean;
+    list?: CustomList;
+    addedMoviesCount?: number;
+    existingMoviesCount?: number;
+    error?: string;
+  }> {
+    try {
+      const res = await fetch(`/api/curated-lists/${encodeURIComponent(id)}/add`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        return {
+          success: false,
+          error: `Server returned an invalid response (${res.status}). Please check server logs.`
+        };
+      }
+      if (!res.ok) {
+        return {
+          success: false,
+          error: data.error || `Server returned ${res.status}. Please check server connection.`
+        };
+      }
+      return data;
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err.message?.includes('JSON')
+          ? 'Cannot connect to backend server. Please verify the server is running on port 7000.'
+          : (err.message || 'Error connecting to server.')
+      };
+    }
   },
 };

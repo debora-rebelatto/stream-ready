@@ -24,6 +24,10 @@ export interface WatchlistContextType {
   setItemCustomLists: (itemId: string, listIds: string[]) => Promise<void>;
   toggleItemCustomList: (itemId: string, listId: string) => Promise<void>;
   isListsLoading: boolean;
+  curatedLists: CuratedList[];
+  fetchCuratedLists: () => Promise<void>;
+  addCuratedList: (id: string) => Promise<boolean>;
+  isCuratedListsLoading: boolean;
   globalMinQuality: '1080p' | '4k';
   setGlobalMinQuality: (quality: '1080p' | '4k') => Promise<void>;
   autoSyncWatched: boolean;
@@ -36,7 +40,7 @@ export interface WatchlistContextType {
   isCheckingAll: boolean;
   refreshWatchlist: () => Promise<void>;
   addItem: (id: string) => Promise<void>;
-  removeItem: (id: string, name: string) => Promise<void>;
+  removeItem: (id: string, name: string) => Promise<boolean>;
   markWatched: (id: string, watched: boolean) => Promise<void>;
   setItemMinQuality: (id: string, minQuality: '1080p' | '4k' | null) => Promise<void>;
   syncWatchedFromStremio: () => Promise<void>;

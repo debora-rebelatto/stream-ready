@@ -63,15 +63,26 @@ describe('Frontend Utils (src/lib/utils.ts)', () => {
       expect(isItemNewRelease({ readyAt: new Date().toISOString(), has1080pPlus: false })).toBe(false);
     });
 
-    test('deve retornar true para lançamentos das últimas 48 horas', () => {
+    test('deve retornar true para lançamentos dos últimos 3 meses', () => {
       const now = new Date();
       const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
       expect(isItemNewRelease({ readyAt: oneHourAgo, has1080pPlus: true })).toBe(true);
+      expect(isItemNewRelease({ readyAt: thirtyDaysAgo, has1080pPlus: true, year: 2026 })).toBe(true);
+      expect(isItemNewRelease({ released: thirtyDaysAgo, has1080pPlus: true })).toBe(true);
     });
 
-    test('deve retornar false para lançamentos com mais de 48 horas', () => {
-      const threeDaysAgo = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
-      expect(isItemNewRelease({ readyAt: threeDaysAgo, has1080pPlus: true })).toBe(false);
+    test('deve retornar false para filmes antigos mesmo com readyAt recente', () => {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      expect(isItemNewRelease({ readyAt: oneHourAgo, has1080pPlus: true, year: '1995' })).toBe(false);
+      expect(isItemNewRelease({ readyAt: oneHourAgo, has1080pPlus: true, year: 2010 })).toBe(false);
+      expect(isItemNewRelease({ readyAt: oneHourAgo, has1080pPlus: true, year: '2020' })).toBe(false);
+    });
+
+    test('deve retornar false para lançamentos com mais de 3 meses (90 dias)', () => {
+      const hundredDaysAgo = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString();
+      expect(isItemNewRelease({ readyAt: hundredDaysAgo, has1080pPlus: true })).toBe(false);
+      expect(isItemNewRelease({ released: hundredDaysAgo, has1080pPlus: true })).toBe(false);
     });
 
     test('deve capturar exceção se a data for inválida ou causar erro', () => {

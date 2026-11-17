@@ -1,0 +1,668 @@
+[
+  {
+    "id": "new_netflix",
+    "name": "New on Netflix",
+    "emoji": "🔴",
+    "platform": "Netflix",
+    "badge": "Netflix",
+    "color": "#E50914",
+    "gradient": "from-red-600/30 to-red-950/20",
+    "description": "Upcoming 2026 blockbusters and newest movies streaming on Netflix.",
+    "items": [
+      {
+        "id": "tt15574124",
+        "name": "Peaky Blinders: The Immortal Man",
+        "year": "2026",
+        "poster": "https://images.metahub.space/poster/small/tt15574124/img",
+        "banner": "https://images.metahub.space/background/medium/tt15574124/img",
+        "genres": [
+          "Crime",
+          "Drama",
+          "History"
+        ],
+        "description": "During World War II, Tommy Shelby returns to a bombed Birmingham and becomes involved in secret wartime missions facing new threats as he reckons with his past.",
+        "imdbRating": "6.5"
+      },
+      {
+        "id": "tt7766378",
+        "name": "The Electric State",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt7766378/img",
+        "banner": "https://images.metahub.space/background/medium/tt7766378/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Comedy"
+        ],
+        "description": "An orphaned teen hits the road with a mysterious robot to find her long-lost brother, teaming up with a smuggler and his wisecracking sidekick.",
+        "imdbRating": "5.9"
+      },
+      {
+        "id": "tt14364480",
+        "name": "Wake Up Dead Man",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt14364480/img",
+        "banner": "https://images.metahub.space/background/medium/tt14364480/img",
+        "genres": [
+          "Comedy",
+          "Crime",
+          "Drama"
+        ],
+        "description": "Detective Benoit Blanc teams up with an earnest young priest to investigate a perfectly impossible crime at a small-town church with a dark history.",
+        "imdbRating": "7.3"
+      },
+      {
+        "id": "tt1312221",
+        "name": "Frankenstein",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt1312221/img",
+        "banner": "https://images.metahub.space/background/medium/tt1312221/img",
+        "genres": [
+          "Drama",
+          "Fantasy",
+          "Horror"
+        ],
+        "description": "Dr. Victor Frankenstein, a brilliant but egotistical scientist, brings a creature to life in a monstrous experiment that ultimately leads to the undoing of both the creator and his tragic creation.",
+        "imdbRating": "7.4"
+      },
+      {
+        "id": "tt31868189",
+        "name": "Happy Gilmore 2",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt31868189/img",
+        "banner": "https://images.metahub.space/background/medium/tt31868189/img",
+        "genres": [
+          "Comedy",
+          "Sport"
+        ],
+        "description": "To provide for his family, a retired Happy Gilmore must pick up the golf clubs once more and reconnect with the sport he once dominated.",
+        "imdbRating": "6.1"
+      },
+      {
+        "id": "tt21191806",
+        "name": "Back in Action",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt21191806/img",
+        "banner": "https://images.metahub.space/background/medium/tt21191806/img",
+        "genres": [
+          "Action",
+          "Comedy"
+        ],
+        "description": "Former CIA spies Emily and Matt are pulled back into espionage after their secret identities are exposed.",
+        "imdbRating": "5.9"
+      },
+      {
+        "id": "tt14961624",
+        "name": "The Old Guard 2",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt14961624/img",
+        "banner": "https://images.metahub.space/background/medium/tt14961624/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Fantasy"
+        ],
+        "description": "Andy leads immortal warriors against a powerful enemy threatening their group. They grapple with the resurfacing of a long-lost immortal, complicating their mission to safeguard humanity.",
+        "imdbRating": "5.1"
+      },
+      {
+        "id": "tt31433402",
+        "name": "Fear Street: Prom Queen",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt31433402/img",
+        "banner": "https://images.metahub.space/background/medium/tt31433402/img",
+        "genres": [
+          "Horror",
+          "Mystery",
+          "Thriller"
+        ],
+        "description": "When the \"it\" girls competing for prom queen at Shadyside High start to disappear, a gutsy outsider discovers she's in for one hell of a prom night.",
+        "imdbRating": "5.1"
+      }
+    ]
+  },
+  {
+    "id": "new_disney",
+    "name": "New on Disney+",
+    "emoji": "✨",
+    "platform": "Disney+",
+    "badge": "Disney+",
+    "color": "#113CCF",
+    "gradient": "from-blue-600/30 to-indigo-950/20",
+    "description": "Anticipated 2026 tentpoles and major Disney+ theatrical releases.",
+    "items": [
+      {
+        "id": "tt21357150",
+        "name": "Avengers: Doomsday",
+        "year": "2026",
+        "poster": "https://images.metahub.space/poster/small/tt21357150/img",
+        "banner": "https://images.metahub.space/background/medium/tt21357150/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Sci-Fi"
+        ],
+        "description": "Heroes from three different worlds must unite when they're thrust together to confront a catastrophic danger that could destroy everything they know.",
+        "imdbRating": "Upcoming"
+      },
+      {
+        "id": "tt30825738",
+        "name": "Star Wars: The Mandalorian and Grogu",
+        "year": "2026",
+        "poster": "https://images.metahub.space/poster/small/tt30825738/img",
+        "banner": "https://images.metahub.space/background/medium/tt30825738/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Family"
+        ],
+        "description": "Once a lone bounty hunter, Mandalorian Din Djarin and his apprentice Grogu embark on an exciting new Star Wars adventure.",
+        "imdbRating": "6.7"
+      },
+      {
+        "id": "tt29355505",
+        "name": "Toy Story 5",
+        "year": "2026",
+        "poster": "https://images.metahub.space/poster/small/tt29355505/img",
+        "banner": "https://images.metahub.space/background/medium/tt29355505/img",
+        "genres": [
+          "Animation",
+          "Adventure",
+          "Comedy"
+        ],
+        "description": "Woody, Buzz, Jessie and the rest of the gang's jobs are challenged when they're introduced to electronics, a new threat to playtime.",
+        "imdbRating": "7.4"
+      },
+      {
+        "id": "tt1757678",
+        "name": "Avatar: Fire and Ash",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt1757678/img",
+        "banner": "https://images.metahub.space/background/medium/tt1757678/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Drama"
+        ],
+        "description": "Jake and Neytiri's family grapples with grief, encountering a new, aggressive Na'vi tribe, the Ash People, who are led by the fiery Varang, as the conflict on Pandora escalates and a new moral focus emerges.",
+        "imdbRating": "7.2"
+      },
+      {
+        "id": "tt14513804",
+        "name": "Captain America: Brave New World",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt14513804/img",
+        "banner": "https://images.metahub.space/background/medium/tt14513804/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Sci-Fi"
+        ],
+        "description": "Sam Wilson, the new Captain America, finds himself in the middle of an international incident and must discover the motive behind a nefarious global plan.",
+        "imdbRating": "5.6"
+      },
+      {
+        "id": "tt20969586",
+        "name": "Thunderbolts*",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt20969586/img",
+        "banner": "https://images.metahub.space/background/medium/tt20969586/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Crime"
+        ],
+        "description": "After finding themselves ensnared in a death trap, an unconventional team of antiheroes must go on a dangerous mission that will force them to confront the darkest corners of their pasts.",
+        "imdbRating": "7.1"
+      },
+      {
+        "id": "tt10676052",
+        "name": "The Fantastic Four: First Steps",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt10676052/img",
+        "banner": "https://images.metahub.space/background/medium/tt10676052/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Sci-Fi"
+        ],
+        "description": "Forced to balance their roles as heroes with the strength of their family bond, the Fantastic Four must defend Earth from a ravenous space god called Galactus and his enigmatic herald, the Silver Surfer.",
+        "imdbRating": "6.8"
+      },
+      {
+        "id": "tt26443597",
+        "name": "Zootopia 2",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt26443597/img",
+        "banner": "https://images.metahub.space/background/medium/tt26443597/img",
+        "genres": [
+          "Animation",
+          "Adventure",
+          "Comedy"
+        ],
+        "description": "Brave rabbit cop Judy Hopps and her friend, the fox Nick Wilde, team up again to crack a new case, the most perilous and intricate of their careers.",
+        "imdbRating": "7.3"
+      },
+      {
+        "id": "tt6604188",
+        "name": "Tron: Ares",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt6604188/img",
+        "banner": "https://images.metahub.space/background/medium/tt6604188/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Sci-Fi"
+        ],
+        "description": "A highly sophisticated program, Ares, is sent from the digital world into the real world on a dangerous mission.",
+        "imdbRating": "6.1"
+      },
+      {
+        "id": "tt4900148",
+        "name": "Elio",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt4900148/img",
+        "banner": "https://images.metahub.space/background/medium/tt4900148/img",
+        "genres": [
+          "Animation",
+          "Adventure",
+          "Comedy"
+        ],
+        "description": "Elio, a space fanatic with an active imagination, finds himself on a cosmic misadventure where he must form new bonds with alien lifeforms, navigate a crisis of intergalactic proportions and somehow discover who he is truly meant ...",
+        "imdbRating": "6.6"
+      }
+    ]
+  },
+  {
+    "id": "new_hbo_max",
+    "name": "New on HBO Max",
+    "emoji": "🟣",
+    "platform": "HBO Max",
+    "badge": "Max",
+    "color": "#600DF8",
+    "gradient": "from-purple-600/30 to-purple-950/20",
+    "description": "Premier 2026 blockbusters and acclaimed Max originals.",
+    "items": [
+      {
+        "id": "tt8814476",
+        "name": "Supergirl",
+        "year": "2026",
+        "poster": "https://images.metahub.space/poster/small/tt8814476/img",
+        "banner": "https://images.metahub.space/background/medium/tt8814476/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Drama"
+        ],
+        "description": "Kara Zor-El, aka Supergirl, joins forces with an unlikely companion on an interstellar journey of vengeance and justice when an unexpected adversary strikes too close to home.",
+        "imdbRating": "5.8"
+      },
+      {
+        "id": "tt2321555",
+        "name": "The Cat in the Hat",
+        "year": "2026",
+        "poster": "https://images.metahub.space/poster/small/tt2321555/img",
+        "banner": "https://images.metahub.space/background/medium/tt2321555/img",
+        "genres": [
+          "Animation",
+          "Adventure",
+          "Comedy"
+        ],
+        "description": "Meet the Cat in the Hat you don't know in an all-new, epic adventure where mischief, magic and mayhem reign supreme.",
+        "imdbRating": "6.6"
+      },
+      {
+        "id": "tt5950044",
+        "name": "Superman",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt5950044/img",
+        "banner": "https://images.metahub.space/background/medium/tt5950044/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Sci-Fi"
+        ],
+        "description": "Superman must reconcile his alien Kryptonian heritage with his human upbringing as reporter Clark Kent. As the embodiment of truth, justice and the American way he soon finds himself in a world that views these as old-fashioned.",
+        "imdbRating": "7.0"
+      },
+      {
+        "id": "tt31193180",
+        "name": "Sinners",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt31193180/img",
+        "banner": "https://images.metahub.space/background/medium/tt31193180/img",
+        "genres": [
+          "Horror"
+        ],
+        "description": "Trying to leave their troubled lives behind, twin brothers return to their hometown to start again, only to discover that an even greater evil is waiting to welcome them back.",
+        "imdbRating": "7.5"
+      },
+      {
+        "id": "tt12299608",
+        "name": "Mickey 17",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt12299608/img",
+        "banner": "https://images.metahub.space/background/medium/tt12299608/img",
+        "genres": [
+          "Adventure",
+          "Comedy",
+          "Fantasy"
+        ],
+        "description": "During a human expedition to colonize space, Mickey 17, a so-called \"expendable\" employee, is sent to explore an ice planet.",
+        "imdbRating": "6.7"
+      },
+      {
+        "id": "tt3566834",
+        "name": "A Minecraft Movie",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt3566834/img",
+        "banner": "https://images.metahub.space/background/medium/tt3566834/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Comedy"
+        ],
+        "description": "Four misfits are suddenly pulled through a mysterious portal into a bizarre cubic wonderland that thrives on imagination. To get back home they'll have to master this world while embarking on a quest with an unexpected expert craf...",
+        "imdbRating": "5.6"
+      },
+      {
+        "id": "tt9619824",
+        "name": "Final Destination: Bloodlines",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt9619824/img",
+        "banner": "https://images.metahub.space/background/medium/tt9619824/img",
+        "genres": [
+          "Horror",
+          "Thriller"
+        ],
+        "description": "Plagued by a recurring violent nightmare, a college student returns home to find the one person who can break the cycle and save her family from the horrific fate that inevitably awaits them.",
+        "imdbRating": "6.7"
+      },
+      {
+        "id": "tt22898462",
+        "name": "The Conjuring: Last Rites",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt22898462/img",
+        "banner": "https://images.metahub.space/background/medium/tt22898462/img",
+        "genres": [
+          "Horror",
+          "Mystery",
+          "Thriller"
+        ],
+        "description": "Paranormal investigators Ed and Lorraine Warren take on one last terrifying case involving mysterious entities they must confront.",
+        "imdbRating": "6.2"
+      },
+      {
+        "id": "tt26584495",
+        "name": "Companion",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt26584495/img",
+        "banner": "https://images.metahub.space/background/medium/tt26584495/img",
+        "genres": [
+          "Sci-Fi",
+          "Thriller"
+        ],
+        "description": "A weekend getaway with friends at a remote cabin turns into chaos after it's revealed that one of the guests is not what they seem.",
+        "imdbRating": "6.9"
+      }
+    ]
+  },
+  {
+    "id": "new_prime",
+    "name": "New on Prime Video",
+    "emoji": "🔵",
+    "platform": "Prime Video",
+    "badge": "Prime",
+    "color": "#00A8E1",
+    "gradient": "from-sky-600/30 to-blue-950/20",
+    "description": "Upcoming 2026 cinematic events and Amazon Original features.",
+    "items": [
+      {
+        "id": "tt0427340",
+        "name": "Masters of the Universe",
+        "year": "2026",
+        "poster": "https://images.metahub.space/poster/small/tt0427340/img",
+        "banner": "https://images.metahub.space/background/medium/tt0427340/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Fantasy"
+        ],
+        "description": "Prince Adam discovers that the strange memories shaping his life are real when the lost Sword of Power resurfaces, forcing him to return to Eternia and challenge the tyrant who shattered his family and kingdom.",
+        "imdbRating": "6.4"
+      },
+      {
+        "id": "tt12042730",
+        "name": "Project Hail Mary",
+        "year": "2026",
+        "poster": "https://images.metahub.space/poster/small/tt12042730/img",
+        "banner": "https://images.metahub.space/background/medium/tt12042730/img",
+        "genres": [
+          "Adventure",
+          "Comedy",
+          "Sci-Fi"
+        ],
+        "description": "A science teacher wakes up alone on a spaceship. As his memory returns, he uncovers a mission to stop a mysterious substance killing Earth's sun, and realizes that an unexpected friendship may be the key.",
+        "imdbRating": "8.2"
+      },
+      {
+        "id": "tt32430579",
+        "name": "Crime 101",
+        "year": "2026",
+        "poster": "https://images.metahub.space/poster/small/tt32430579/img",
+        "banner": "https://images.metahub.space/background/medium/tt32430579/img",
+        "genres": [
+          "Crime",
+          "Drama",
+          "Thriller"
+        ],
+        "description": "A meticulous jewel thief risks his flawless record against an equally obsessive detective and a volatile rival, while an underestimated insurance broker turns accomplice after decades of professional disrespect.",
+        "imdbRating": "6.8"
+      },
+      {
+        "id": "tt14181714",
+        "name": "The Bluff",
+        "year": "2026",
+        "poster": "https://images.metahub.space/poster/small/tt14181714/img",
+        "banner": "https://images.metahub.space/background/medium/tt14181714/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Drama"
+        ],
+        "description": "A Caribbean woman gets her secret past revealed when her island is invaded by vicious buccaneers.",
+        "imdbRating": "5.8"
+      },
+      {
+        "id": "tt7068946",
+        "name": "The Accountant 2",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt7068946/img",
+        "banner": "https://images.metahub.space/background/medium/tt7068946/img",
+        "genres": [
+          "Action",
+          "Crime",
+          "Drama"
+        ],
+        "description": "Christian Wolff applies his brilliant mind and illegal methods to reconstruct the unsolved puzzle of a Treasury chief's murder.",
+        "imdbRating": "6.6"
+      },
+      {
+        "id": "tt13357520",
+        "name": "Heads of State",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt13357520/img",
+        "banner": "https://images.metahub.space/background/medium/tt13357520/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Comedy"
+        ],
+        "description": "When the U.K. Prime Minister and U.S. President become the targets of a foreign adversary, they are forced to rely on each other to thwart a global conspiracy.",
+        "imdbRating": "6.4"
+      },
+      {
+        "id": "tt18392014",
+        "name": "Play Dirty",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt18392014/img",
+        "banner": "https://images.metahub.space/background/medium/tt18392014/img",
+        "genres": [
+          "Action",
+          "Crime",
+          "Drama"
+        ],
+        "description": "A ruthless thief and his expert crew stumble onto the heist of a lifetime.",
+        "imdbRating": "5.9"
+      },
+      {
+        "id": "tt21227864",
+        "name": "You're Cordially Invited",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt21227864/img",
+        "banner": "https://images.metahub.space/background/medium/tt21227864/img",
+        "genres": [
+          "Comedy",
+          "Romance"
+        ],
+        "description": "When two weddings are double-booked at the same venue, the father of one bride and the sister of the other bride try to preserve the wedding weekend.",
+        "imdbRating": "5.5"
+      },
+      {
+        "id": "tt31121295",
+        "name": "Deep Cover",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt31121295/img",
+        "banner": "https://images.metahub.space/background/medium/tt31121295/img",
+        "genres": [
+          "Action",
+          "Comedy",
+          "Crime"
+        ],
+        "description": "Three improv actors are asked to go undercover by the police in London's criminal underworld.",
+        "imdbRating": "6.7"
+      }
+    ]
+  },
+  {
+    "id": "new_apple",
+    "name": "New on Apple TV+",
+    "emoji": "🍏",
+    "platform": "Apple TV+",
+    "badge": "Apple TV+",
+    "color": "#333333",
+    "gradient": "from-zinc-600/30 to-zinc-950/20",
+    "description": "Prestige 2026 feature films and Apple Original productions.",
+    "items": [
+      {
+        "id": "tt32213169",
+        "name": "Way of the Warrior Kid",
+        "year": "2026",
+        "poster": "https://images.metahub.space/poster/small/tt32213169/img",
+        "banner": "https://images.metahub.space/background/medium/tt32213169/img",
+        "genres": [
+          "Drama",
+          "Family"
+        ],
+        "description": "Jake is an injured Navy SEAL who becomes a mentor for his shy, struggling nephew Marc. Using the principles of his military training, Jake teaches Marc how to be a Warrior Kid as he enters high school.",
+        "imdbRating": "Upcoming"
+      },
+      {
+        "id": "tt23724682",
+        "name": "Outcome",
+        "year": "2026",
+        "poster": "https://images.metahub.space/poster/small/tt23724682/img",
+        "banner": "https://images.metahub.space/background/medium/tt23724682/img",
+        "genres": [
+          "Comedy",
+          "Crime",
+          "Drama"
+        ],
+        "description": "Hollywood star Reef is forced to confront his problems and atone for his past after being threatened by bizarre video footage from his past.",
+        "imdbRating": "4.5"
+      },
+      {
+        "id": "tt16311594",
+        "name": "F1: The Movie",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt16311594/img",
+        "banner": "https://images.metahub.space/background/medium/tt16311594/img",
+        "genres": [
+          "Drama",
+          "Sport"
+        ],
+        "description": "A Formula One driver comes out of retirement to mentor and team up with a younger driver.",
+        "imdbRating": "7.6"
+      },
+      {
+        "id": "tt13654226",
+        "name": "The Gorge",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt13654226/img",
+        "banner": "https://images.metahub.space/background/medium/tt13654226/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Horror"
+        ],
+        "description": "Two operatives are appointed to posts in guard towers on opposite sides of a classified gorge.",
+        "imdbRating": "6.7"
+      },
+      {
+        "id": "tt27075958",
+        "name": "Fountain of Youth",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt27075958/img",
+        "banner": "https://images.metahub.space/background/medium/tt27075958/img",
+        "genres": [
+          "Action",
+          "Adventure",
+          "Fantasy"
+        ],
+        "description": "Two estranged siblings join forces to seek the legendary Fountain of Youth. Using historical clues, they embark on an epic quest filled with adventure. If successful, the mythical fountain could grant them immortality.",
+        "imdbRating": "5.7"
+      },
+      {
+        "id": "tt31194612",
+        "name": "Highest 2 Lowest",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt31194612/img",
+        "banner": "https://images.metahub.space/background/medium/tt31194612/img",
+        "genres": [
+          "Crime",
+          "Drama",
+          "Mystery"
+        ],
+        "description": "When a titan music mogul is targeted with a ransom plot, he is jammed up in a life-or-death moral dilemma.",
+        "imdbRating": "5.5"
+      },
+      {
+        "id": "tt21103218",
+        "name": "The Lost Bus",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt21103218/img",
+        "banner": "https://images.metahub.space/background/medium/tt21103218/img",
+        "genres": [
+          "Biography",
+          "Drama",
+          "History"
+        ],
+        "description": "A wayward school bus driver and a dedicated school teacher battle to save 22 children from a terrifying inferno.",
+        "imdbRating": "6.8"
+      },
+      {
+        "id": "tt27052633",
+        "name": "Echo Valley",
+        "year": "2025",
+        "poster": "https://images.metahub.space/poster/small/tt27052633/img",
+        "banner": "https://images.metahub.space/background/medium/tt27052633/img",
+        "genres": [
+          "Drama",
+          "Thriller"
+        ],
+        "description": "Kate is dealing with a personal tragedy while owning and training horses in Echo Valley, an isolated and picturesque place, when her daughter, Claire, arrives at her doorstep, frightened, trembling and covered in someone else's bl...",
+        "imdbRating": "6.3"
+      }
+    ]
+  }
+]

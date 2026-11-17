@@ -105,6 +105,72 @@ describe('QualityChecker - parseStreams', () => {
     expect(result.bestQuality).toBe('1080p FHD');
     expect(result.cleanStreamCount).toBe(1);
   });
+
+  test('deve rejeitar torrent falso sem fonte digital oficial cercado por streams CAM (ex: Godzilla Minus Zero)', () => {
+    const streams = [
+      {
+        name: 'Torrentio\n1080p',
+        title: 'Godzilla Minus Zero 2026 1080p HD h264- ETHEL\n👤 1373 💾 1.2 GB ⚙️ 1337x'
+      },
+      {
+        name: 'Torrentio\n1080p',
+        title: 'Godzilla Minus Zero 2026 1080p HD h264- ETHEL\n👤 172 💾 1.8 GB ⚙️ 1337x'
+      },
+      {
+        name: 'Torrentio\nCAM',
+        title: 'Godzilla.Minus.Zero.2026.1080p.CAMRip.Dublado.mkv\n👤 274 💾 3.83 GB'
+      },
+      {
+        name: 'Torrentio\nTeleSync',
+        title: 'Godzilla.Minus.Zero.2026.PL.AI.1080p.HDTS.H264-MAXX\n👤 97 💾 2.9 GB'
+      },
+      {
+        name: 'Torrentio\nTeleCine',
+        title: 'Godzilla.Minus.Zero.2026.D.TELECINE.1080p\n👤 42 💾 6.53 GB'
+      },
+      {
+        name: 'Torrentio',
+        title: 'Godzilla Minus Zero (2026) HdTScr Lat\n👤 215 💾 1.37 GB'
+      }
+    ];
+
+    const result = parseStreams(streams, 'Godzilla Minus Zero');
+    expect(result.isReady).toBe(false);
+    expect(result.isCamOnly).toBe(true);
+    expect(result.bestQuality).toBe('CAM / Theater Rip');
+    expect(result.cleanStreamCount).toBe(0);
+  });
+
+  test('deve rejeitar streams de filmes antigos homônimos ou upload falso para farmar seed (ex: How to Rob a Bank 2026 vs 2007)', () => {
+    const streams = [
+      {
+        name: 'Torrentio\n1080p',
+        title: 'How to Rob a Bank 2007 1080p AMZN WEB-DL H264-GPRS\n👤 111 💾 6.18 GB'
+      },
+      {
+        name: 'Torrentio\n1080p',
+        title: 'How to Rob a Bank 2007 1080p AMZN WEB-DL DDP2 0 H 264-GPRS\n👤 6 💾 6.18 GB'
+      },
+      {
+        name: 'Torrentio\nCAM',
+        title: 'How.to.Rob.a.Bank.2026.1080p.CAMRip.Dublado.mkv\n👤 65 💾 3.44 GB'
+      },
+      {
+        name: 'Torrentio\nTeleCine',
+        title: 'How.to.Rob.a.Bank.2026.D.TELECINE.1080p\n👤 16 💾 5.79 GB'
+      },
+      {
+        name: 'Torrentio\nTeleSync',
+        title: 'How.to.Rob.a.Bank.2026.TS.1080p\n👤 13 💾 4.67 GB'
+      }
+    ];
+
+    const result = parseStreams(streams, 'How to Rob a Bank', '2026');
+    expect(result.isReady).toBe(false);
+    expect(result.isCamOnly).toBe(true);
+    expect(result.bestQuality).toBe('CAM / Theater Rip');
+    expect(result.cleanStreamCount).toBe(0);
+  });
 });
 
 describe('QualityChecker - checkMovieQuality', () => {

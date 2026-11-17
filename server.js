@@ -8,6 +8,7 @@ const { searchMovies, getMeta } = require('./lib/cinemeta');
 const { getManifest, handleCatalog, handleMeta } = require('./lib/stremioAddon');
 const { loginStremio, getUserInfo, getAccountWatchlist, saveAccountWatchlist } = require('./lib/stremioAuth');
 const { encodeUserData, decodeUserData } = require('./lib/userData');
+const { getCuratedLists, getCuratedListById, addCuratedListToUser } = require('./lib/curatedLists');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
@@ -126,7 +127,7 @@ function triggerUserOnDemandSync(authKey, userId) {
       // 2. Confere qualidade dos filmes pendentes deste usuário
       const pendingItems = db.getItems(userId).filter(i => !i.has1080pPlus && !i.isWatched);
       for (const item of pendingItems.slice(0, 5)) {
-        const q = await checkMovieQuality(item.id, item.type || 'movie', item.name);
+        const q = await checkMovieQuality(item.id, item.type || 'movie', item.name, item.year);
         if (q && q.has1080pPlus) {
           await db.updateItem(item.id, {
             has1080pPlus: q.has1080pPlus,
@@ -529,7 +530,7 @@ app.post('/api/items', async (req, res) => {
     }
 
     // Immediately check stream quality
-    const quality = await checkMovieQuality(id, 'movie', meta.name);
+    const quality = await checkMovieQuality(id, 'movie', meta.name, meta.year);
 
     const saved = await db.addItem({
       id: meta.id,
@@ -567,7 +568,7 @@ app.post('/api/check/:id', async (req, res) => {
     const item = db.getItem(id, userId);
     if (!item) return res.status(404).json({ error: 'Item not found in watchlist' });
 
-    const quality = await checkMovieQuality(id, item.type || 'movie', item.name);
+    const quality = await checkMovieQuality(id, item.type || 'movie', item.name, item.year);
     const wasReady = item.has1080pPlus;
 
     const updated = await db.updateItem(id, {
@@ -603,7 +604,7 @@ app.post('/api/check-all', async (req, res) => {
     const results = [];
 
     for (const item of items) {
-      const quality = await checkMovieQuality(item.id, item.type || 'movie', item.name);
+      const quality = await checkMovieQuality(item.id, item.type || 'movie', item.name, item.year);
       const wasReady = item.has1080pPlus;
 
       const updated = await db.updateItem(item.id, {
@@ -729,7 +730,7 @@ app.post('/api/items/sync-batch', async (req, res) => {
         db.addItem(item, userId);
         added++;
         if (!item.bestQuality || item.bestQuality === 'Pending' || item.bestQuality === 'Pendente' || item.bestQuality === 'Checking...' || item.bestQuality === 'Verificando...') {
-          checkMovieQuality(item.id, item.type || 'movie', item.name).then(q => {
+          checkMovieQuality(item.id, item.type || 'movie', item.name, item.year).then(q => {
             if (q) db.updateItem(item.id, { has1080pPlus: q.has1080pPlus, bestQuality: q.bestQuality, streamCount: q.streamCount }, userId);
           }).catch(() => {});
         }
@@ -832,14 +833,14 @@ app.delete('/api/lists/:id', async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const { id } = req.params;
-    await db.deleteCustomList(userId, id);
+    const result = await db.deleteCustomList(userId, id);
 
     if (authKey) {
       const baseUrl = getBaseUrl(req);
       syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
     }
 
-    res.json({ success: true });
+    res.json(typeof result === 'object' && result !== null ? result : { success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -863,6 +864,45 @@ app.post('/api/items/:id/lists', async (req, res) => {
     }
 
     res.json({ success: true, item: updatedItem });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// -------------------------------------------------------------
+// CURATED STANDARD LISTS (NEW ON NETFLIX, DISNEY+, HBO MAX, ETC.)
+// -------------------------------------------------------------
+
+// Get all curated standard lists
+app.get('/api/curated-lists', async (req, res) => {
+  try {
+    await db.ensureLoaded();
+    const { userId } = await getRequestUser(req);
+    const userCustomLists = userId ? db.getCustomLists(userId) : [];
+    const lists = getCuratedLists(userCustomLists);
+    res.json({ success: true, lists });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Add a curated standard list with its movies to user's account
+app.post('/api/curated-lists/:id/add', async (req, res) => {
+  try {
+    await db.ensureLoaded();
+    const { authKey, userId } = await getRequestUser(req);
+    if (!userId || !authKey) {
+      return res.status(401).json({ error: 'Please sign in with your Stremio account to add curated lists.' });
+    }
+
+    const { id } = req.params;
+    const result = await addCuratedListToUser(userId, id, db, checkMovieQuality);
+
+    // Sync updated catalogs to user's Stremio account
+    const baseUrl = getBaseUrl(req);
+    syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
+
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -1014,7 +1054,7 @@ async function runBackgroundCheck() {
     if (allPending.length > 0) {
       console.log(`[AutoChecker] Checking ${allPending.length} items waiting for good quality...`);
       for (const { userId, item } of allPending) {
-        const quality = await checkMovieQuality(item.id, item.type || 'movie', item.name);
+        const quality = await checkMovieQuality(item.id, item.type || 'movie', item.name, item.year);
         if (quality.has1080pPlus) {
           console.log(`🎉 [NEW:${userId}] "${item.name}" is now available in ${quality.bestQuality}!`);
         }

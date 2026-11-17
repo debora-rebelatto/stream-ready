@@ -12,6 +12,7 @@ const mapping = {
   'stremioAddonService.ts': 'stremioAddon.js',
   'stremioAuthService.ts': 'stremioAuth.js',
   'userDataService.ts': 'userData.js',
+  'curatedListsService.ts': 'curatedLists.js',
 };
 
 console.log('Compiling server TypeScript services to lib/*.js (CommonJS)...');
@@ -34,11 +35,11 @@ for (const [tsFile, jsFile] of Object.entries(mapping)) {
     .replace(/from\s+['"]\.\/stremioAuthService(?:\.ts)?['"]/g, "from './stremioAuth'")
     .replace(/from\s+['"]\.\/userDataService(?:\.ts)?['"]/g, "from './userData'");
 
-  // Fix createRequire db pattern for CommonJS output
-  code = code.replace(
-    /import\s*\{\s*createRequire\s*\}\s*from\s*['"]module['\"];?\s*const\s*req\s*=\s*createRequire\(import\.meta\.url\);?\s*const\s*db\s*=\s*req\(['"][^'"]+['"]\);?/g,
-    "const db = require('./db');"
-  );
+  // Fix createRequire and relative imports for CommonJS output
+  code = code
+    .replace(/import\s*\{\s*createRequire\s*\}\s*from\s*['"]module['\"];?\s*const\s*req\s*=\s*createRequire\(import\.meta\.url\);?/g, '')
+    .replace(/\breq\(['"]\.\.\/\.\.\/lib\/db['"]\)/g, "require('./db')")
+    .replace(/\breq\(/g, 'require(');
 
   const transformed = swc.transformSync(code, {
     module: {
@@ -62,6 +63,17 @@ for (const [tsFile, jsFile] of Object.entries(mapping)) {
   const outPath = path.join(libDir, jsFile);
   fs.writeFileSync(outPath, outputCode, 'utf8');
   console.log(`✓ Compiled ${tsFile} -> lib/${jsFile}`);
+}
+
+// Copy JSON data files if they exist in servicesDir
+const dataFiles = ['curatedListsData.json'];
+for (const file of dataFiles) {
+  const src = path.join(servicesDir, file);
+  const dest = path.join(libDir, file);
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, dest);
+    console.log(`✓ Copied ${file} -> lib/${file}`);
+  }
 }
 
 console.log('All backend services compiled successfully to CommonJS.');

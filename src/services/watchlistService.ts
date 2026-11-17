@@ -99,7 +99,7 @@ export const watchlistService = {
     return api.getCustomLists();
   },
 
-  async createCustomList(name: string, emoji = '🎬') {
+  async createCustomList(name: string, emoji = '') {
     return api.createCustomList(name, emoji);
   },
 
@@ -113,5 +113,16 @@ export const watchlistService = {
 
   async setItemCustomLists(id: string, listIds: string[]) {
     return api.setItemCustomLists(id, listIds);
+  },
+
+  /**
+   * Curated / standard lists (New on Netflix, Disney+, HBO Max, etc.)
+   */
+  async getCuratedLists() {
+    return api.getCuratedLists();
+  },
+
+  async addCuratedList(id: string) {
+    return api.addCuratedList(id);
   },
 };

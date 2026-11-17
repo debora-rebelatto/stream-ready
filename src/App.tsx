@@ -3,15 +3,18 @@ import { isItemReady, isItemUnreleased } from './lib/utils';
 import { useAuth, useWatchlist } from './context/useAppContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
+import { RecommendedBanner } from './components/RecommendedBanner';
 import { SearchSection } from './components/SearchSection';
 import { MovieCard } from './components/MovieCard';
 import { LoginModal } from './components/LoginModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ManageListsModal } from './components/ManageListsModal';
+import { DeleteMovieModal } from './components/DeleteMovieModal';
 import { LandingPage } from './components/LandingPage';
+import { GitHubSponsorButton } from './components/GitHubSponsorButton';
 import { ToastContainer } from './components/ToastContainer';
 import { Pagination } from './components/Pagination';
-import { RotateCw, Film, Eye, Folder, FolderPlus, Search, ArrowUpDown, Filter, X } from 'lucide-react';
+import { RotateCw, Film, Eye, Folder, FolderPlus, Search, ArrowUpDown, Filter, X, Sparkles } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -33,9 +36,40 @@ export const App: React.FC = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isManageListsOpen, setIsManageListsOpen] = useState(false);
+  const [manageListsTab, setManageListsTab] = useState<'standard' | 'custom'>('standard');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const listTopRef = useRef<HTMLDivElement>(null);
+
+  // Delete movie confirmation modal state
+  const [movieToDelete, setMovieToDelete] = useState<{
+    id: string;
+    name: string;
+    poster?: string;
+    year?: string | number;
+  } | null>(null);
+  const [isDeletingMovie, setIsDeletingMovie] = useState(false);
+
+  const handleDeleteRequest = (id: string, name: string) => {
+    const found = items.find((i) => i.id === id);
+    setMovieToDelete({
+      id,
+      name,
+      poster: found?.poster,
+      year: found?.year,
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!movieToDelete || isDeletingMovie) return;
+    setIsDeletingMovie(true);
+    try {
+      await removeItem(movieToDelete.id, movieToDelete.name);
+      setMovieToDelete(null);
+    } finally {
+      setIsDeletingMovie(false);
+    }
+  };
 
   // New Filters & Sort states
   const [searchQuery, setSearchQuery] = useState('');
@@ -239,6 +273,7 @@ export const App: React.FC = () => {
         ) : user ? (
           <>
             <Hero onOpenSettings={() => setIsSettingsOpen(true)} />
+            <RecommendedBanner />
             <SearchSection />
 
             {/* Custom Lists Bar */}
@@ -286,12 +321,27 @@ export const App: React.FC = () => {
               })}
 
               <button
-                onClick={() => setIsManageListsOpen(true)}
+                onClick={() => {
+                  setManageListsTab('standard');
+                  setIsManageListsOpen(true);
+                }}
+                className="px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 flex items-center gap-1.5 shrink-0"
+                title="Explore and add standard streaming lists (Netflix, Disney+, HBO Max, etc.)"
+              >
+                <Sparkles size={13} />
+                <span>⭐ Standard Lists</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setManageListsTab('custom');
+                  setIsManageListsOpen(true);
+                }}
                 className="px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 flex items-center gap-1.5 shrink-0"
                 title="Create and manage custom lists"
               >
                 <FolderPlus size={13} />
-                <span>+ New List</span>
+                <span>+ Custom List</span>
               </button>
             </div>
 
@@ -550,7 +600,7 @@ export const App: React.FC = () => {
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
                   {paginatedItems.map((item) => (
-                    <MovieCard key={item.id} item={item} onDelete={removeItem} />
+                    <MovieCard key={item.id} item={item} onDelete={handleDeleteRequest} />
                   ))}
                 </div>
 
@@ -573,18 +623,37 @@ export const App: React.FC = () => {
       {/* Modals & Toast */}
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-      <ManageListsModal isOpen={isManageListsOpen} onClose={() => setIsManageListsOpen(false)} />
+      <ManageListsModal
+        isOpen={isManageListsOpen}
+        onClose={() => setIsManageListsOpen(false)}
+        initialTab={manageListsTab}
+      />
+      <DeleteMovieModal
+        isOpen={!!movieToDelete}
+        movieName={movieToDelete?.name || ''}
+        moviePoster={movieToDelete?.poster}
+        movieYear={movieToDelete?.year}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setMovieToDelete(null)}
+        isDeleting={isDeletingMovie}
+      />
       <ToastContainer />
 
       {/* Footer for authenticated users (LandingPage has its own footer) */}
       {user && (
         <footer className="border-t border-white/5 py-6 px-4 text-center text-xs text-gray-500">
-          <p>
-            🎬 <span className="font-semibold text-gray-400">Stremio Watchlist (Good Quality Tracker)</span> • Beta Version
-          </p>
-          <p className="mt-1 text-[11px] text-gray-600">
-            Disclaimer: This community tool uses public stream metadata and is not affiliated with or endorsed by Stremio.
-          </p>
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="shrink-0">
+              🎬 <span className="font-semibold text-gray-400">Stremio Watchlist (Good Quality Tracker)</span> • Beta Version
+            </p>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-gray-400 text-[11px] hidden sm:inline">Support the project:</span>
+              <GitHubSponsorButton size="sm" />
+            </div>
+            <p className="text-[11px] text-gray-600 shrink-0">
+              Disclaimer: Community tool not affiliated with Stremio.
+            </p>
+          </div>
         </footer>
       )}
     </div>
