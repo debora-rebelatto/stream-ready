@@ -918,17 +918,44 @@ app.get('/api/info', async (req, res) => {
 
 // Export database (for logged in user)
 app.get('/api/export', async (req, res) => {
-  const { userId } = await getRequestUser(req);
-  const items = userId ? db.getItems(userId) : [];
-  res.setHeader('Content-Disposition', 'attachment; filename="stremio-watchlist.json"');
-  res.setHeader('Content-Type', 'application/json');
-  res.send(JSON.stringify(items, null, 2));
+  try {
+    await db.ensureLoaded();
+    const { authKey, userId } = await getRequestUser(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized. Please sign in with your Stremio account to export your watchlist.' });
+    }
+
+    let items = db.getItems(userId);
+    // Se o banco deste usuário estiver vazio na memória (ex.: cold start), restaura da nuvem do Stremio
+    if (items.length === 0 && authKey) {
+      try {
+        const cloudItems = await getAccountWatchlist(authKey);
+        if (Array.isArray(cloudItems) && cloudItems.length > 0) {
+          for (const it of cloudItems) {
+            if (!db.getItem(it.id, userId)) {
+              db.addItem(it, userId);
+            }
+          }
+          items = db.getItems(userId);
+        }
+      } catch (e) {
+        console.warn('[Persistence:api/export] Erro ao recuperar da nuvem:', e.message);
+      }
+    }
+
+    res.setHeader('Content-Disposition', 'attachment; filename="stremio-watchlist.json"');
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(items, null, 2));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Import database (for logged in user)
 app.post('/api/import', async (req, res) => {
   try {
-    const { userId } = await getRequestUser(req);
+    await db.ensureLoaded();
+    const { authKey, userId } = await getRequestUser(req);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const { items } = req.body;
@@ -942,6 +969,12 @@ app.post('/api/import', async (req, res) => {
         addedCount++;
       }
     }
+
+    if (addedCount > 0 && authKey) {
+      const baseUrl = getBaseUrl(req);
+      syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
+    }
+
     res.json({ success: true, addedCount, stats: db.getStats(userId) });
   } catch (err) {
     res.status(500).json({ error: err.message });

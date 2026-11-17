@@ -21,8 +21,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   } = useWatchlist();
   const { user } = useAuth();
   const { showToast } = useToast();
+  const [isExporting, setIsExporting] = React.useState(false);
 
   if (!isOpen) return null;
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const items = await watchlistService.exportBackup();
+      if (!Array.isArray(items) || items.length === 0) {
+        showToast('Your watchlist is empty. There are no movies to export.', 'info');
+        return;
+      }
+
+      const jsonStr = JSON.stringify(items, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const dateStr = new Date().toISOString().split('T')[0];
+      link.href = url;
+      link.download = `stremio-watchlist-backup-${dateStr}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast(`🎉 Exported ${items.length} movie${items.length === 1 ? '' : 's'} successfully!`, 'success');
+    } catch (err: any) {
+      console.error('[Export Backup Error]', err);
+      showToast(err.message || 'Failed to export backup.', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,12 +62,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     const reader = new FileReader();
     reader.onload = async (ev) => {
       try {
-        const items = JSON.parse(ev.target?.result as string);
+        const raw = JSON.parse(ev.target?.result as string);
+        const items = Array.isArray(raw) ? raw : (raw.items || raw.movies || []);
+        if (!Array.isArray(items) || items.length === 0) {
+          showToast('No valid movies found in this JSON backup file.', 'error');
+          return;
+        }
         const res = await watchlistService.importBackup(items);
         if (res.success) {
           showToast(`🎉 ${res.addedCount} items imported successfully!`, 'success');
           await refreshWatchlist();
           onClose();
+        } else {
+          showToast('Failed to import backup.', 'error');
         }
       } catch {
         showToast('Invalid JSON file.', 'error');
@@ -223,10 +261,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           <div className="pt-2 border-t border-white/10 flex gap-3">
             <button
               type="button"
-              onClick={() => (window.location.href = '/api/export')}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-[#1f2438] hover:bg-[#272e48] border border-white/10 text-gray-200 font-medium cursor-pointer transition-colors"
+              onClick={handleExport}
+              disabled={isExporting}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-[#1f2438] hover:bg-[#272e48] border border-white/10 text-gray-200 font-medium cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Download size={13} /> Export Backup (.json)
+              <Download size={13} className={isExporting ? 'animate-spin' : ''} />
+              {isExporting ? 'Exporting...' : 'Export Backup (.json)'}
             </button>
 
             <label className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-[#1f2438] hover:bg-[#272e48] border border-white/10 text-gray-200 font-medium cursor-pointer transition-colors">

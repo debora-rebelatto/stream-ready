@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS public.watchlist_users (
   stremio_auth_key TEXT,                         -- Chave de autenticação criptografada
   min_quality TEXT DEFAULT '1080p',              -- Qualidade mínima desejada ('1080p' ou '4k')
   auto_sync_watched BOOLEAN DEFAULT FALSE,       -- Sincronização automática de vistos (desativada por padrão)
+  track_watchlist_watched BOOLEAN DEFAULT TRUE,  -- Rastrear filmes da lista assistidos após adição
+  sync_previously_watched BOOLEAN DEFAULT FALSE, -- Sincronizar filmes assistidos anteriormente no Stremio
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

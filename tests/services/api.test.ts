@@ -205,13 +205,28 @@ describe('API Client (src/lib/api.ts)', () => {
       }));
     });
 
-    test('getInfo e importBackup', async () => {
+    test('getInfo, exportBackup e importBackup', async () => {
       global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
         json: async () => ({ success: true }),
       });
 
       await api.getInfo();
       expect(global.fetch).toHaveBeenCalledWith('/api/info', expect.any(Object));
+
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ([{ id: 'tt1' }]),
+      });
+
+      const backup = await api.exportBackup();
+      expect(global.fetch).toHaveBeenCalledWith('/api/export', expect.any(Object));
+      expect(backup).toEqual([{ id: 'tt1' }]);
+
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
 
       await api.importBackup([{ id: 'tt1' }] as any);
       expect(global.fetch).toHaveBeenCalledWith('/api/import', expect.objectContaining({

@@ -79,6 +79,13 @@ export const watchlistService = {
   },
 
   /**
+   * Export JSON backup
+   */
+  async exportBackup(): Promise<WatchlistItem[]> {
+    return api.exportBackup();
+  },
+
+  /**
    * Import JSON backup
    */
   async importBackup(items: WatchlistItem[]) {

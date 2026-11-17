@@ -147,6 +147,15 @@ describe('watchlistService', () => {
       expect(res).toEqual(mockResult);
     });
 
+    test('exportBackup deve delegar para api.exportBackup', async () => {
+      const mockResult = [{ id: 'tt1', name: 'Movie 1' }] as any;
+      const spy = jest.spyOn(api, 'exportBackup').mockResolvedValue(mockResult);
+
+      const res = await watchlistService.exportBackup();
+      expect(spy).toHaveBeenCalled();
+      expect(res).toEqual(mockResult);
+    });
+
     test('importBackup deve delegar para api.importBackup', async () => {
       const mockResult = { success: true, addedCount: 3, stats: {} as any };
       const spy = jest.spyOn(api, 'importBackup').mockResolvedValue(mockResult);

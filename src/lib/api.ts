@@ -206,6 +206,17 @@ export const api = {
     return res.json();
   },
 
+  async exportBackup(): Promise<WatchlistItem[]> {
+    const res = await fetch('/api/export', {
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Failed to export backup (${res.status})`);
+    }
+    return res.json();
+  },
+
   async importBackup(items: WatchlistItem[]): Promise<{ success: boolean; addedCount: number; stats: WatchlistStats }> {
     const res = await fetch('/api/import', {
       method: 'POST',
