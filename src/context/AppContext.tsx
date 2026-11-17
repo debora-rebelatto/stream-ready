@@ -5,10 +5,28 @@ import { watchlistService } from '../services/watchlistService';
 import { cinemetaService } from '../services/cinemetaService';
 import { api } from '../lib/api';
 import { isItemReady, isItemUnreleased } from '../lib/utils';
-import { trackEvent, identifyUser, resetUser, type EventSource } from '../lib/analytics';
+import posthog from '../lib/posthog';
+import { trackEvent, identifyUser as identifyAnalyticsUser, resetUser as resetAnalyticsUser, type EventSource } from '../lib/analytics';
 import { AuthContext, WatchlistContext, ToastContext, useToast } from './useAppContext';
 
 const RATINGS_CACHE_KEY = 'stremio_ratings_cache';
+const isPostHogConfigured = Boolean(import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST);
+
+function identifyUser(user: StremioUser) {
+  if (isPostHogConfigured && user.id) {
+    posthog.identify(user.id, { email: user.email });
+  }
+  identifyAnalyticsUser(user.id || user.email, { email: user.email });
+}
+
+function resetPostHog() {
+  if (isPostHogConfigured) posthog.reset();
+  resetAnalyticsUser();
+}
+
+function capturePostHog(event: string, properties: Record<string, string | number | boolean> = {}) {
+  if (isPostHogConfigured) posthog.capture(event, properties);
+}
 
 function getStoredRatings(): Record<string, string> {
   try {
@@ -108,9 +126,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const checkAuth = useCallback(async () => {
     setIsLoadingAuth(true);
+    const hadStoredSession = Boolean(authService.getAuthKey());
     try {
       const res = await authService.getStatus();
       if (res.loggedIn && res.user) {
+        identifyUser(res.user);
         setUser(res.user);
         identifyUser(res.user.email, { email: res.user.email });
         try {
@@ -129,6 +149,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         } catch {}
       } else if (res.isUnauthorized) {
+        if (hadStoredSession) resetPostHog();
         setUser(null);
         authService.clearAuth();
       } else {
@@ -157,6 +178,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.getWatchlist();
       if (res.requireAuth) {
+        resetPostHog();
         setUser(null);
         authService.clearAuth();
         return;
@@ -242,6 +264,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await authService.login({ email, password: pass });
       if (res.success && res.authKey && res.user) {
+        if (authService.getAuthKey() && user?.id !== res.user.id) resetPostHog();
+        identifyUser(res.user);
+        capturePostHog('stremio_login_completed', { login_method: 'credentials' });
         authService.setAuthKey(res.authKey, res.user.email);
         setUser(res.user);
         identifyUser(res.user.email, { email: res.user.email });
@@ -259,6 +284,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await authService.login({ authKey });
       if (res.success && res.authKey && res.user) {
+        if (authService.getAuthKey() && user?.id !== res.user.id) resetPostHog();
+        identifyUser(res.user);
+        capturePostHog('stremio_login_completed', { login_method: 'auth_key' });
         authService.setAuthKey(res.authKey, res.user.email);
         setUser(res.user);
         identifyUser(res.user.email, { email: res.user.email });
@@ -276,6 +304,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     trackEvent('auth_logout', {});
     resetUser();
     await authService.logout();
+    resetPostHog();
     setUser(null);
     setItems([]);
     setCustomLists([]);
@@ -330,6 +359,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return;
       }
       const item = res.item;
+      capturePostHog('watchlist_item_added', { is_ready: Boolean(item.has1080pPlus) });
       trackEvent('movie_added', {
         title: item.name,
         year: item.year ? String(item.year) : undefined,
@@ -351,6 +381,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.removeItem(id);
       if (res.success) {
+        capturePostHog('watchlist_item_removed', {});
         trackEvent('movie_removed', { title: name, imdbId: id });
         showToast(`"${name}" removed from watchlist.`, 'info');
         setItems((prev) => prev.filter((i) => i.id !== id));
@@ -388,6 +419,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.recheckAll(true);
       if (res.success) {
+        capturePostHog('watchlist_recheck_completed', { newly_ready: res.newlyReady || 0 });
         if (res.newlyReady > 0) {
           showToast(`🎉 ${res.newlyReady} movie(s) are now ready in good quality!`, 'success');
         } else {
@@ -407,6 +439,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setGlobalMinQualityState(quality);
     try {
       await api.saveSettings({ minQuality: quality });
+      capturePostHog('watchlist_quality_target_updated', { scope: 'global', quality_target: quality });
       showToast(`🎯 Quality preference set to ${quality.toUpperCase()}!`, 'success');
       await refreshWatchlist();
     } catch {
@@ -473,6 +506,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           )
         );
         if (res.stats) setStats(res.stats);
+        capturePostHog('watchlist_item_watched', { status: watched ? 'watched' : 'active' });
         showToast(
           watched ? '👁️ Movie moved to Watched History.' : '↩️ Movie restored to active watchlist.',
           'success'
@@ -491,6 +525,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           prev.map((i) => (i.id === id ? { ...i, minQuality } : i))
         );
         if (res.stats) setStats(res.stats);
+        capturePostHog('watchlist_quality_target_updated', {
+          scope: 'item',
+          quality_target: minQuality || 'default',
+        });
         showToast(`Target quality set to ${minQuality ? minQuality.toUpperCase() : 'Default'}.`, 'success');
       }
     } catch {
@@ -527,6 +565,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.createCustomList(name, emoji);
       if (res.success && res.list) {
+        capturePostHog('custom_list_created', {});
         trackEvent('custom_list_created', { listName: res.list.name });
         setCustomLists((prev) => [...prev, res.list]);
         showToast(`📁 List "${res.list.name}" created successfully!`, 'success');
@@ -637,6 +676,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.addCuratedList(id);
       if (res.success && res.list) {
+        capturePostHog('curated_list_added', { added_movies_count: res.addedMoviesCount ?? 0 });
         trackEvent('curated_list_added', { listName: res.list.name || id });
         showToast(`Added "${res.list.name || 'Standard List'}" (${res.addedMoviesCount ?? 0} new movies)!`, 'success');
 
