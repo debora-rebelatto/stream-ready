@@ -39,7 +39,14 @@ export const WatchInStremioButton: React.FC<WatchInStremioButtonProps> = ({
       aria-label={buttonText}
     >
       <Play size={13} fill="currentColor" />
-      <span>{buttonText}</span>
+      {label ? (
+        <span>{label}</span>
+      ) : (
+        <>
+          <span className="hidden sm:inline">{buttonText}</span>
+          <span className="sm:hidden">{isReady ? 'Watch' : 'Stremio'}</span>
+        </>
+      )}
     </button>
   );
 };

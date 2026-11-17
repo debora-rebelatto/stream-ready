@@ -53,10 +53,11 @@ export const WatchlistActionButton: React.FC<WatchlistActionButtonProps> = ({
   if (isInWatchlist) {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-emerald-300 text-xs sm:text-sm font-medium backdrop-blur-md ${className}`}
+        className={`inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-white/5 border border-white/10 text-emerald-300 text-xs sm:text-sm font-medium backdrop-blur-md ${className}`}
       >
-        <Check size={14} className="text-emerald-400" />
-        <span>In Watchlist</span>
+        <Check size={13} className="text-emerald-400" />
+        <span className="hidden sm:inline">In Watchlist</span>
+        <span className="sm:hidden">Saved</span>
       </span>
     );
   }
@@ -66,7 +67,7 @@ export const WatchlistActionButton: React.FC<WatchlistActionButtonProps> = ({
       type="button"
       onClick={handleAdd}
       disabled={isLoading}
-      className={`inline-flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-medium text-xs sm:text-sm backdrop-blur-md transition-all cursor-pointer disabled:opacity-50 ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-medium text-xs sm:text-sm backdrop-blur-md transition-all cursor-pointer disabled:opacity-50 ${className}`}
       title="Add to Watchlist"
       aria-label="Add to Watchlist"
     >
@@ -75,7 +76,8 @@ export const WatchlistActionButton: React.FC<WatchlistActionButtonProps> = ({
       ) : (
         <Plus size={14} />
       )}
-      <span>Add to Watchlist</span>
+      <span className="hidden sm:inline">Add to Watchlist</span>
+      <span className="sm:hidden">Add</span>
     </button>
   );
 };

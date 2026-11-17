@@ -170,13 +170,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             <Button
               variant="outline"
               size="sm"
+              isIconOnly
               onClick={onBack}
-              icon={<ArrowLeft size={14} />}
+              icon={<ArrowLeft size={16} />}
               className="text-gray-300 hover:text-white"
-            >
-              Back to Watchlist
-            </Button>
-            <div className="hidden sm:block h-5 w-px bg-white/10" />
+              aria-label="Back to Watchlist"
+              title="Back to Watchlist"
+            />
+            <div className="h-5 w-px bg-white/10" />
             <div className="flex items-center gap-2">
               <span className="text-lg">⚙️</span>
               <h1 className="text-base sm:text-lg font-bold tracking-tight text-white">Settings</h1>
@@ -191,16 +192,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   {user.email}
                 </span>
               </div>
-            )}
-            {onOpenInstallGuide && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onOpenInstallGuide}
-                icon={<BookOpen size={13} className="text-purple-400" />}
-              >
-                Install Guide
-              </Button>
             )}
           </div>
         </div>
@@ -217,23 +208,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   Categories
                 </h2>
               </div>
-              <nav className="flex lg:flex-col gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
+              <nav className="grid grid-cols-2 lg:flex lg:flex-col gap-2">
                 {navItems.map((item) => {
                   const isActive = activeTab === item.id;
                   return (
                     <button
                       key={item.id}
                       onClick={() => setActiveTab(item.id)}
-                      className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer text-left ${
                         isActive
                           ? 'bg-purple-600/20 text-purple-200 border border-purple-500/30 shadow-sm'
-                          : 'text-gray-400 hover:text-white hover:bg-white/5'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
                       }`}
                     >
-                      <span className={isActive ? 'text-purple-400' : 'text-gray-500'}>
+                      <span className={`shrink-0 ${isActive ? 'text-purple-400' : 'text-gray-500'}`}>
                         {item.icon}
                       </span>
-                      <span>{item.label}</span>
+                      <span className="truncate">{item.label}</span>
                     </button>
                   );
                 })}
@@ -400,11 +391,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                         </p>
                       </div>
                     </div>
-                    {stats.watched > 0 && (
-                      <Badge variant="purple" size="sm">
-                        {stats.watched} watched
-                      </Badge>
-                    )}
                   </div>
 
                   {/* Sync Toggles */}

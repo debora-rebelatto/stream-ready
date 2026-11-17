@@ -25,6 +25,7 @@ Welcome to **Stremio Watchlist (Good Quality Tracker)**. This document serves as
 
 ---
 
+
 ## 🏛️ Clean Architecture & Clean Code Standards
 
 > [!IMPORTANT]
@@ -106,10 +107,12 @@ Every feature in the application must respect strict layer boundaries. Dependenc
 To transition the entire codebase to 100% compliance with the Clean Architecture structure above without breaking existing functionality or tests, refactoring is organized into the following achievable phases:
 
 ### Phase 1: Domain Models & Pure Utilities (`src/models/` & `src/utils/`)
+
 - [ ] **1.1. Create `src/models/`:** Split `src/types.ts` into domain-specific model files (`MovieModel.ts`, `UserModel.ts`, `CustomListModel.ts`, `SettingsModel.ts`, `ServerInfoModel.ts`) with a barrel export `src/models/index.ts` (keeping `src/types.ts` as a re-export bridge for backward compatibility).
 - [ ] **1.2. Consolidate `src/utils/`:** Move pure helper functions (`utils.ts`, `recommendations.ts`, `analytics.ts`, `api.ts`) into `src/utils/` with clear adapter/helper naming (`movieAdapter.ts`, `recommendationEngine.ts`, `analyticsClient.ts`, `httpClient.ts`).
 
 ### Phase 2: Frontend Controllers & Context Decomposition (`src/controllers/`)
+
 - [ ] **2.1. Decompose `AppContext.tsx` (816 lines):** Extract domain state and actions into dedicated controller hooks in `src/controllers/`:
   - `useAuthController.ts` (session check, login, logout, account deletion)
   - `useWatchlistController.ts` (watchlist CRUD, quality rechecks, watched sync, backup import/export)
@@ -122,6 +125,7 @@ To transition the entire codebase to 100% compliance with the Clean Architecture
   - `useSearchController.ts` (debounced Cinemeta/server search, adding state per item)
 
 ### Phase 3: Presentational Views & Minimal Components (`src/views/` & `src/components/`)
+
 - [ ] **3.1. Create `src/views/`:** Move page-level screens into `src/views/` as pure presentational views:
   - `LandingPageView.tsx` (consuming `useLandingController`)
   - `UserDashboardView.tsx` (consuming `useDashboardController`)
@@ -134,6 +138,7 @@ To transition the entire codebase to 100% compliance with the Clean Architecture
   - Create a reusable base `<Modal />` wrapper component to eliminate duplicated backdrop/header/close boilerplate across all 6 modal components.
 
 ### Phase 4: Backend Clean Architecture (`server/` & `lib/db.js`)
+
 - [ ] **4.1. Split Monolithic `lib/db.js` (1,344 lines) into `server/repositories/`:**
   - `supabaseClient.ts` (shared Supabase headers, REST helpers, and retry logic)
   - `userRepository.ts` (user resolution, settings, account deletion)

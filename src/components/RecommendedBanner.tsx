@@ -163,7 +163,7 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Background Banner Image with Cross-Fade */}
-      <div className="relative w-full h-80 sm:h-90 md:h-97.5 overflow-hidden">
+      <div className="relative w-full h-72 sm:h-88 md:h-96 overflow-hidden">
         {movies.map((movie, idx) => {
           const isActive = idx === currentIndex;
           const bannerUrl =
@@ -197,26 +197,27 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({
         <div className="absolute inset-0 bg-linear-to-r from-[#0c0d14] via-[#0c0d14]/90 sm:via-[#0c0d14]/70 md:via-[#0c0d14]/40 to-transparent z-10" />
 
         {/* Top Controls: Minimal Header + Slide Switcher */}
-        <div className="absolute top-4 left-4 sm:left-6 right-4 sm:right-6 flex items-center justify-between z-20">
+        <div className="absolute top-3 sm:top-4 left-3.5 sm:left-6 right-3.5 sm:right-6 flex items-center justify-between z-20">
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[11px] font-semibold text-purple-300 tracking-wider uppercase">
-              <Sparkles size={12} className="text-purple-400" />
-              <span>Recommended to Watch</span>
+            <span className="flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] sm:text-[11px] font-semibold text-purple-300 tracking-wider uppercase">
+              <Sparkles size={11} className="text-purple-400" />
+              <span className="hidden xs:inline">Recommended</span>
+              <span className="xs:hidden">Featured</span>
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             {/* Slide Navigation Buttons */}
-            <div className="flex items-center gap-1 bg-black/50 backdrop-blur-md rounded-xl p-1 border border-white/10">
+            <div className="flex items-center gap-1 bg-black/50 backdrop-blur-md rounded-xl p-0.5 sm:p-1 border border-white/10">
               <button
                 onClick={handlePrev}
                 className="p-1 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 title="Previous"
                 aria-label="Previous"
               >
-                <ChevronLeft size={15} />
+                <ChevronLeft size={14} />
               </button>
-              <span className="text-[11px] font-medium text-gray-300 px-1.5 font-mono">
+              <span className="text-[10px] sm:text-[11px] font-medium text-gray-300 px-1 font-mono">
                 {currentIndex + 1}/{movies.length}
               </span>
               <button
@@ -225,64 +226,46 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({
                 title="Next"
                 aria-label="Next"
               >
-                <ChevronRight size={15} />
+                <ChevronRight size={14} />
               </button>
             </div>
           </div>
         </div>
 
         {/* Main Content Area */}
-        <div className="absolute bottom-6 sm:bottom-8 left-4 sm:left-6 right-4 sm:right-6 z-20 max-w-2xl">
+        <div className="absolute bottom-4 sm:bottom-8 left-3.5 sm:left-6 right-3.5 sm:right-6 z-20 max-w-2xl">
           {/* Status Badge: Single, clean, non-redundant tag */}
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
             {currentMovie.isReady ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wide bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 backdrop-blur-md">
+              <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold uppercase tracking-wide bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 backdrop-blur-md">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>
-                  Ready to Watch
                   {currentMovie.qualityBadge && currentMovie.qualityBadge !== 'Ready to Watch'
-                    ? ` • ${currentMovie.qualityBadge}`
-                    : ''}
+                    ? currentMovie.qualityBadge
+                    : 'Ready to Watch'}
                 </span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wide bg-amber-500/20 border border-amber-400/30 text-amber-300 backdrop-blur-md">
+              <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold uppercase tracking-wide bg-amber-500/20 border border-amber-400/30 text-amber-300 backdrop-blur-md">
                 <Clock size={11} className="text-amber-400" />
                 <span>{currentMovie.qualityBadge || 'Coming Soon'}</span>
-              </span>
-            )}
-
-            {currentMovie.isInWatchlist && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-purple-500/20 border border-purple-500/30 text-purple-300 backdrop-blur-md">
-                <Check size={11} />
-                <span>In Watchlist</span>
               </span>
             )}
           </div>
 
           {/* Title */}
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight drop-shadow-md mb-2 leading-tight">
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight drop-shadow-md mb-1 sm:mb-2 leading-tight line-clamp-1 sm:line-clamp-2">
             {currentMovie.name}
           </h2>
 
-          {/* Minimalist Metadata Line: Year • Genres • Rating */}
-          <div className="flex items-center gap-2 text-xs text-gray-300 mb-2.5 font-medium">
+          {/* Minimalist Metadata Line: Year • Genres (desktop) • Rating */}
+          <div className="flex items-center gap-2 text-[11px] sm:text-xs text-gray-300 mb-2 sm:mb-2.5 font-medium">
             {currentMovie.year && <span>{currentMovie.year}</span>}
-
-            {currentMovie.releaseDate && (
-              <>
-                <span className="text-gray-500">•</span>
-                <span className="text-gray-400 font-mono text-[11px]">
-                  {currentMovie.isReady ? 'Released: ' : 'Premiere: '}
-                  {currentMovie.releaseDate}
-                </span>
-              </>
-            )}
 
             {currentMovie.genres && currentMovie.genres.length > 0 && (
               <>
-                <span className="text-gray-500">•</span>
-                <span className="text-gray-300 truncate max-w-[200px] sm:max-w-none">
+                <span className="hidden sm:inline text-gray-500">•</span>
+                <span className="hidden sm:inline text-gray-300 truncate max-w-[200px] sm:max-w-none">
                   {currentMovie.genres.slice(0, 3).join(', ')}
                 </span>
               </>
@@ -299,15 +282,15 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({
             )}
           </div>
 
-          {/* Brief Description */}
+          {/* Brief Description: Hidden on mobile to keep hero clean and focused */}
           {currentMovie.description && (
-            <p className="text-xs sm:text-sm text-gray-300/90 leading-relaxed line-clamp-2 mb-4 drop-shadow">
+            <p className="hidden sm:block text-xs sm:text-sm text-gray-300/90 leading-relaxed line-clamp-2 mb-4 drop-shadow">
               {currentMovie.description}
             </p>
           )}
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             <WatchInStremioButton
               movieId={currentMovie.id}
               isReady={currentMovie.isReady}
