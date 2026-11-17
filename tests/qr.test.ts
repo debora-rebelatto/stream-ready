@@ -53,4 +53,16 @@ describe('QR Code & TV Mobile Companion', () => {
     expect(metaEmpty.meta?.genres).toContain('Scan QR Code');
     expect(metaEmpty.meta?.description).toContain('SCAN QR CODE');
   });
+
+  test('validates qr tracking redirect url structure', () => {
+    const context = 'stremio_tv';
+    const redirectUrl = `/r/qr?context=${context}`;
+    expect(redirectUrl).toContain('/r/qr');
+    expect(redirectUrl).toContain('context=stremio_tv');
+
+    const targetUrl = `https://stremiowatchlist.vercel.app/?source=stremio_tv_qr&context=${context}`;
+    const parsed = new URL(targetUrl);
+    expect(parsed.searchParams.get('source')).toBe('stremio_tv_qr');
+    expect(parsed.searchParams.get('context')).toBe('stremio_tv');
+  });
 });

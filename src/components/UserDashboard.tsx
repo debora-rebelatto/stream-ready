@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { isItemReady, isItemUnreleased } from '../lib/utils';
 import { trackEvent } from '../lib/analytics';
-import { useAuth, useWatchlist } from '../context/useAppContext';
+import { useAuth, useWatchlist, useToast } from '../context/useAppContext';
 import { api } from '../lib/api';
 import { Navbar } from './Navbar';
 import { Hero } from './Hero';
@@ -24,6 +24,7 @@ import { RotateCw, Eye, Folder, FolderPlus, Search, X, Sparkles } from 'lucide-r
 
 export const UserDashboard: React.FC = () => {
   const { user, deleteAccount } = useAuth();
+  const { showToast } = useToast();
   const {
     items,
     stats,
@@ -44,13 +45,35 @@ export const UserDashboard: React.FC = () => {
   const [isManageListsOpen, setIsManageListsOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [manageListsTab, setManageListsTab] = useState<'standard' | 'custom'>('standard');
-  const [manifestInfo, setManifestInfo] = useState<{ manifestUrl?: string; stremioInstallUrl?: string }>({});
+  const [manifestInfo, setManifestInfo] = useState<{
+    manifestUrl?: string;
+    stremioInstallUrl?: string;
+  }>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const listTopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    api.getInfo()
+    // Detect redirect from Stremio TV QR code
+    const searchParams = new URLSearchParams(window.location.search);
+    const source = searchParams.get('source');
+    const context = searchParams.get('context') || 'stremio_tv';
+
+    if (source === 'stremio_tv_qr') {
+      trackEvent('qr_code_scanned', {
+        source: 'stremio_tv_qr',
+        context: context,
+      });
+      showToast(
+        '📱 Connected from Stremio TV! Search or add movies below to watch on your TV.',
+        'info'
+      );
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    api
+      .getInfo()
       .then((info) => setManifestInfo(info))
       .catch(() => {});
   }, [user]);
@@ -108,7 +131,15 @@ export const UserDashboard: React.FC = () => {
   const [selectedQuality, setSelectedQuality] = useState<string>('all');
   const [includeWatchedInAll, setIncludeWatchedInAll] = useState(true);
   const [sortBy, setSortBy] = useState<
-    'added_desc' | 'added_asc' | 'rating_desc' | 'rating_asc' | 'year_desc' | 'year_asc' | 'title_asc' | 'title_desc' | 'streams_desc'
+    | 'added_desc'
+    | 'added_asc'
+    | 'rating_desc'
+    | 'rating_asc'
+    | 'year_desc'
+    | 'year_asc'
+    | 'title_asc'
+    | 'title_desc'
+    | 'streams_desc'
   >('added_desc');
 
   const handleTabChange = (tab: typeof currentTab) => {
@@ -155,7 +186,8 @@ export const UserDashboard: React.FC = () => {
       } else if (selectedQuality === '720p') {
         if (!q.includes('720p')) return false;
       } else if (selectedQuality === 'pending') {
-        if (q.includes('1080p') || q.includes('4k') || q.includes('2160p') || q.includes('720p')) return false;
+        if (q.includes('1080p') || q.includes('4k') || q.includes('2160p') || q.includes('720p'))
+          return false;
       }
     }
 
@@ -264,7 +296,15 @@ export const UserDashboard: React.FC = () => {
   // Reset to first page when changing tabs, lists, or itemsPerPage
   useEffect(() => {
     setCurrentPage(1);
-  }, [currentTab, activeCustomListId, selectedQuality, searchQuery, sortBy, itemsPerPage, includeWatchedInAll]);
+  }, [
+    currentTab,
+    activeCustomListId,
+    selectedQuality,
+    searchQuery,
+    sortBy,
+    itemsPerPage,
+    includeWatchedInAll,
+  ]);
 
   const hasActiveFilters =
     searchQuery !== '' ||
@@ -307,7 +347,6 @@ export const UserDashboard: React.FC = () => {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <Hero onOpenSettings={() => setIsSettingsOpen(true)} />
         <OnboardingCallout
-          onOpenQrModal={() => setIsQrModalOpen(true)}
           onScrollToRecommendations={() => {
             const el = document.getElementById('recommended-banner');
             if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -389,7 +428,8 @@ export const UserDashboard: React.FC = () => {
             <div className="flex items-center gap-2 text-sm text-purple-200">
               <span className="text-xl">{activeList.emoji || '🎬'}</span>
               <span>
-                Showing movies in list <strong>{activeList.name}</strong> ({filtered.length} movie{filtered.length === 1 ? '' : 's'})
+                Showing movies in list <strong>{activeList.name}</strong> ({filtered.length} movie
+                {filtered.length === 1 ? '' : 's'})
               </span>
             </div>
             <button
@@ -402,7 +442,10 @@ export const UserDashboard: React.FC = () => {
         )}
 
         {/* Filter Tabs & Header */}
-        <div ref={listTopRef} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+        <div
+          ref={listTopRef}
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4"
+        >
           <div className="flex items-center gap-1 bg-[#151824] p-1 rounded-xl border border-white/5 overflow-x-auto">
             <Button
               variant="tab"
@@ -466,7 +509,10 @@ export const UserDashboard: React.FC = () => {
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
             {/* Search within Watchlist */}
             <div className="relative flex-1 min-w-50">
-              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search
+                size={14}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+              />
               <input
                 type="text"
                 value={searchQuery}
@@ -515,7 +561,12 @@ export const UserDashboard: React.FC = () => {
                       : 'bg-[#1e2235] text-gray-400 border-white/10 hover:text-gray-200'
                   }`}
                   onClick={() => setIncludeWatchedInAll(!includeWatchedInAll)}
-                  icon={<Eye size={13} className={includeWatchedInAll ? 'text-purple-400' : 'text-gray-400'} />}
+                  icon={
+                    <Eye
+                      size={13}
+                      className={includeWatchedInAll ? 'text-purple-400' : 'text-gray-400'}
+                    />
+                  }
                   title={
                     includeWatchedInAll
                       ? 'Hide watched movies in All view'
@@ -563,7 +614,8 @@ export const UserDashboard: React.FC = () => {
           {/* Status & Results counter */}
           <div className="flex items-center justify-between text-[11px] text-gray-400 pt-2.5 mt-2.5 border-t border-white/5">
             <span>
-              Showing <strong className="text-white">{sorted.length}</strong> {sorted.length === 1 ? 'title' : 'titles'}
+              Showing <strong className="text-white">{sorted.length}</strong>{' '}
+              {sorted.length === 1 ? 'title' : 'titles'}
               {hasActiveFilters && ' (filtered)'}
             </span>
             {hasActiveFilters && (
@@ -586,36 +638,36 @@ export const UserDashboard: React.FC = () => {
               {hasActiveFilters
                 ? '🔍'
                 : currentTab === 'ready'
-                ? '🎬'
-                : currentTab === 'pending'
-                ? '⏳'
-                : currentTab === 'watched'
-                ? '👁️'
-                : currentTab === 'unreleased'
-                ? '📅'
-                : '📋'}
+                  ? '🎬'
+                  : currentTab === 'pending'
+                    ? '⏳'
+                    : currentTab === 'watched'
+                      ? '👁️'
+                      : currentTab === 'unreleased'
+                        ? '📅'
+                        : '📋'}
             </div>
             <h4 className="text-base font-bold text-white mb-1">
               {hasActiveFilters
                 ? 'No titles found with active filters'
                 : currentTab === 'ready'
-                ? 'No movies ready in good quality yet'
-                : currentTab === 'pending'
-                ? 'No movies waiting for good quality!'
-                : currentTab === 'unreleased'
-                ? 'No unreleased movies found!'
-                : currentTab === 'watched'
-                ? 'No movies in your watched history'
-                : 'Your watchlist is empty'}
+                  ? 'No movies ready in good quality yet'
+                  : currentTab === 'pending'
+                    ? 'No movies waiting for good quality!'
+                    : currentTab === 'unreleased'
+                      ? 'No unreleased movies found!'
+                      : currentTab === 'watched'
+                        ? 'No movies in your watched history'
+                        : 'Your watchlist is empty'}
             </h4>
             <p className="text-xs text-gray-400 max-w-sm mx-auto mb-3">
               {hasActiveFilters
                 ? 'Try searching for another title or clearing the selected filters.'
                 : currentTab === 'watched'
-                ? 'Click the eye icon on any movie card to mark it as watched and archive it.'
-                : items.length === 0
-                ? 'Use the recommendations or search bar above to start tracking movies.'
-                : 'Switch tabs or add more items to monitor.'}
+                  ? 'Click the eye icon on any movie card to mark it as watched and archive it.'
+                  : items.length === 0
+                    ? 'Use the recommendations or search bar above to start tracking movies.'
+                    : 'Switch tabs or add more items to monitor.'}
             </p>
             {items.length === 0 && !hasActiveFilters && (
               <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
@@ -635,7 +687,9 @@ export const UserDashboard: React.FC = () => {
                   className="hover:text-white"
                   onClick={() => {
                     window.scrollTo({ top: 350, behavior: 'smooth' });
-                    const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+                    const searchInput = document.querySelector(
+                      'input[type="text"]'
+                    ) as HTMLInputElement;
                     if (searchInput) searchInput.focus();
                   }}
                   icon={<Search size={14} />}
@@ -721,7 +775,11 @@ export const UserDashboard: React.FC = () => {
       <footer className="border-t border-white/5 py-6 px-4 text-center text-xs text-gray-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="shrink-0">
-            🎬 <span className="font-semibold text-gray-400">Stremio Watchlist (Good Quality Tracker)</span> • Beta Version
+            🎬{' '}
+            <span className="font-semibold text-gray-400">
+              Stremio Watchlist (Good Quality Tracker)
+            </span>{' '}
+            • Beta Version
           </p>
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-gray-400 text-[11px] hidden sm:inline">Support the project:</span>

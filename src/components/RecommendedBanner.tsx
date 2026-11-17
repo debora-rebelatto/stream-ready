@@ -2,9 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Sparkles,
   Clock,
-  Play,
   Check,
-  Plus,
   ChevronLeft,
   ChevronRight,
   Star,
@@ -12,6 +10,8 @@ import {
 import { buildRecommendedList, type RecommendedMovie } from '../lib/recommendations';
 import { useWatchlist, useToast } from '../context/useAppContext';
 import { cinemetaService } from '../services/cinemetaService';
+import { WatchInStremioButton } from './WatchInStremioButton';
+import { WatchlistActionButton } from './WatchlistActionButton';
 
 interface RecommendedBannerProps {
   className?: string;
@@ -280,33 +280,20 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({ className 
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2.5">
-            <button
+            <WatchInStremioButton
+              movieId={currentMovie.id}
+              isReady={currentMovie.isReady}
               onClick={() => handleWatchInStremio(currentMovie.id)}
-              className="inline-flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-purple-900/30 transition-all cursor-pointer transform hover:-translate-y-0.5"
-            >
-              <Play size={13} fill="currentColor" />
-              <span>{currentMovie.isReady ? 'Watch in Stremio' : 'Open in Stremio'}</span>
-            </button>
+            />
 
-            {currentMovie.isInWatchlist ? (
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-emerald-300 text-xs sm:text-sm font-medium backdrop-blur-md">
-                <Check size={14} className="text-emerald-400" />
-                <span>In Watchlist</span>
-              </span>
-            ) : (
-              <button
-                onClick={(e) => handleAddToWatchlist(e, currentMovie.id, currentMovie.name)}
-                disabled={isAddingId === currentMovie.id}
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-medium text-xs sm:text-sm backdrop-blur-md transition-all cursor-pointer"
-              >
-                {isAddingId === currentMovie.id ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <Plus size={14} />
-                )}
-                <span>Add to Watchlist</span>
-              </button>
-            )}
+            <WatchlistActionButton
+              movieId={currentMovie.id}
+              movieName={currentMovie.name}
+              isInWatchlist={currentMovie.isInWatchlist}
+              isLoading={isAddingId === currentMovie.id}
+              onAdd={(e) => handleAddToWatchlist(e, currentMovie.id, currentMovie.name)}
+              onOpenLogin={onOpenLogin}
+            />
           </div>
         </div>
 

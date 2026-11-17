@@ -23,8 +23,10 @@ export const QrCodeModal: React.FC<QrCodeModalProps> = ({
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Web App dashboard URL (current origin or fallback)
-  const webAppUrl = typeof window !== 'undefined' ? window.location.origin : 'https://stremiowatchlist.vercel.app';
+  // Web App dashboard URL with QR tracking route
+  const webAppUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/r/qr?context=modal_webapp`
+    : 'https://stremiowatchlist.vercel.app/r/qr?context=modal_webapp';
 
   // Target URL depending on active tab
   const activeUrl = activeTab === 'webapp' ? webAppUrl : (installUrl || manifestUrl);

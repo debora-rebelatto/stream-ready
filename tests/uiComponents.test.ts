@@ -1,6 +1,8 @@
 import React from 'react';
 import { Button } from '../src/components/Button';
 import { Badge } from '../src/components/Badge';
+import { WatchInStremioButton } from '../src/components/WatchInStremioButton';
+import { WatchlistActionButton } from '../src/components/WatchlistActionButton';
 
 describe('UI Reusable Components (Button & Badge)', () => {
   describe('Button Component', () => {
@@ -59,6 +61,58 @@ describe('UI Reusable Components (Button & Badge)', () => {
       expect(el.props.dot).toBe(true);
       expect(el.props.pill).toBe(true);
       expect(el.props.pulse).toBe(true);
+    });
+  });
+
+  describe('WatchInStremioButton Component', () => {
+    test('is defined and renders a valid React element with ready and unready states', () => {
+      expect(WatchInStremioButton).toBeDefined();
+      const elReady = React.createElement(WatchInStremioButton, { movieId: 'tt1234567', isReady: true });
+      expect(React.isValidElement(elReady)).toBe(true);
+      expect(elReady.props.movieId).toBe('tt1234567');
+      expect(elReady.props.isReady).toBe(true);
+
+      const elUnready = React.createElement(WatchInStremioButton, { movieId: 'tt1234567', isReady: false });
+      expect(elUnready.props.isReady).toBe(false);
+    });
+
+    test('supports custom label and onClick handler', () => {
+      const onClickMock = jest.fn();
+      const elCustom = React.createElement(WatchInStremioButton, {
+        movieId: 'tt1234567',
+        label: 'Play Movie',
+        onClick: onClickMock,
+      });
+      expect(elCustom.props.label).toBe('Play Movie');
+      expect(elCustom.props.onClick).toBe(onClickMock);
+    });
+  });
+
+  describe('WatchlistActionButton Component', () => {
+    test('is defined and renders a valid React element', () => {
+      expect(WatchlistActionButton).toBeDefined();
+      const elAdd = React.createElement(WatchlistActionButton, {
+        movieId: 'tt1234567',
+        movieName: 'Inception',
+        isInWatchlist: false,
+      });
+      expect(React.isValidElement(elAdd)).toBe(true);
+      expect(elAdd.props.movieId).toBe('tt1234567');
+      expect(elAdd.props.isInWatchlist).toBe(false);
+    });
+
+    test('supports in-watchlist state and loading props', () => {
+      const elInWatchlist = React.createElement(WatchlistActionButton, {
+        movieId: 'tt1234567',
+        isInWatchlist: true,
+      });
+      expect(elInWatchlist.props.isInWatchlist).toBe(true);
+
+      const elLoading = React.createElement(WatchlistActionButton, {
+        movieId: 'tt1234567',
+        isLoading: true,
+      });
+      expect(elLoading.props.isLoading).toBe(true);
     });
   });
 });

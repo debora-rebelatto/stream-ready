@@ -54,11 +54,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const handleOpenQrModal = propsOnOpenQrModal || (() => setIsQrModalOpen(true));
 
   useEffect(() => {
-    // Detect redirect from Stremio Configure button
+    // Detect redirect from Stremio TV QR code or Configure button
     const searchParams = new URLSearchParams(window.location.search);
-    if (searchParams.get('source') === 'stremio_configure') {
+    const source = searchParams.get('source');
+    const context = searchParams.get('context') || 'stremio_tv';
+
+    if (source === 'stremio_tv_qr' || source === 'stremio_configure') {
       setIsLoginOpen(true);
-      showToast('👋 Welcome from Stremio! Connect your Stremio account to configure the addon.', 'info');
+      trackEvent('qr_code_scanned', {
+        source: source,
+        context: context
+      });
+
+      if (source === 'stremio_tv_qr') {
+        showToast('📱 Welcome from Stremio TV! Connect your Stremio account to sync movies to your TV.', 'info');
+      } else {
+        showToast('👋 Welcome from Stremio! Connect your Stremio account to configure the addon.', 'info');
+      }
     }
   }, [showToast]);
 

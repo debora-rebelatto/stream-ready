@@ -28,6 +28,7 @@ export interface EventDataMap {
   onboarding_viewed: { watchlistCount: number };
   onboarding_quick_add_clicked: { movieIds: string[]; source: string };
   onboarding_dismissed: { reason?: string };
+  qr_code_scanned: { source: string; context?: string; userAgent?: string };
 }
 
 export type EventName = keyof EventDataMap;

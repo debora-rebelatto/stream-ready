@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Plus, X, Film, ChevronRight, Tv, Compass, QrCode, Search } from 'lucide-react';
+import { Sparkles, Plus, X, Film, ChevronRight, Tv, Compass, Search } from 'lucide-react';
 import { CURATED_RECOMMENDED_MOVIES } from '../lib/recommendations';
 import { useWatchlist, useToast } from '../context/useAppContext';
 import { trackEvent } from '../lib/analytics';
@@ -11,13 +11,11 @@ const COOLDOWN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 interface OnboardingCalloutProps {
   onScrollToRecommendations?: () => void;
   onFocusSearch?: () => void;
-  onOpenQrModal?: () => void;
 }
 
 export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
   onScrollToRecommendations,
   onFocusSearch,
-  onOpenQrModal,
 }) => {
   const { items: watchlistItems, addItem } = useWatchlist();
   const { showToast } = useToast();
@@ -38,7 +36,9 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
   });
 
   const [isBatchAdding, setIsBatchAdding] = useState(false);
-  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(
+    null
+  );
   const [addingId, setAddingId] = useState<string | null>(null);
 
   // Selected top 3 starter movies (popular, diverse, with confirmed quality streams)
@@ -164,8 +164,9 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
               </h2>
 
               <p className="text-xs sm:text-sm text-gray-300 mt-1 max-w-2xl leading-relaxed">
-                Stremio cannot add movies directly from your TV or player screen. Add your first titles
-                here on the web dashboard to populate your good-quality tracker catalog in Stremio!
+                Stremio cannot add movies directly from your TV or player screen. Add your first
+                titles here on the web dashboard to populate your good-quality tracker catalog in
+                Stremio!
               </p>
             </div>
           </div>
@@ -200,11 +201,7 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
                   : 'Add Top 3 Hits'}
               </Button>
 
-              <Button
-                variant="indigo"
-                onClick={handleExploreClick}
-                icon={<Compass size={13} />}
-              >
+              <Button variant="indigo" onClick={handleExploreClick} icon={<Compass size={13} />}>
                 <span>Browse All</span>
                 <ChevronRight size={13} className="inline ml-1" />
               </Button>
@@ -217,17 +214,6 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
                   title="Search movies to add"
                 >
                   Search
-                </Button>
-              )}
-
-              {onOpenQrModal && (
-                <Button
-                  variant="outline"
-                  onClick={onOpenQrModal}
-                  icon={<QrCode size={13} className="text-purple-400" />}
-                  title="Scan QR Code to open on mobile"
-                >
-                  Mobile QR
                 </Button>
               )}
             </div>

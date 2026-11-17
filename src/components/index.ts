@@ -22,3 +22,7 @@ export { SettingsModal } from './SettingsModal';
 export { ManageListsModal } from './ManageListsModal';
 export { DeleteMovieModal } from './DeleteMovieModal';
 export { DeleteAccountModal } from './DeleteAccountModal';
+export { WatchInStremioButton } from './WatchInStremioButton';
+export type { WatchInStremioButtonProps } from './WatchInStremioButton';
+export { WatchlistActionButton } from './WatchlistActionButton';
+export type { WatchlistActionButtonProps } from './WatchlistActionButton';

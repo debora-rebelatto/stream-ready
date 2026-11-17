@@ -1033,11 +1033,41 @@ app.get('/api/qr', async (req, res) => {
   }
 });
 
+// QR Code Tracking Redirect (Logs scan from Stremio TV and redirects to mobile dashboard)
+app.get('/r/qr', async (req, res) => {
+  try {
+    const context = req.query.context || 'stremio_tv';
+    const userAgent = req.get('user-agent') || 'unknown';
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+
+    console.log(`[QR Code Scan] User scanned QR code from Stremio TV - Context: ${context}, IP: ${ip}, User-Agent: ${userAgent}`);
+
+    // Asynchronously record event in database without blocking redirect
+    db.recordAnalyticsEvent('qr_code_scanned', {
+      source: 'stremio_tv_qr',
+      context,
+      ip,
+      userAgent
+    }).catch(err => {
+      console.warn('[QR Analytics Warning] Failed to log QR event:', err.message);
+    });
+
+    const baseUrl = getBaseUrl(req);
+    const target = `${baseUrl}/?source=stremio_tv_qr&context=${encodeURIComponent(context)}`;
+    return res.redirect(302, target);
+  } catch (err) {
+    console.error('[QR Redirect Error]', err);
+    return res.redirect(302, '/');
+  }
+});
+
 // Stremio TV Poster with Scannable QR Code
 app.get('/api/qr/poster', async (req, res) => {
   try {
     const baseUrl = getBaseUrl(req);
-    const targetUrl = req.query.url || baseUrl;
+    const context = req.query.context || 'stremio_tv';
+    // If no explicit url is passed, default to our tracked redirect route
+    const targetUrl = req.query.url || `${baseUrl}/r/qr?context=${encodeURIComponent(context)}`;
 
     const qrDataUrl = await QRCode.toDataURL(targetUrl, {
       width: 280,
@@ -1045,7 +1075,7 @@ app.get('/api/qr/poster', async (req, res) => {
       color: { dark: '#000000', light: '#ffffff' }
     });
 
-    const cleanDisplayUrl = targetUrl.replace(/^https?:\/\//, '');
+    const cleanDisplayUrl = baseUrl.replace(/^https?:\/\//, '');
 
     const svg = `<svg width="500" height="750" viewBox="0 0 500 750" xmlns="http://www.w3.org/2000/svg">
   <defs>
