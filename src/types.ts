@@ -1,6 +1,7 @@
 export interface WatchlistItem {
   id: string;
   userId?: string;
+  rowId?: string | number;
   type: string;
   name: string;
   year?: string | number;
@@ -9,6 +10,7 @@ export interface WatchlistItem {
   genres?: string[];
   description?: string;
   imdbRating?: string | number;
+  addedAt?: string | null;
   has1080pPlus: boolean;
   bestQuality?: string;
   streamCount: number;

@@ -220,7 +220,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
                   itemLists.map((l) => (
                     <span
                       key={l.id}
-                      className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20 truncate max-w-[85px]"
+                      className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20 truncate max-w-21.25"
                       title={l.name}
                     >
                       <span>{l.emoji || '🎬'}</span>

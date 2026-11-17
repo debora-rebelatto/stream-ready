@@ -161,7 +161,7 @@ export const Hero: React.FC<HeroProps> = () => {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackEvent('feedback_link_clicked', { location: 'hero_button' })}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 hover:text-white font-semibold text-xs border border-amber-400/40 transition-all cursor-pointer min-h-[30px] h-[30px]"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 hover:text-white font-semibold text-xs border border-amber-400/40 transition-all cursor-pointer min-h-7.5 h-7.5"
           >
             <MessageSquare size={12} />
             <span>Feedback</span>

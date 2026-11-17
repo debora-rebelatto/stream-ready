@@ -170,7 +170,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer touch-manipulation min-w-[32px] min-h-[32px] flex items-center justify-center"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer touch-manipulation min-w-8 min-h-8 flex items-center justify-center"
             aria-label="Close dialog"
           >
             <X size={18} />
@@ -544,7 +544,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   <AlertTriangle size={16} />
                   Danger Zone
                 </span>
-                <span className="text-[11px] text-gray-400 truncate max-w-[180px]" title={user.email}>
+                <span className="text-[11px] text-gray-400 truncate max-w-45" title={user.email}>
                   {user.email}
                 </span>
               </div>

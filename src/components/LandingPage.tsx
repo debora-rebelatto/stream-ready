@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
 import {
   Sparkles,
-  ShieldCheck,
   Film,
   CheckCircle2,
   XCircle,
@@ -13,16 +12,11 @@ import {
   ChevronDown,
   ChevronUp,
   Zap,
-  Sliders,
-  Star,
   Check,
   Eye,
-  Layers,
-  Heart,
   Flame,
   Search,
   SlidersHorizontal,
-  RotateCcw,
   Info,
   QrCode
 } from 'lucide-react';
@@ -30,18 +24,44 @@ import { api } from '../lib/api';
 import { trackEvent } from '../lib/analytics';
 import { useToast } from '../context/useAppContext';
 import { RecommendedBanner } from './RecommendedBanner';
+import { Navbar } from './Navbar';
+import { LoginModal } from './LoginModal';
+import { InstallGuideModal } from './InstallGuideModal';
+import { QrCodeModal } from './QrCodeModal';
 
-interface LandingPageProps {
-  onOpenLogin: () => void;
+export interface LandingPageProps {
+  onOpenLogin?: () => void;
   onOpenInstallGuide?: () => void;
   onOpenQrModal?: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin, onOpenInstallGuide, onOpenQrModal }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({
+  onOpenLogin: propsOnOpenLogin,
+  onOpenInstallGuide: propsOnOpenInstallGuide,
+  onOpenQrModal: propsOnOpenQrModal,
+}) => {
   const { showToast } = useToast();
   const [manifestUrl, setManifestUrl] = useState('');
   const [installUrl, setInstallUrl] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Internal modal states for self-contained landing page experience
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+
+  const handleOpenLogin = propsOnOpenLogin || (() => setIsLoginOpen(true));
+  const handleOpenInstallGuide = propsOnOpenInstallGuide || (() => setIsInstallGuideOpen(true));
+  const handleOpenQrModal = propsOnOpenQrModal || (() => setIsQrModalOpen(true));
+
+  useEffect(() => {
+    // Detect redirect from Stremio Configure button
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('source') === 'stremio_configure') {
+      setIsLoginOpen(true);
+      showToast('👋 Welcome from Stremio! Connect your Stremio account to configure the addon.', 'info');
+    }
+  }, [showToast]);
 
   useEffect(() => {
     api.getInfo()
@@ -67,8 +87,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin, onOpenIns
 
   const handleInstallClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (onOpenInstallGuide) {
-      onOpenInstallGuide();
+    if (handleOpenInstallGuide) {
+      handleOpenInstallGuide();
       return;
     }
     if (installUrl) {
@@ -118,11 +138,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin, onOpenIns
   ];
 
   return (
-    <div className="space-y-24 sm:space-y-32 py-4">
+    <div className="min-h-screen flex flex-col bg-[#0c0d14]">
+      <Navbar
+        onOpenLogin={handleOpenLogin}
+        onOpenInstallGuide={handleOpenInstallGuide}
+        onOpenQrModal={handleOpenQrModal}
+      />
+
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="space-y-24 sm:space-y-32 py-4">
       {/* 1. HERO SECTION */}
       <section className="relative text-center max-w-4xl mx-auto pt-4 sm:pt-10 px-4">
         {/* Ambient background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-purple-600/25 via-indigo-600/15 to-transparent blur-[140px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-87.5 bg-gradient-to-tr from-purple-600/25 via-indigo-600/15 to-transparent blur-[140px] rounded-full pointer-events-none -z-10" />
 
         {/* Top Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/25 text-purple-300 text-xs font-semibold mb-6 shadow-sm">
@@ -162,7 +190,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin, onOpenIns
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-10">
           <button
-            onClick={onOpenLogin}
+            onClick={handleOpenLogin}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-gradient-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white font-bold text-sm shadow-[0_0_30px_rgba(123,66,246,0.55)] hover:shadow-[0_0_40px_rgba(123,66,246,0.75)] transition-all cursor-pointer transform hover:-translate-y-0.5"
           >
             <Sparkles size={17} />
@@ -188,16 +216,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin, onOpenIns
             <Copy size={17} />
           </button>
 
-          {onOpenQrModal && (
-            <button
-              onClick={onOpenQrModal}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-4 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-200 hover:text-white font-semibold text-sm transition-all cursor-pointer"
-              title="Scan QR Code to open on Phone or TV"
-            >
-              <QrCode size={16} className="text-purple-400" />
-              <span>Scan QR Code</span>
-            </button>
-          )}
+          <button
+            onClick={handleOpenQrModal}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-4 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-200 hover:text-white font-semibold text-sm transition-all cursor-pointer"
+            title="Scan QR Code to open on Phone or TV"
+          >
+            <QrCode size={16} className="text-purple-400" />
+            <span>Scan QR Code</span>
+          </button>
         </div>
 
         {/* Trust Badges */}
@@ -489,7 +515,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin, onOpenIns
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
-              onClick={onOpenLogin}
+              onClick={handleOpenLogin}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white font-bold text-sm shadow-[0_0_25px_rgba(123,66,246,0.6)] transition-all cursor-pointer transform hover:-translate-y-0.5"
             >
               <Sparkles size={16} />
@@ -533,7 +559,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin, onOpenIns
               Copy Addon URL
             </button>
             <button
-              onClick={onOpenLogin}
+              onClick={handleOpenLogin}
               className="text-purple-400 hover:text-purple-300 font-semibold cursor-pointer"
             >
               Sign In
@@ -541,6 +567,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin, onOpenIns
           </div>
         </div>
       </footer>
+        </div>
+      </main>
+
+      {/* Modals */}
+      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      <InstallGuideModal
+        isOpen={isInstallGuideOpen}
+        onClose={() => setIsInstallGuideOpen(false)}
+        onOpenLogin={handleOpenLogin}
+        onOpenQrModal={handleOpenQrModal}
+        installUrl={installUrl}
+        manifestUrl={manifestUrl}
+      />
+      <QrCodeModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        installUrl={installUrl}
+        manifestUrl={manifestUrl}
+      />
     </div>
   );
 };

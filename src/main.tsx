@@ -4,7 +4,6 @@ import { ToastProvider, AppProvider } from './context/AppContext';
 import { App } from './App';
 import './index.css';
 import { Analytics } from '@vercel/analytics/react';
-import './lib/posthog';
 import { initPostHog, isTrackingBlocked } from './lib/analytics';
 
 // Initialize PostHog if VITE_POSTHOG_KEY is configured and tracking is not blocked

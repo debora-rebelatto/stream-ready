@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+package-lock.json
+.env
+.env.*
+*.local.json
+*.private.json
+private/
+data/

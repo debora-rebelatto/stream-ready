@@ -157,7 +157,7 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({ className 
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Background Banner Image with Cross-Fade */}
-      <div className="relative w-full h-[320px] sm:h-[360px] md:h-[390px] overflow-hidden">
+      <div className="relative w-full h-80 sm:h-90 md:h-97.5 overflow-hidden">
         {movies.map((movie, idx) => {
           const isActive = idx === currentIndex;
           const bannerUrl =
@@ -262,7 +262,7 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({ className 
             {currentMovie.genres && currentMovie.genres.length > 0 && (
               <>
                 <span className="text-gray-500">•</span>
-                <span className="text-gray-300 truncate max-w-[200px] sm:max-w-none">
+                <span className="text-gray-300 truncate max-w-50 sm:max-w-none">
                   {currentMovie.genres.slice(0, 3).join(', ')}
                 </span>
               </>

@@ -78,7 +78,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           disabled={currentPage === 1}
           aria-label="First page"
           title="First page"
-          className="p-1.5 sm:p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer touch-manipulation min-w-[34px] min-h-[34px] flex items-center justify-center"
+          className="p-1.5 sm:p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer touch-manipulation min-w-8.5 min-h-8.5 flex items-center justify-center"
         >
           <ChevronsLeft size={16} />
         </button>
@@ -89,7 +89,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           disabled={currentPage === 1}
           aria-label="Previous page"
           title="Previous page"
-          className="p-1.5 sm:p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer touch-manipulation min-w-[34px] min-h-[34px] flex items-center justify-center"
+          className="p-1.5 sm:p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer touch-manipulation min-w-8.5 min-h-8.5 flex items-center justify-center"
         >
           <ChevronLeft size={16} />
         </button>
@@ -120,7 +120,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               <button
                 key={pageNum}
                 onClick={() => onPageChange(pageNum)}
-                className={`min-w-[34px] min-h-[34px] px-2 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer touch-manipulation ${
+                className={`min-w-8.5 min-h-8.5 px-2 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer touch-manipulation ${
                   isActive
                     ? 'bg-[#7b42f6] text-white shadow-md shadow-purple-500/20 border border-purple-400/30 font-bold'
                     : 'text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10'
@@ -139,7 +139,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           disabled={currentPage === totalPages}
           aria-label="Next page"
           title="Next page"
-          className="p-1.5 sm:p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer touch-manipulation min-w-[34px] min-h-[34px] flex items-center justify-center"
+          className="p-1.5 sm:p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer touch-manipulation min-w-8.5 min-h-8.5 flex items-center justify-center"
         >
           <ChevronRight size={16} />
         </button>
@@ -150,7 +150,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           disabled={currentPage === totalPages}
           aria-label="Last page"
           title="Last page"
-          className="p-1.5 sm:p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer touch-manipulation min-w-[34px] min-h-[34px] flex items-center justify-center"
+          className="p-1.5 sm:p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer touch-manipulation min-w-8.5 min-h-8.5 flex items-center justify-center"
         >
           <ChevronsRight size={16} />
         </button>

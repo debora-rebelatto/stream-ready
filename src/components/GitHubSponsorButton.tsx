@@ -16,8 +16,8 @@ export const GitHubSponsorButton: React.FC<GitHubSponsorButtonProps> = ({
       rel="noopener noreferrer"
       className={`inline-flex items-center justify-center gap-1.5 rounded-md font-semibold transition-all select-none border cursor-pointer shrink-0 whitespace-nowrap leading-none ${
         size === 'sm'
-          ? 'px-3 py-1.5 text-[11px] min-h-[30px] h-[30px]'
-          : 'px-3.5 py-2 text-xs min-h-[34px] h-[34px]'
+          ? 'px-3 py-1.5 text-[11px] min-h-7.5 h-7.5'
+          : 'px-3.5 py-2 text-xs min-h-8.5 h-8.5'
       } bg-[#21262d] hover:bg-[#30363d] text-white border-[#30363d] hover:border-[#8b949e] shadow-sm hover:scale-[1.02] active:scale-[0.98] ${className}`}
       title="Sponsor @debora-rebelatto on GitHub"
       aria-label="Sponsor @debora-rebelatto on GitHub"

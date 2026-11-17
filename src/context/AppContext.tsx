@@ -5,47 +5,19 @@ import { watchlistService } from '../services/watchlistService';
 import { cinemetaService } from '../services/cinemetaService';
 import { api } from '../lib/api';
 import { isItemReady, isItemUnreleased } from '../lib/utils';
-import posthog from '../lib/posthog';
 import {
   trackEvent,
   identifyUser as identifyAnalyticsUser,
   resetUser as resetAnalyticsUser,
-  isTrackingBlocked,
   type EventSource
 } from '../lib/analytics';
 import { AuthContext, WatchlistContext, ToastContext, useToast } from './useAppContext';
 
 const RATINGS_CACHE_KEY = 'stremio_ratings_cache';
-const isPostHogConfigured = Boolean(import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST);
 
 function identifyUser(user: StremioUser) {
   try {
-    if (isTrackingBlocked(user.id) || isTrackingBlocked(user.email)) {
-      try {
-        posthog.opt_out_capturing?.();
-      } catch {}
-      return;
-    }
-    if (isPostHogConfigured && user.id) {
-      posthog.identify?.(user.id, { email: user.email });
-    }
     identifyAnalyticsUser(user.id || user.email, { email: user.email });
-  } catch {}
-}
-
-function resetPostHog() {
-  try {
-    if (isPostHogConfigured) posthog.reset?.();
-  } catch {}
-  try {
-    resetAnalyticsUser();
-  } catch {}
-}
-
-function capturePostHog(event: string, properties: Record<string, string | number | boolean> = {}) {
-  try {
-    if (isTrackingBlocked()) return;
-    if (isPostHogConfigured) posthog.capture?.(event, properties);
   } catch {}
 }
 
@@ -169,7 +141,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         } catch {}
       } else if (res.isUnauthorized) {
-        if (hadStoredSession) resetPostHog();
+        if (hadStoredSession) resetAnalyticsUser();
         setUser(null);
         authService.clearAuth();
       } else {
@@ -198,7 +170,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await watchlistService.getWatchlist();
       if (res.requireAuth) {
-        resetPostHog();
+        resetAnalyticsUser();
         setUser(null);
         authService.clearAuth();
         return;

@@ -209,17 +209,6 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
                 <span>Browse All</span>
                 <ChevronRight size={13} />
               </button>
-
-              {onOpenQrModal && (
-                <button
-                  onClick={onOpenQrModal}
-                  className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer"
-                  title="Scan QR Code to open on mobile"
-                >
-                  <QrCode size={13} className="text-purple-400" />
-                  <span>Mobile QR</span>
-                </button>
-              )}
             </div>
           </div>
 

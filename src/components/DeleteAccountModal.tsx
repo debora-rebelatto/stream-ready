@@ -110,7 +110,7 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
           {userEmail && (
             <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5 border border-white/5 text-xs">
               <span className="text-gray-400 text-[11px]">Target account:</span>
-              <span className="text-gray-200 font-semibold truncate max-w-[220px]" title={userEmail}>
+              <span className="text-gray-200 font-semibold truncate max-w-55" title={userEmail}>
                 {userEmail}
               </span>
             </div>

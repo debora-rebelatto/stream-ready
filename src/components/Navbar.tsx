@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuth, useToast } from '../context/useAppContext';
 import { api } from '../lib/api';
 import { trackEvent } from '../lib/analytics';
-import { Settings, Copy, LogIn, LogOut, Menu, X, Play, MessageSquare, Folder, Trash2, QrCode } from 'lucide-react';
+import { Settings, Copy, LogIn, LogOut, Menu, X, Play, MessageSquare, Folder, QrCode } from 'lucide-react';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
 
 interface NavbarProps {
-  onOpenSettings: () => void;
-  onOpenLogin: () => void;
+  onOpenSettings?: () => void;
+  onOpenLogin?: () => void;
   onOpenInstallGuide?: () => void;
   onOpenLists?: () => void;
   onOpenDeleteAccount?: () => void;
@@ -142,14 +142,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Quick Utility Icon Buttons (Settings & Feedback) */}
           <div className="flex items-center gap-1">
-            <button
-              onClick={onOpenSettings}
-              className="p-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 border border-white/10 transition-colors cursor-pointer"
-              title="Settings & Guide"
-              aria-label="Settings & Guide"
-            >
-              <Settings size={15} />
-            </button>
+            {onOpenSettings && (
+              <button
+                onClick={onOpenSettings}
+                className="p-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 border border-white/10 transition-colors cursor-pointer"
+                title="Settings & Guide"
+                aria-label="Settings & Guide"
+              >
+                <Settings size={15} />
+              </button>
+            )}
 
             <a
               href="https://tally.so/r/dbazxA"
@@ -178,7 +180,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           ) : user ? (
             <div className="flex items-center gap-1.5 bg-[#151824] border border-white/10 pl-2.5 pr-1 py-1 rounded-lg text-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-              <span className="text-gray-200 max-w-[130px] truncate text-[11px] font-medium" title={user.email}>
+              <span className="text-gray-200 max-w-32.5 truncate text-[11px] font-medium" title={user.email}>
                 {user.email}
               </span>
               <button
@@ -298,16 +300,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            <button
-              onClick={() => {
-                onOpenSettings();
-                setMobileMenuOpen(false);
-              }}
-              className="flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium rounded-xl bg-[#151824] text-gray-200 border border-white/10"
-            >
-              <Settings size={13} />
-              <span>Guide & Backup</span>
-            </button>
+            {onOpenSettings && (
+              <button
+                onClick={() => {
+                  onOpenSettings();
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium rounded-xl bg-[#151824] text-gray-200 border border-white/10"
+              >
+                <Settings size={13} />
+                <span>Guide & Backup</span>
+              </button>
+            )}
 
             <a
               href="https://tally.so/r/dbazxA"

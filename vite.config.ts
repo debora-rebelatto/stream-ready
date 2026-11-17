@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
     define: {
       'process.env.VITE_POSTHOG_KEY': JSON.stringify(env.VITE_POSTHOG_KEY || process.env.VITE_POSTHOG_KEY || ''),
       'process.env.VITE_POSTHOG_HOST': JSON.stringify(env.VITE_POSTHOG_HOST || process.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com'),
+      'process.env.VITE_EXCLUDED_TRACKING_EMAILS': JSON.stringify(env.VITE_EXCLUDED_TRACKING_EMAILS || process.env.VITE_EXCLUDED_TRACKING_EMAILS || ''),
     },
     resolve: {
       alias: {

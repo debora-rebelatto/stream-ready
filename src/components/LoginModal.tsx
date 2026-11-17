@@ -65,7 +65,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10 transition-colors cursor-pointer touch-manipulation min-w-[32px] min-h-[32px] flex items-center justify-center"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10 transition-colors cursor-pointer touch-manipulation min-w-8 min-h-8 flex items-center justify-center"
             aria-label="Close dialog"
           >
             <X size={18} />
@@ -164,7 +164,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full min-h-[44px] py-3 sm:py-2.5 mt-2 rounded-xl bg-[#7b42f6] hover:bg-[#6a34e0] active:scale-[0.99] text-white text-sm sm:text-xs font-bold tracking-wide transition-all shadow-md cursor-pointer disabled:opacity-50 touch-manipulation flex items-center justify-center gap-2"
+                className="w-full min-h-11 py-3 sm:py-2.5 mt-2 rounded-xl bg-[#7b42f6] hover:bg-[#6a34e0] active:scale-[0.99] text-white text-sm sm:text-xs font-bold tracking-wide transition-all shadow-md cursor-pointer disabled:opacity-50 touch-manipulation flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>
@@ -221,7 +221,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full min-h-[44px] py-3 sm:py-2.5 mt-2 rounded-xl bg-[#7b42f6] hover:bg-[#6a34e0] active:scale-[0.99] text-white text-sm sm:text-xs font-bold tracking-wide transition-all shadow-md cursor-pointer disabled:opacity-50 touch-manipulation flex items-center justify-center gap-2"
+                className="w-full min-h-11 py-3 sm:py-2.5 mt-2 rounded-xl bg-[#7b42f6] hover:bg-[#6a34e0] active:scale-[0.99] text-white text-sm sm:text-xs font-bold tracking-wide transition-all shadow-md cursor-pointer disabled:opacity-50 touch-manipulation flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>

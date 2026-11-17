@@ -101,7 +101,7 @@ export const InstallGuideModal: React.FC<InstallGuideModalProps> = ({
 
           {/* Benefits Grid */}
           <div className="space-y-3">
-            <h4 className="font-bold text-white text-xs uppercase tracking-wider text-gray-400">
+            <h4 className="font-bold text-white text-xs uppercase tracking-wider">
               What you get when you connect:
             </h4>
 
@@ -152,7 +152,7 @@ export const InstallGuideModal: React.FC<InstallGuideModalProps> = ({
           <div className="pt-2">
             <button
               onClick={handleConnectClick}
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white font-bold text-sm shadow-[0_0_25px_rgba(123,66,246,0.5)] transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-xl bg-linear-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white font-bold text-sm shadow-[0_0_25px_rgba(123,66,246,0.5)] transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <Sparkles size={16} />
               <span>Connect Stremio Account (Recommended)</span>
