@@ -19,7 +19,7 @@ import {
   QrCode,
 } from 'lucide-react';
 import { useLandingController, type UseLandingControllerProps } from '../controllers/useLandingController';
-import { GitHubSponsorButton } from '../components/GitHubSponsorButton';
+import { Footer } from '../components/Footer';
 import { RecommendedBanner } from '../components/RecommendedBanner';
 import { Navbar } from '../components/Navbar';
 import { LoginModal } from '../components/LoginModal';
@@ -463,46 +463,7 @@ export const LandingPageView: React.FC<LandingPageProps> = (props) => {
           </section>
 
           {/* 9. FOOTER */}
-          <footer className="border-t border-white/10 pt-8 pb-12 text-center text-xs text-gray-500">
-            <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-2 shrink-0">
-                <img
-                  src="/icon.png"
-                  alt="Stremio Watchlist"
-                  className="w-5 h-5 rounded object-contain select-none"
-                />
-                <span className="font-bold text-gray-300">
-                  Stremio Watchlist • Good Quality Tracker
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-gray-400 text-[11px] hidden sm:inline">
-                  Support the project:
-                </span>
-                <GitHubSponsorButton size="sm" />
-              </div>
-
-              <p className="text-gray-500 text-[11px]">
-                Community Stremio Addon. Not officially affiliated with Stremio or IMDb.
-              </p>
-
-              <div className="flex items-center gap-4 text-gray-400 shrink-0">
-                <button
-                  onClick={handleCopy}
-                  className="hover:text-white transition-colors cursor-pointer"
-                >
-                  Copy Addon URL
-                </button>
-                <button
-                  onClick={handleOpenLogin}
-                  className="text-purple-400 hover:text-purple-300 font-semibold cursor-pointer"
-                >
-                  Sign In
-                </button>
-              </div>
-            </div>
-          </footer>
+          <Footer onCopyManifest={handleCopy} onOpenLogin={handleOpenLogin} className="pt-8 pb-12 border-white/10" />
         </div>
       </main>
 

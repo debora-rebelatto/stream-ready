@@ -1,13 +1,12 @@
 import React from 'react';
-import { useAuth } from './context/useAppContext';
-import { LandingPage } from './components/LandingPage';
-import { UserDashboard } from './components/UserDashboard';
+import { useAppController } from './controllers';
+import { LandingPageView, UserDashboardView } from './views';
 import { ToastContainer } from './components/ToastContainer';
 
 export const App: React.FC = () => {
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAppController();
 
-  if (isAuthLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#0c0d14] text-center px-4">
         <div className="w-10 h-10 border-3 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mb-4" />
@@ -19,7 +18,7 @@ export const App: React.FC = () => {
 
   return (
     <>
-      {user ? <UserDashboard /> : <LandingPage />}
+      {isAuthenticated ? <UserDashboardView /> : <LandingPageView />}
       <ToastContainer />
     </>
   );

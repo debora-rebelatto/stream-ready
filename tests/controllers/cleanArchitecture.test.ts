@@ -1,0 +1,143 @@
+import {
+  filterWatchlistItems,
+  sortWatchlistItems,
+  formatQualityLabel,
+  isItemReady,
+} from '../../src/utils';
+import {
+  useAppController,
+  useDashboardController,
+  useLandingController,
+  useManageListsController,
+  useSearchController,
+  useSettingsController,
+  LANDING_FAQS,
+  EMOJI_OPTIONS,
+} from '../../src/controllers';
+import {
+  LandingPageView,
+  UserDashboardView,
+  SettingsPageView,
+} from '../../src/views';
+import type { WatchlistItem } from '../../src/models';
+
+describe('Clean Architecture Layers (models, utils, controllers, views)', () => {
+  const sampleItems: WatchlistItem[] = [
+    {
+      id: 'tt001',
+      type: 'movie',
+      name: 'Alpha Movie',
+      year: '2025',
+      imdbRating: '8.5',
+      addedAt: '2026-01-10T10:00:00Z',
+      has1080pPlus: true,
+      bestQuality: '4K UHD',
+      streamCount: 15,
+      isWatched: false,
+      customLists: ['list-1'],
+    },
+    {
+      id: 'tt002',
+      type: 'movie',
+      name: 'Beta Film',
+      year: '2026',
+      imdbRating: '7.1',
+      addedAt: '2026-02-15T10:00:00Z',
+      has1080pPlus: false,
+      bestQuality: 'CAM',
+      streamCount: 3,
+      isWatched: false,
+      customLists: [],
+    },
+    {
+      id: 'tt003',
+      type: 'movie',
+      name: 'Gamma Cinema',
+      year: '2024',
+      imdbRating: '9.0',
+      addedAt: '2026-01-05T10:00:00Z',
+      has1080pPlus: true,
+      bestQuality: '1080p FHD',
+      streamCount: 25,
+      isWatched: true,
+      customLists: ['list-1', 'list-2'],
+    },
+  ];
+
+  describe('utils/watchlistFilter', () => {
+    test('filters by ready tab and excludes watched items', () => {
+      const result = filterWatchlistItems(sampleItems, {
+        currentTab: 'ready',
+        activeCustomListId: null,
+        selectedQuality: 'all',
+        includeWatchedInAll: true,
+        searchQuery: '',
+        globalMinQuality: '1080p',
+      });
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('tt001');
+    });
+
+    test('filters by watched tab', () => {
+      const result = filterWatchlistItems(sampleItems, {
+        currentTab: 'watched',
+        activeCustomListId: null,
+        selectedQuality: 'all',
+        includeWatchedInAll: true,
+        searchQuery: '',
+        globalMinQuality: '1080p',
+      });
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('tt003');
+    });
+
+    test('filters by custom list ID and search query', () => {
+      const result = filterWatchlistItems(sampleItems, {
+        currentTab: 'all',
+        activeCustomListId: 'list-1',
+        selectedQuality: 'all',
+        includeWatchedInAll: true,
+        searchQuery: 'alpha',
+        globalMinQuality: '1080p',
+      });
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('tt001');
+    });
+
+    test('sorts items by rating_desc, title_asc, and streams_desc', () => {
+      const byRating = sortWatchlistItems(sampleItems, 'rating_desc');
+      expect(byRating.map((i) => i.id)).toEqual(['tt003', 'tt001', 'tt002']);
+
+      const byTitle = sortWatchlistItems(sampleItems, 'title_asc');
+      expect(byTitle.map((i) => i.id)).toEqual(['tt001', 'tt002', 'tt003']);
+
+      const byStreams = sortWatchlistItems(sampleItems, 'streams_desc');
+      expect(byStreams.map((i) => i.id)).toEqual(['tt003', 'tt001', 'tt002']);
+    });
+  });
+
+  describe('controllers & views barrel exports', () => {
+    test('exports all custom controller hooks and constants', () => {
+      expect(typeof useAppController).toBe('function');
+      expect(typeof useDashboardController).toBe('function');
+      expect(typeof useLandingController).toBe('function');
+      expect(typeof useManageListsController).toBe('function');
+      expect(typeof useSearchController).toBe('function');
+      expect(typeof useSettingsController).toBe('function');
+      expect(Array.isArray(LANDING_FAQS)).toBe(true);
+      expect(LANDING_FAQS.length).toBeGreaterThan(0);
+      expect(Array.isArray(EMOJI_OPTIONS)).toBe(true);
+    });
+
+    test('exports all page views', () => {
+      expect(typeof LandingPageView).toBe('function');
+      expect(typeof UserDashboardView).toBe('function');
+      expect(typeof SettingsPageView).toBe('function');
+    });
+
+    test('exports quality adapter helpers via utils barrel', () => {
+      expect(formatQualityLabel('ainda não lançado')).toBe('Unreleased');
+      expect(isItemReady({ has1080pPlus: true, bestQuality: '1080p' }, '1080p')).toBe(true);
+    });
+  });
+});

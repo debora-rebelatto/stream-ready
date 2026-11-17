@@ -9,7 +9,7 @@ import { FeaturePollCard } from '../components/FeaturePollCard';
 import { CustomListPills } from '../components/CustomListPills';
 import { DashboardFilterToolbar } from '../components/DashboardFilterToolbar';
 import { WatchlistGrid } from '../components/WatchlistGrid';
-import { GitHubSponsorButton } from '../components/GitHubSponsorButton';
+import { Footer } from '../components/Footer';
 import { SettingsPage } from '../components/SettingsPage';
 import { ManageListsModal } from '../components/ManageListsModal';
 import { DeleteMovieModal } from '../components/DeleteMovieModal';
@@ -233,24 +233,7 @@ export const UserDashboardView: React.FC = () => {
         installUrl={manifestInfo.stremioInstallUrl}
       />
 
-      <footer className="border-t border-white/5 py-6 px-4 text-center text-xs text-gray-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="shrink-0">
-            🎬{' '}
-            <span className="font-semibold text-gray-400">
-              Stremio Watchlist (Good Quality Tracker)
-            </span>{' '}
-            • Beta Version
-          </p>
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-gray-400 text-[11px] hidden sm:inline">Support the project:</span>
-            <GitHubSponsorButton size="sm" />
-          </div>
-          <p className="text-[11px] text-gray-600 shrink-0">
-            Disclaimer: Community tool not affiliated with Stremio.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

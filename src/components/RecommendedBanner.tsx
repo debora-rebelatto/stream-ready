@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Sparkles, Clock, Check, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { Sparkles, Clock, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import {
   buildRecommendedList,
   fetchTrendingMovies,

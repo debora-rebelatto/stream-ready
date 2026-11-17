@@ -3,6 +3,7 @@ import { Button } from '../src/components/Button';
 import { Badge } from '../src/components/Badge';
 import { WatchInStremioButton } from '../src/components/WatchInStremioButton';
 import { WatchlistActionButton } from '../src/components/WatchlistActionButton';
+import { Footer } from '../src/components/Footer';
 
 describe('UI Reusable Components (Button & Badge)', () => {
   describe('Button Component', () => {
@@ -143,6 +144,27 @@ describe('UI Reusable Components (Button & Badge)', () => {
         isLoading: true,
       });
       expect(elLoading.props.isLoading).toBe(true);
+    });
+  });
+
+  describe('Footer Component', () => {
+    test('is defined and renders a valid React element', () => {
+      expect(Footer).toBeDefined();
+      const el = React.createElement(Footer);
+      expect(React.isValidElement(el)).toBe(true);
+    });
+
+    test('accepts optional action link callbacks and custom className', () => {
+      const onCopy = jest.fn();
+      const onLogin = jest.fn();
+      const el = React.createElement(Footer, {
+        className: 'custom-footer-class',
+        onCopyManifest: onCopy,
+        onOpenLogin: onLogin,
+      });
+      expect(el.props.className).toBe('custom-footer-class');
+      expect(el.props.onCopyManifest).toBe(onCopy);
+      expect(el.props.onOpenLogin).toBe(onLogin);
     });
   });
 });
