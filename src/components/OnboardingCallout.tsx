@@ -16,8 +16,8 @@ interface OnboardingCalloutProps {
 
 export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
   onScrollToRecommendations,
-  onOpenQrModal,
   onFocusSearch,
+  onOpenQrModal,
 }) => {
   const { items: watchlistItems, addItem } = useWatchlist();
   const { showToast } = useToast();
@@ -189,48 +189,46 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
             </div>
 
             <div className="flex items-center gap-2.5">
-              <button
+              <Button
+                variant="primary"
                 onClick={handleBatchAddTopPicks}
                 disabled={isBatchAdding}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-[0.98] shadow-lg shadow-purple-900/30 transition-all cursor-pointer disabled:opacity-50"
+                icon={<Sparkles size={14} />}
               >
-                <Sparkles size={14} />
-                <span>
-                  {isBatchAdding && batchProgress
-                    ? `Adding (${batchProgress.current}/${batchProgress.total})...`
-                    : 'Add Top 3 Hits'}
-                </span>
-              </button>
+                {isBatchAdding && batchProgress
+                  ? `Adding (${batchProgress.current}/${batchProgress.total})...`
+                  : 'Add Top 3 Hits'}
+              </Button>
 
-              <button
+              <Button
+                variant="indigo"
                 onClick={handleExploreClick}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium text-purple-300 hover:text-white bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 transition-all cursor-pointer"
+                icon={<Compass size={13} />}
               >
-                <Compass size={13} />
                 <span>Browse All</span>
-                <ChevronRight size={13} />
-              </button>
+                <ChevronRight size={13} className="inline ml-1" />
+              </Button>
 
               {onFocusSearch && (
-                <button
+                <Button
+                  variant="outline"
                   onClick={onFocusSearch}
-                  className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer"
+                  icon={<Search size={13} className="text-purple-400" />}
                   title="Search movies to add"
                 >
-                  <Search size={13} className="text-purple-400" />
-                  <span>Search</span>
-                </button>
+                  Search
+                </Button>
               )}
 
               {onOpenQrModal && (
-                <button
+                <Button
+                  variant="outline"
                   onClick={onOpenQrModal}
-                  className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer"
+                  icon={<QrCode size={13} className="text-purple-400" />}
                   title="Scan QR Code to open on mobile"
                 >
-                  <QrCode size={13} className="text-purple-400" />
-                  <span>Mobile QR</span>
-                </button>
+                  Mobile QR
+                </Button>
               )}
             </div>
           </div>
