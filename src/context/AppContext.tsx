@@ -31,6 +31,12 @@ function identifyUser(user: StremioUser) {
   } catch {}
 }
 
+function resetUser() {
+  try {
+    resetAnalyticsUser();
+  } catch {}
+}
+
 function getStoredRatings(): Record<string, string> {
   try {
     const raw = localStorage.getItem(RATINGS_CACHE_KEY);
@@ -331,7 +337,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       trackEvent('auth_logout', {});
     } catch {}
     try {
-      resetAnalyticsUser();
+      resetUser();
     } catch {}
     try {
       await authService.logout();
@@ -343,7 +349,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await authService.deleteAccount();
       if (res.success) {
         trackEvent('account_deleted', {});
-        resetAnalyticsUser();
+        resetUser();
         authService.clearAuth();
         setUser(null);
         setItems([]);

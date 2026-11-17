@@ -1,70 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useWatchlist, useToast } from '../context/useAppContext';
-import { watchlistService } from '../services/watchlistService';
-import { cinemetaService } from '../services/cinemetaService';
-import { trackEvent } from '../lib/analytics';
-import type { SearchMovieResult } from '../types';
+import React from 'react';
+import { useSearchController } from '../controllers/useSearchController';
 import { Search, X, Plus, Check } from 'lucide-react';
 
 export const SearchSection: React.FC = () => {
-  const { items, addItem } = useWatchlist();
-  const { showToast } = useToast();
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchMovieResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      setIsOpen(false);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setIsLoading(true);
-      try {
-        const data = await watchlistService.searchMovies(query);
-        const moviesOnly = (data || []).filter((m) => !m.type || m.type === 'movie');
-        trackEvent('search_query_performed', { resultsCount: moviesOnly.length });
-        setResults(moviesOnly);
-        setIsOpen(true);
-      } catch {
-        setResults([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  // Close on outside click
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleAdd = async (id: string) => {
-    setIsOpen(false);
-    setQuery('');
-    try {
-      const meta = await cinemetaService.getMeta('movie', id);
-      if (meta && meta.type && meta.type !== 'movie') {
-        showToast('Only movies are supported. Series cannot be added.', 'error');
-        return;
-      }
-    } catch {
-      // proceed to add
-    }
-    await addItem(id, 'search');
-  };
+  const {
+    items,
+    query,
+    setQuery,
+    results,
+    isLoading,
+    isOpen,
+    wrapperRef,
+    handleAdd,
+    handleKeyDown,
+  } = useSearchController();
 
   return (
     <div className="relative max-w-3xl mx-auto mb-8" ref={wrapperRef}>
@@ -74,17 +23,7 @@ export const SearchSection: React.FC = () => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={async (e) => {
-            if (e.key === 'Enter' && query.trim()) {
-              e.preventDefault();
-              const imdbMatch = query.match(/tt\d{7,8}/i);
-              if (imdbMatch) {
-                await handleAdd(imdbMatch[0]);
-              } else if (results.length > 0) {
-                await handleAdd(results[0].id);
-              }
-            }
-          }}
+          onKeyDown={handleKeyDown}
           placeholder="Search movie by title (e.g. Gladiator II, Dune, Oppenheimer) or paste IMDb ID/URL..."
           className="w-full bg-transparent text-sm text-white placeholder-gray-500 focus:outline-none py-2"
         />
