@@ -48,6 +48,27 @@ export function getAuthHeaders(): HeadersInit {
   };
 }
 
+export async function safeJsonParse<T = any>(
+  res: Response | any,
+  fallbackErrorMessage: string = 'Server response was invalid or empty'
+): Promise<T> {
+  if (typeof res.text !== 'function' && typeof res.json === 'function') {
+    return res.json();
+  }
+  const text = typeof res.text === 'function' ? await res.text() : '';
+  if (!text || !text.trim()) {
+    if (!res.ok) {
+      throw new Error(`Server returned status ${res.status}. Please check backend connection.`);
+    }
+    return {} as T;
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(text.length < 120 ? text : fallbackErrorMessage);
+  }
+}
+
 export const api = {
   async getAuthStatus(): Promise<{
     loggedIn: boolean;
@@ -67,7 +88,7 @@ export const api = {
       if (!res.ok) {
         return { loggedIn: false, isUnauthorized: false };
       }
-      const data = await res.json();
+      const data = await safeJsonParse(res, 'Invalid auth status response');
       return { ...data, isUnauthorized: false };
     } catch (err) {
       console.warn('Network error checking auth status:', err);
@@ -81,12 +102,30 @@ export const api = {
     user: StremioUser;
     error?: string;
   }> {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(creds),
-    });
-    return res.json();
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(creds),
+      });
+      const data = await safeJsonParse(res, 'Login failed: Invalid server response');
+      if (!res.ok) {
+        return {
+          success: false,
+          authKey: '',
+          user: { email: '' },
+          error: data?.error || `Server error (${res.status}): Please check that the server is running.`,
+        };
+      }
+      return data;
+    } catch (err: any) {
+      return {
+        success: false,
+        authKey: '',
+        user: { email: '' },
+        error: err.message || 'Cannot connect to server. Please verify the server is running.',
+      };
+    }
   },
 
   async logout(): Promise<void> {

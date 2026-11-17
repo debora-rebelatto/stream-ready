@@ -4,3 +4,4 @@ export { customListService } from './customListService';
 export { pollService } from './pollService';
 export { systemService } from './systemService';
 export { cinemetaService } from './cinemetaService';
+export { adminService } from './adminService';

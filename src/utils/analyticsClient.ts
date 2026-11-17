@@ -47,10 +47,7 @@ export type EventName = keyof EventDataMap;
 export const TRACKING_DISABLED_KEY = 'stremio_tracking_disabled';
 export const EXCLUDED_EMAILS_KEY = 'stremio_excluded_tracking_emails';
 
-export const BUILTIN_EXCLUDED_EMAILS: string[] = [
-  'deborarebelatto1@gmail.com',
-  'debyr.dbr@gmail.com',
-];
+export const BUILTIN_EXCLUDED_EMAILS: string[] = [];
 export const BUILTIN_EXCLUDED_USER_IDS: string[] = [
   '0ae027a6-56e6-41d5-a25b-86fc1e04aed4',
   'aa1bdc75-f539-4e11-8c90-510c0e998ce8',

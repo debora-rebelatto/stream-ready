@@ -7,3 +7,4 @@ export * from './useManageListsController';
 export * from './useSearchController';
 export * from './useSettingsController';
 export * from './useWatchlistController';
+export * from './useAdminController';

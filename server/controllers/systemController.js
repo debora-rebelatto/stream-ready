@@ -93,14 +93,12 @@ function registerSystemRoutes(app, PORT = process.env.PORT || 7000) {
       const excludedEnvIds =
         process.env.EXCLUDED_TRACKING_USER_IDS || process.env.VITE_EXCLUDED_TRACKING_USER_IDS || '';
 
-      const excludedList = new Set([
-        'deborarebelatto1@gmail.com',
-        'debyr.dbr@gmail.com',
-        ...excludedEnvEmails
+      const excludedList = new Set(
+        excludedEnvEmails
           .split(',')
           .map((s) => s.trim().toLowerCase())
-          .filter(Boolean),
-      ]);
+          .filter(Boolean)
+      );
       const excludedUserIds = new Set([
         '0ae027a6-56e6-41d5-a25b-86fc1e04aed4',
         'aa1bdc75-f539-4e11-8c90-510c0e998ce8',

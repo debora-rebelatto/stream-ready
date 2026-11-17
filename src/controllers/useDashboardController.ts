@@ -28,9 +28,10 @@ export function useDashboardController() {
   } = useWatchlist();
 
   const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'settings'>(() => {
-    if (typeof window !== 'undefined' && window.location.hash === '#settings') {
-      return 'settings';
+  const [currentView, setCurrentView] = useState<'dashboard' | 'settings' | 'admin'>(() => {
+    if (typeof window !== 'undefined') {
+      if (window.location.hash === '#settings') return 'settings';
+      if (window.location.hash === '#admin') return 'admin';
     }
     return 'dashboard';
   });
@@ -76,6 +77,8 @@ export function useDashboardController() {
     const handleHashChange = () => {
       if (window.location.hash === '#settings') {
         setCurrentView('settings');
+      } else if (window.location.hash === '#admin') {
+        setCurrentView('admin');
       } else {
         setCurrentView('dashboard');
       }
@@ -92,6 +95,18 @@ export function useDashboardController() {
   const handleBackFromSettings = () => {
     setCurrentView('dashboard');
     if (window.location.hash === '#settings') {
+      window.history.pushState(null, '', window.location.pathname + window.location.search);
+    }
+  };
+
+  const handleOpenAdmin = () => {
+    setCurrentView('admin');
+    window.location.hash = '#admin';
+  };
+
+  const handleBackFromAdmin = () => {
+    setCurrentView('dashboard');
+    if (window.location.hash === '#admin') {
       window.history.pushState(null, '', window.location.pathname + window.location.search);
     }
   };
@@ -226,6 +241,8 @@ export function useDashboardController() {
     setCurrentView,
     handleOpenSettings,
     handleBackFromSettings,
+    handleOpenAdmin,
+    handleBackFromAdmin,
     isManageListsOpen,
     setIsManageListsOpen,
     isQrModalOpen,

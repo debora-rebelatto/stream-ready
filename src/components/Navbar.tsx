@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Folder,
   QrCode,
+  Shield,
 } from 'lucide-react';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
 import { Button } from './Button';
@@ -20,6 +21,7 @@ import { Badge } from './Badge';
 
 interface NavbarProps {
   onOpenSettings?: () => void;
+  onOpenAdmin?: () => void;
   onOpenLogin?: () => void;
   onOpenInstallGuide?: () => void;
   onOpenLists?: () => void;
@@ -29,6 +31,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenSettings,
+  onOpenAdmin,
   onOpenLogin,
   onOpenInstallGuide,
   onOpenLists,
@@ -166,8 +169,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             </Button>
           )}
 
-          {/* Quick Utility Icon Buttons (Settings & Feedback) */}
+          {/* Quick Utility Icon Buttons (Settings, Admin & Feedback) */}
           <div className="flex items-center gap-1">
+            {user?.isAdmin && onOpenAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onOpenAdmin}
+                icon={<Shield size={14} className="text-purple-400" />}
+                className="border-purple-500/30 text-purple-200 hover:bg-purple-600/15 mr-1"
+                title="Admin Analytics Dashboard"
+              >
+                <span className="hidden xl:inline">Admin Analytics</span>
+              </Button>
+            )}
+
             {onOpenSettings && (
               <Button
                 variant="outline"
@@ -322,6 +338,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Folder size={13} />
                 <span>Your Lists</span>
+              </button>
+            )}
+
+            {user?.isAdmin && onOpenAdmin && (
+              <button
+                onClick={() => {
+                  onOpenAdmin();
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold rounded-xl bg-purple-500/15 text-purple-200 border border-purple-500/30"
+              >
+                <Shield size={13} className="text-purple-400" />
+                <span>Admin Analytics</span>
               </button>
             )}
 

@@ -11,6 +11,7 @@ import { DashboardFilterToolbar } from '../components/DashboardFilterToolbar';
 import { WatchlistGrid } from '../components/WatchlistGrid';
 import { Footer } from '../components/Footer';
 import { SettingsPageView } from './SettingsPageView';
+import { AdminDashboardView } from './AdminDashboardView';
 import { ManageListsModal } from '../components/ManageListsModal';
 import { DeleteMovieModal } from '../components/DeleteMovieModal';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
@@ -34,6 +35,8 @@ export const UserDashboardView: React.FC = () => {
     currentView,
     handleOpenSettings,
     handleBackFromSettings,
+    handleOpenAdmin,
+    handleBackFromAdmin,
     isManageListsOpen,
     setIsManageListsOpen,
     isQrModalOpen,
@@ -73,6 +76,10 @@ export const UserDashboardView: React.FC = () => {
     clearFilters,
     activeList,
   } = useDashboardController();
+
+  if (currentView === 'admin') {
+    return <AdminDashboardView onBack={handleBackFromAdmin} />;
+  }
 
   if (currentView === 'settings') {
     return (
@@ -114,6 +121,7 @@ export const UserDashboardView: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-[#0c0d14]">
       <Navbar
         onOpenSettings={handleOpenSettings}
+        onOpenAdmin={handleOpenAdmin}
         onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
         onOpenLists={() => setIsManageListsOpen(true)}
         onOpenDeleteAccount={() => setIsDeleteAccountOpen(true)}
