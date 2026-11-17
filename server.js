@@ -117,9 +117,9 @@ function triggerUserOnDemandSync(authKey, userId) {
   // Executa em segundo plano de forma assíncrona (não atrasa a resposta da requisição)
   (async () => {
     try {
-      // 1. Sincroniza filmes assistidos no Stremio apenas se habilitado nas configurações
+      // 1. Sincroniza filmes assistidos no Stremio se autoSyncWatched ou trackWatchlistWatched estiver ativo
       const userSettings = db.getSettings(userId);
-      if (userSettings && userSettings.autoSyncWatched) {
+      if (userSettings && (userSettings.autoSyncWatched || userSettings.trackWatchlistWatched)) {
         await db.syncWatchedWithStremio(authKey, userId);
       }
 
@@ -291,7 +291,7 @@ app.post('/api/auth/login', async (req, res) => {
       const baseUrl = getBaseUrl(req);
       syncAddonUrlWithAccount(authKey, baseUrl, user.id).catch(() => {});
       const userSettings = db.getSettings(user.id);
-      if (userSettings && userSettings.autoSyncWatched) {
+      if (userSettings && (userSettings.autoSyncWatched || userSettings.trackWatchlistWatched)) {
         db.syncWatchedWithStremio(authKey, user.id).catch(() => {});
       }
 
@@ -325,7 +325,7 @@ app.post('/api/auth/login', async (req, res) => {
     const baseUrl = getBaseUrl(req);
     syncAddonUrlWithAccount(authResult.authKey, baseUrl, userId).catch(() => {});
     const loginUserSettings = db.getSettings(userId);
-    if (loginUserSettings && loginUserSettings.autoSyncWatched) {
+    if (loginUserSettings && (loginUserSettings.autoSyncWatched || loginUserSettings.trackWatchlistWatched)) {
       db.syncWatchedWithStremio(authResult.authKey, userId).catch(() => {});
     }
 

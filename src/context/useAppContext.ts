@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { WatchlistItem, WatchlistStats, StremioUser, ToastMessage, CustomList } from '../types';
+import type { WatchlistItem, WatchlistStats, StremioUser, ToastMessage, CustomList, CuratedList } from '../types';
 
 export interface AuthContextType {
   user: StremioUser | null;
@@ -28,6 +28,10 @@ export interface WatchlistContextType {
   setGlobalMinQuality: (quality: '1080p' | '4k') => Promise<void>;
   autoSyncWatched: boolean;
   setAutoSyncWatched: (enabled: boolean) => Promise<void>;
+  trackWatchlistWatched: boolean;
+  setTrackWatchlistWatched: (enabled: boolean) => Promise<void>;
+  syncPreviouslyWatched: boolean;
+  setSyncPreviouslyWatched: (enabled: boolean) => Promise<void>;
   isLoading: boolean;
   isCheckingAll: boolean;
   refreshWatchlist: () => Promise<void>;

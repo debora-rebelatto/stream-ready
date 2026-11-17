@@ -65,6 +65,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isListsLoading, setIsListsLoading] = useState(false);
   const [globalMinQuality, setGlobalMinQualityState] = useState<'1080p' | '4k'>('1080p');
   const [autoSyncWatched, setAutoSyncWatchedState] = useState<boolean>(false);
+  const [trackWatchlistWatched, setTrackWatchlistWatchedState] = useState<boolean>(true);
+  const [syncPreviouslyWatched, setSyncPreviouslyWatchedState] = useState<boolean>(false);
   const [isLoadingList, setIsLoadingList] = useState(false);
   const [isCheckingAll, setIsCheckingAll] = useState(false);
   const [isSyncingWatched, setIsSyncingWatched] = useState(false);
@@ -100,6 +102,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
           if (typeof settings?.autoSyncWatched === 'boolean') {
             setAutoSyncWatchedState(settings.autoSyncWatched);
+          }
+          if (typeof settings?.trackWatchlistWatched === 'boolean') {
+            setTrackWatchlistWatchedState(settings.trackWatchlistWatched);
+          }
+          if (typeof settings?.syncPreviouslyWatched === 'boolean') {
+            setSyncPreviouslyWatchedState(settings.syncPreviouslyWatched);
           }
         } catch {}
       } else if (res.isUnauthorized) {
@@ -360,6 +368,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const setTrackWatchlistWatched = async (enabled: boolean) => {
+    setTrackWatchlistWatchedState(enabled);
+    try {
+      await api.saveSettings({ trackWatchlistWatched: enabled });
+      showToast(
+        enabled
+          ? 'Watchlist tracking enabled (watched after adding).'
+          : 'Watchlist tracking disabled.',
+        'success'
+      );
+    } catch {
+      showToast('Failed to save settings.', 'error');
+    }
+  };
+
+  const setSyncPreviouslyWatched = async (enabled: boolean) => {
+    setSyncPreviouslyWatchedState(enabled);
+    try {
+      await api.saveSettings({ syncPreviouslyWatched: enabled });
+      showToast(
+        enabled
+          ? 'Sync for previously watched movies enabled.'
+          : 'Sync for previously watched movies disabled.',
+        'success'
+      );
+    } catch {
+      showToast('Failed to save settings.', 'error');
+    }
+  };
+
   const markWatched = async (id: string, watched: boolean) => {
     try {
       const res = await watchlistService.setWatched(id, watched);
@@ -539,6 +577,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setGlobalMinQuality,
           autoSyncWatched,
           setAutoSyncWatched,
+          trackWatchlistWatched,
+          setTrackWatchlistWatched,
+          syncPreviouslyWatched,
+          setSyncPreviouslyWatched,
           isLoading: isLoadingList,
           isCheckingAll,
           isSyncingWatched,
