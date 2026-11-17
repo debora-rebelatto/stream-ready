@@ -168,7 +168,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
           ) : (
             <button
               onClick={onOpenLogin}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white shadow-sm border border-white/15 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-linear-to-r from-[#7b42f6] to-indigo-600 hover:from-[#6a34e0] hover:to-indigo-500 text-white shadow-sm border border-white/15 transition-all cursor-pointer"
             >
               <LogIn size={13} />
               <span>Sign In</span>
@@ -183,7 +183,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
           {/* User Profile / Login row */}
           {user ? (
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#151824] border border-white/10">
-              <div className="flex items-center gap-2 truncate max-w-[170px]">
+              <div className="flex items-center gap-2 truncate max-w-42.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
                 <span className="text-xs text-gray-200 truncate font-medium">{user.email}</span>
               </div>
@@ -200,22 +200,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
                 >
                   Sign Out
                 </button>
-                {onOpenDeleteAccount && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setMobileMenuOpen(false);
-                      onOpenDeleteAccount();
-                    }}
-                    className="text-xs font-semibold text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 transition-colors flex items-center gap-1 cursor-pointer"
-                    title="Delete Account & Wipe Data"
-                  >
-                    <Trash2 size={12} />
-                    <span>Delete</span>
-                  </button>
-                )}
               </div>
             </div>
           ) : (
@@ -224,7 +208,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenLogin, onO
                 onOpenLogin();
                 setMobileMenuOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-[#7b42f6] to-indigo-600 text-white"
+              className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-xl from-[#7b42f6] to-indigo-600 text-white"
             >
               <LogIn size={14} />
               Sign in with Stremio
