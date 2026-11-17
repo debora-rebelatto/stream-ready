@@ -596,7 +596,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <footer className="border-t border-white/10 pt-8 pb-12 text-center text-xs text-gray-500">
             <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-base">🎬</span>
+                <img
+                  src="/icon.png"
+                  alt="Stremio Watchlist"
+                  className="w-5 h-5 rounded object-contain select-none"
+                />
                 <span className="font-bold text-gray-300">
                   Stremio Watchlist • Good Quality Tracker
                 </span>

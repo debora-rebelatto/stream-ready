@@ -93,7 +93,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex items-center gap-2.5 shrink-0">
-          <span className="text-xl sm:text-2xl select-none">🎬</span>
+          <img
+            src="/icon.png"
+            alt="Stremio Watchlist"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg shadow-sm object-contain select-none"
+          />
           <div className="flex items-center gap-2">
             <h1 className="text-base sm:text-lg font-bold tracking-tight text-white whitespace-nowrap">
               Stremio Watchlist
