@@ -151,6 +151,7 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({ className 
 
   return (
     <div
+      id="recommended-banner"
       className={`mb-8 relative rounded-2xl overflow-hidden border border-white/10 bg-[#0c0d14] shadow-2xl transition-all duration-300 ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

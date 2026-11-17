@@ -1,4 +1,5 @@
 import { api } from '../src/lib/api';
+import { FEATURE_OPTIONS, POLL_VOTED_KEY } from '../src/components/FeaturePollCard';
 
 describe('Feature Roadmap Poll Client API', () => {
   const originalFetch = global.fetch;
@@ -14,6 +15,18 @@ describe('Feature Roadmap Poll Client API', () => {
   afterEach(() => {
     global.fetch = originalFetch;
     jest.clearAllMocks();
+  });
+
+  it('exports FEATURE_OPTIONS with expected IDs for both poll components', () => {
+    expect(FEATURE_OPTIONS).toHaveLength(6);
+    const ids = FEATURE_OPTIONS.map((o) => o.id);
+    expect(ids).toContain('notifications');
+    expect(ids).toContain('tv_shows');
+    expect(ids).toContain('import_lists');
+    expect(ids).toContain('debrid_filters');
+    expect(ids).toContain('share_lists');
+    expect(ids).toContain('other');
+    expect(POLL_VOTED_KEY).toBe('stremio_poll_voted');
   });
 
   it('submits a poll vote without custom text', async () => {

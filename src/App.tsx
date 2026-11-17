@@ -5,6 +5,7 @@ import { useAuth, useWatchlist, useToast } from './context/useAppContext';
 import { api } from './lib/api';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
+import { OnboardingCallout } from './components/OnboardingCallout';
 import { RecommendedBanner } from './components/RecommendedBanner';
 import { SearchSection } from './components/SearchSection';
 import { FeaturePollCard } from './components/FeaturePollCard';
@@ -326,6 +327,7 @@ export const App: React.FC = () => {
         ) : user ? (
           <>
             <Hero onOpenSettings={() => setIsSettingsOpen(true)} />
+            <OnboardingCallout />
             <RecommendedBanner />
             <SearchSection />
             <FeaturePollCard watchlistCount={items.length} userEmail={user?.email} />
@@ -637,9 +639,34 @@ export const App: React.FC = () => {
                     : currentTab === 'watched'
                     ? 'Click the eye icon on any movie card to mark it as watched and archive it.'
                     : items.length === 0
-                    ? 'Use the search bar above to start tracking movies.'
+                    ? 'Use the recommendations or search bar above to start tracking movies.'
                     : 'Switch tabs or add more items to monitor.'}
                 </p>
+                {items.length === 0 && !hasActiveFilters && (
+                  <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
+                    <button
+                      onClick={() => {
+                        const el = document.getElementById('recommended-banner');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-900/30 transition-all cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <Sparkles size={14} />
+                      <span>Explore Recommendations</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        window.scrollTo({ top: 350, behavior: 'smooth' });
+                        const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+                        if (searchInput) searchInput.focus();
+                      }}
+                      className="px-4 py-2 rounded-xl text-xs font-medium bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <Search size={14} />
+                      <span>Search Movies</span>
+                    </button>
+                  </div>
+                )}
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}

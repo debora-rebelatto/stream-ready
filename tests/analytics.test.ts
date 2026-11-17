@@ -72,6 +72,41 @@ describe('analytics.trackEvent (PostHog & Supabase)', () => {
     }));
   });
 
+  it('tracks onboarding events (viewed, quick add, and dismissed)', () => {
+    trackEvent('onboarding_viewed', { watchlistCount: 0 });
+    expect(global.fetch).toHaveBeenCalledWith('/api/events', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({
+        event: 'onboarding_viewed',
+        data: { watchlistCount: 0 },
+      }),
+    }));
+
+    trackEvent('onboarding_quick_add_clicked', {
+      movieIds: ['tt34384661', 'tt34206385'],
+      source: 'onboarding_callout_batch',
+    });
+    expect(global.fetch).toHaveBeenCalledWith('/api/events', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({
+        event: 'onboarding_quick_add_clicked',
+        data: {
+          movieIds: ['tt34384661', 'tt34206385'],
+          source: 'onboarding_callout_batch',
+        },
+      }),
+    }));
+
+    trackEvent('onboarding_dismissed', { reason: 'user_closed' });
+    expect(global.fetch).toHaveBeenCalledWith('/api/events', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({
+        event: 'onboarding_dismissed',
+        data: { reason: 'user_closed' },
+      }),
+    }));
+  });
+
   it('captures with PostHog once initialized', () => {
     initPostHog('phc_test_key_123', 'https://us.i.posthog.com');
     expect(posthog.init).toHaveBeenCalledWith('phc_test_key_123', expect.objectContaining({

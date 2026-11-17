@@ -3,17 +3,17 @@ import { api } from '../lib/api';
 import { trackEvent } from '../lib/analytics';
 import { Check, X, Send, Vote, Sparkles, MessageSquare } from 'lucide-react';
 
-const DISMISS_KEY = 'stremio_dismiss_poll_until';
-const VOTED_KEY = 'stremio_poll_voted';
+export const POLL_DISMISS_KEY = 'stremio_dismiss_poll_until';
+export const POLL_VOTED_KEY = 'stremio_poll_voted';
 const COOLDOWN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
-interface FeatureOption {
+export interface FeatureOption {
   id: string;
   title: string;
   description: string;
 }
 
-const FEATURE_OPTIONS: FeatureOption[] = [
+export const FEATURE_OPTIONS: FeatureOption[] = [
   {
     id: 'notifications',
     title: 'Automated notifications',
@@ -66,12 +66,12 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({ watchlistCount
     }
 
     try {
-      if (localStorage.getItem(VOTED_KEY) === 'true') {
+      if (localStorage.getItem(POLL_VOTED_KEY) === 'true') {
         setIsVisible(false);
         return;
       }
 
-      const dismissedUntil = localStorage.getItem(DISMISS_KEY);
+      const dismissedUntil = localStorage.getItem(POLL_DISMISS_KEY);
       if (dismissedUntil) {
         const expiry = parseInt(dismissedUntil, 10);
         if (!isNaN(expiry) && Date.now() < expiry) {
@@ -86,7 +86,7 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({ watchlistCount
       .then((status) => {
         if (status.hasVoted) {
           try {
-            localStorage.setItem(VOTED_KEY, 'true');
+            localStorage.setItem(POLL_VOTED_KEY, 'true');
           } catch {}
           setIsVisible(false);
         } else {
@@ -103,7 +103,7 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({ watchlistCount
     trackEvent('poll_dismissed', { reason: 'user_closed' });
     try {
       const expiry = Date.now() + COOLDOWN_DAYS_MS;
-      localStorage.setItem(DISMISS_KEY, String(expiry));
+      localStorage.setItem(POLL_DISMISS_KEY, String(expiry));
     } catch {}
   };
 
@@ -123,7 +123,7 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({ watchlistCount
       if (res.success) {
         trackEvent('poll_voted', { option: optionId, hasCustomText: false });
         try {
-          localStorage.setItem(VOTED_KEY, 'true');
+          localStorage.setItem(POLL_VOTED_KEY, 'true');
         } catch {}
         setHasSubmitted(true);
         setTimeout(() => {
@@ -145,7 +145,7 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({ watchlistCount
       if (res.success) {
         trackEvent('poll_voted', { option: 'other', hasCustomText: Boolean(customText.trim()) });
         try {
-          localStorage.setItem(VOTED_KEY, 'true');
+          localStorage.setItem(POLL_VOTED_KEY, 'true');
         } catch {}
         setHasSubmitted(true);
         setTimeout(() => {

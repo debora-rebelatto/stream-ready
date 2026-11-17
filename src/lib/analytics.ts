@@ -24,6 +24,9 @@ export interface EventDataMap {
   sponsor_clicked: { location: string };
   poll_voted: { option: string; hasCustomText: boolean };
   poll_dismissed: { reason?: string };
+  onboarding_viewed: { watchlistCount: number };
+  onboarding_quick_add_clicked: { movieIds: string[]; source: string };
+  onboarding_dismissed: { reason?: string };
 }
 
 export type EventName = keyof EventDataMap;
