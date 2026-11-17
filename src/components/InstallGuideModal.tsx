@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Tv, Copy, Check, Play, ArrowRight, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { X, Sparkles, Tv, Copy, Check, Play, ArrowRight, ShieldCheck, AlertTriangle, QrCode } from 'lucide-react';
 import { trackEvent } from '../lib/analytics';
 
 interface InstallGuideModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenLogin: () => void;
+  onOpenQrModal?: () => void;
   installUrl?: string;
   manifestUrl?: string;
 }
@@ -14,6 +15,7 @@ export const InstallGuideModal: React.FC<InstallGuideModalProps> = ({
   isOpen,
   onClose,
   onOpenLogin,
+  onOpenQrModal,
   installUrl,
   manifestUrl = 'https://stremiowatchlist.vercel.app/manifest.json'
 }) => {
@@ -159,6 +161,18 @@ export const InstallGuideModal: React.FC<InstallGuideModalProps> = ({
             <p className="text-[11px] text-center text-gray-400 mt-2">
               Free setup in 10 seconds • No credit card needed
             </p>
+            {onOpenQrModal && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenQrModal();
+                }}
+                className="w-full py-2.5 px-3 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 hover:text-white font-semibold text-xs border border-purple-500/25 transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
+              >
+                <QrCode size={14} className="text-purple-400" />
+                <span>Scan QR Code to Open on Mobile / TV</span>
+              </button>
+            )}
           </div>
 
           {/* Advanced / Fallback Manual Link */}

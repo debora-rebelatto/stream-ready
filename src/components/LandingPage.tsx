@@ -23,7 +23,8 @@ import {
   Search,
   SlidersHorizontal,
   RotateCcw,
-  Info
+  Info,
+  QrCode
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { trackEvent } from '../lib/analytics';
@@ -33,9 +34,10 @@ import { RecommendedBanner } from './RecommendedBanner';
 interface LandingPageProps {
   onOpenLogin: () => void;
   onOpenInstallGuide?: () => void;
+  onOpenQrModal?: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin, onOpenInstallGuide }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin, onOpenInstallGuide, onOpenQrModal }) => {
   const { showToast } = useToast();
   const [manifestUrl, setManifestUrl] = useState('');
   const [installUrl, setInstallUrl] = useState('');
@@ -185,6 +187,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin, onOpenIns
           >
             <Copy size={17} />
           </button>
+
+          {onOpenQrModal && (
+            <button
+              onClick={onOpenQrModal}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-4 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-200 hover:text-white font-semibold text-sm transition-all cursor-pointer"
+              title="Scan QR Code to open on Phone or TV"
+            >
+              <QrCode size={16} className="text-purple-400" />
+              <span>Scan QR Code</span>
+            </button>
+          )}
         </div>
 
         {/* Trust Badges */}

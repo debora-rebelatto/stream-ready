@@ -10,6 +10,7 @@ const { loginStremio, getUserInfo, getAccountWatchlist, saveAccountWatchlist } =
 const { encodeUserData, decodeUserData } = require('./lib/userData');
 const { getCuratedLists, getCuratedListById, addCuratedListToUser } = require('./lib/curatedLists');
 const { logPostHog } = require('./lib/posthogLogs');
+const QRCode = require('qrcode');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
@@ -997,6 +998,81 @@ app.get('/api/info', async (req, res) => {
     supabaseConfigured: db.isSupabaseConfigured(),
     port: PORT
   });
+});
+
+// QR Code Generator (PNG or SVG)
+app.get('/api/qr', async (req, res) => {
+  try {
+    const text = req.query.url || req.query.text || getBaseUrl(req);
+    const format = req.query.format || 'png';
+    const size = Math.min(Math.max(parseInt(req.query.size, 10) || 320, 100), 1000);
+
+    if (format === 'svg') {
+      const svg = await QRCode.toString(text, {
+        type: 'svg',
+        margin: 2,
+        color: { dark: '#ffffff', light: '#0c0d14' }
+      });
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.send(svg);
+    }
+
+    const buffer = await QRCode.toBuffer(text, {
+      type: 'png',
+      width: size,
+      margin: 2,
+      color: { dark: '#000000', light: '#ffffff' }
+    });
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(buffer);
+  } catch (err) {
+    console.error('[QR Error]', err);
+    res.status(500).send('Error generating QR code');
+  }
+});
+
+// Stremio TV Poster with Scannable QR Code
+app.get('/api/qr/poster', async (req, res) => {
+  try {
+    const baseUrl = getBaseUrl(req);
+    const targetUrl = req.query.url || baseUrl;
+
+    const qrDataUrl = await QRCode.toDataURL(targetUrl, {
+      width: 280,
+      margin: 1,
+      color: { dark: '#000000', light: '#ffffff' }
+    });
+
+    const cleanDisplayUrl = targetUrl.replace(/^https?:\/\//, '');
+
+    const svg = `<svg width="500" height="750" viewBox="0 0 500 750" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1b1338"/>
+      <stop offset="50%" stop-color="#0e101f"/>
+      <stop offset="100%" stop-color="#080911"/>
+    </linearGradient>
+  </defs>
+  <rect width="500" height="750" fill="url(#bgGrad)" rx="24"/>
+  <rect x="14" y="14" width="472" height="722" fill="none" stroke="#7c3aed" stroke-width="2" stroke-opacity="0.4" rx="16"/>
+  <text x="250" y="80" font-family="Arial, sans-serif" font-size="24" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="2">STREMIO WATCHLIST</text>
+  <text x="250" y="115" font-family="Arial, sans-serif" font-size="14" font-weight="600" fill="#c4b5fd" text-anchor="middle">Good Quality Tracker • 1080p &amp; 4K</text>
+  <rect x="100" y="165" width="300" height="300" fill="#ffffff" rx="20"/>
+  <image href="${qrDataUrl}" x="110" y="175" width="280" height="280"/>
+  <text x="250" y="525" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#ffffff" text-anchor="middle">📱 Scan with Phone Camera</text>
+  <text x="250" y="560" font-family="Arial, sans-serif" font-size="14" fill="#9ca3af" text-anchor="middle">to open web app &amp; add movies</text>
+  <text x="250" y="640" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#34d399" text-anchor="middle">${cleanDisplayUrl}</text>
+</svg>`;
+
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(svg);
+  } catch (err) {
+    console.error('[QR Poster Error]', err);
+    res.status(500).send('Error generating QR poster');
+  }
 });
 
 // Export database (for logged in user)

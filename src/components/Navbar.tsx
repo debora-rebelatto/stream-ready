@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth, useToast } from '../context/useAppContext';
 import { api } from '../lib/api';
 import { trackEvent } from '../lib/analytics';
-import { Settings, Copy, LogIn, LogOut, Menu, X, Play, MessageSquare, Folder, Trash2 } from 'lucide-react';
+import { Settings, Copy, LogIn, LogOut, Menu, X, Play, MessageSquare, Folder, Trash2, QrCode } from 'lucide-react';
 import { GitHubSponsorButton } from './GitHubSponsorButton';
 
 interface NavbarProps {
@@ -11,6 +11,7 @@ interface NavbarProps {
   onOpenInstallGuide?: () => void;
   onOpenLists?: () => void;
   onOpenDeleteAccount?: () => void;
+  onOpenQrModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -18,7 +19,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenLogin,
   onOpenInstallGuide,
   onOpenLists,
-  onOpenDeleteAccount
+  onOpenDeleteAccount,
+  onOpenQrModal
 }) => {
   const { user, logout, isLoading: isAuthLoading } = useAuth();
   const { showToast } = useToast();
@@ -113,6 +115,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Copy size={13} />
             </button>
           </div>
+
+          {/* QR Code Modal Trigger */}
+          {onOpenQrModal && (
+            <button
+              onClick={onOpenQrModal}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white border border-white/10 transition-all cursor-pointer"
+              title="Scan QR Code to open on Mobile or TV"
+            >
+              <QrCode size={13} className="text-purple-400" />
+              <span>QR Code</span>
+            </button>
+          )}
 
           {/* User Custom Lists (if authenticated) */}
           {user && onOpenLists && (
@@ -257,6 +271,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Copy size={13} />
               <span>Copy Link</span>
             </button>
+
+            {onOpenQrModal && (
+              <button
+                onClick={() => {
+                  onOpenQrModal();
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium rounded-xl bg-[#151824] text-gray-200 border border-white/10"
+              >
+                <QrCode size={13} className="text-purple-400" />
+                <span>QR Code</span>
+              </button>
+            )}
 
             {user && onOpenLists && (
               <button

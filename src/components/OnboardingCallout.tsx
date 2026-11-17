@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Plus, Check, X, Film, ChevronRight, Tv, Compass } from 'lucide-react';
+import { Sparkles, Plus, Check, X, Film, ChevronRight, Tv, Compass, QrCode } from 'lucide-react';
 import { CURATED_RECOMMENDED_MOVIES } from '../lib/recommendations';
 import { useWatchlist, useToast } from '../context/useAppContext';
 import { trackEvent } from '../lib/analytics';
@@ -10,11 +10,13 @@ const COOLDOWN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 interface OnboardingCalloutProps {
   onScrollToRecommendations?: () => void;
   onFocusSearch?: () => void;
+  onOpenQrModal?: () => void;
 }
 
 export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
   onScrollToRecommendations,
   onFocusSearch,
+  onOpenQrModal,
 }) => {
   const { items: watchlistItems, addItem } = useWatchlist();
   const { showToast } = useToast();
@@ -195,7 +197,7 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
                 <span>
                   {isBatchAdding && batchProgress
                     ? `Adding (${batchProgress.current}/${batchProgress.total})...`
-                    : '✨ Add Top 3 Hits (1-Click)'}
+                    : 'Add Top 3 Hits'}
                 </span>
               </button>
 
@@ -207,6 +209,17 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
                 <span>Browse All</span>
                 <ChevronRight size={13} />
               </button>
+
+              {onOpenQrModal && (
+                <button
+                  onClick={onOpenQrModal}
+                  className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer"
+                  title="Scan QR Code to open on mobile"
+                >
+                  <QrCode size={13} className="text-purple-400" />
+                  <span>Mobile QR</span>
+                </button>
+              )}
             </div>
           </div>
 

@@ -16,6 +16,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { ManageListsModal } from './components/ManageListsModal';
 import { DeleteMovieModal } from './components/DeleteMovieModal';
 import { DeleteAccountModal } from './components/DeleteAccountModal';
+import { QrCodeModal } from './components/QrCodeModal';
 import { LandingPage } from './components/LandingPage';
 import { GitHubSponsorButton } from './components/GitHubSponsorButton';
 import { ToastContainer } from './components/ToastContainer';
@@ -42,6 +43,7 @@ export const App: React.FC = () => {
   const { showToast } = useToast();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isManageListsOpen, setIsManageListsOpen] = useState(false);
   const [manageListsTab, setManageListsTab] = useState<'standard' | 'custom'>('standard');
@@ -314,6 +316,7 @@ export const App: React.FC = () => {
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenLists={() => setIsManageListsOpen(true)}
         onOpenDeleteAccount={() => setIsDeleteAccountOpen(true)}
+        onOpenQrModal={() => setIsQrModalOpen(true)}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
@@ -327,7 +330,7 @@ export const App: React.FC = () => {
         ) : user ? (
           <>
             <Hero onOpenSettings={() => setIsSettingsOpen(true)} />
-            <OnboardingCallout />
+            <OnboardingCallout onOpenQrModal={() => setIsQrModalOpen(true)} />
             <RecommendedBanner />
             <SearchSection />
             <FeaturePollCard watchlistCount={items.length} userEmail={user?.email} />
@@ -700,6 +703,7 @@ export const App: React.FC = () => {
           <LandingPage
             onOpenLogin={() => setIsLoginOpen(true)}
             onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
+            onOpenQrModal={() => setIsQrModalOpen(true)}
           />
         )}
       </main>
@@ -710,8 +714,15 @@ export const App: React.FC = () => {
         isOpen={isInstallGuideOpen}
         onClose={() => setIsInstallGuideOpen(false)}
         onOpenLogin={() => setIsLoginOpen(true)}
+        onOpenQrModal={() => setIsQrModalOpen(true)}
         installUrl={manifestInfo.stremioInstallUrl}
         manifestUrl={manifestInfo.manifestUrl}
+      />
+      <QrCodeModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        manifestUrl={manifestInfo.manifestUrl}
+        installUrl={manifestInfo.stremioInstallUrl}
       />
       <SettingsModal
         isOpen={isSettingsOpen}
