@@ -88,14 +88,6 @@ export function getManifest(hostUrl: string = '', userId: string = ''): AddonMan
       extra: [
         { name: 'skip', isRequired: false }
       ]
-    },
-    {
-      type: 'movie',
-      id: 'watchlist_watched',
-      name: '👁️ Watchlist: Watched History',
-      extra: [
-        { name: 'skip', isRequired: false }
-      ]
     }
   ];
 
@@ -213,7 +205,7 @@ export async function handleCatalog(
     return { metas: [] };
   }
 
-  const validCatalogs = ['watchlist_ready', 'watchlist_all', 'watchlist_pending', 'watchlist_watched'];
+  const validCatalogs = ['watchlist_ready', 'watchlist_all', 'watchlist_pending'];
   const isCustomCatalog = catalogId.startsWith('watchlist_custom_');
   if (!validCatalogs.includes(catalogId) && !isCustomCatalog) {
     return { metas: [] };
@@ -250,8 +242,6 @@ export async function handleCatalog(
   if (isCustomCatalog) {
     const listId = catalogId.replace('watchlist_custom_', '');
     filtered = filtered.filter((i: any) => Array.isArray(i.customLists) && i.customLists.includes(listId));
-  } else if (catalogId === 'watchlist_watched') {
-    filtered = filtered.filter((i: any) => Boolean(i.isWatched));
   } else {
     // Esconde filmes assistidos dos catálogos ativos
     filtered = filtered.filter((i: any) => !i.isWatched);

@@ -78,7 +78,8 @@ describe('Backend StremioAddonService (server/services/stremioAddonService.ts)',
       expect(manifest.name).toBe('Watchlist (Good Quality Tracker)');
       expect(manifest.resources).toContain('catalog');
       expect(manifest.resources).toContain('meta');
-      expect(manifest.catalogs.length).toBeGreaterThanOrEqual(4);
+      expect(manifest.catalogs.length).toBeGreaterThanOrEqual(3);
+      expect(manifest.catalogs.some((c) => c.id === 'watchlist_watched')).toBe(false);
       expect(manifest.logo).toBe('http://localhost:7000/icon.png');
     });
   });

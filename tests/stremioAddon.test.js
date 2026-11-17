@@ -27,14 +27,14 @@ describe('Stremio Addon Module (lib/stremioAddon.js)', () => {
       const manifest = getManifest('https://myaddon.com');
       expect(manifest.id).toBe('community.watchlist.quality.tracker');
       expect(manifest.logo).toBe('https://myaddon.com/icon.png');
-      expect(manifest.catalogs).toHaveLength(4);
+      expect(manifest.catalogs).toHaveLength(3);
     });
 
     test('deve incluir listas personalizadas quando userId for fornecido', () => {
       const manifest = getManifest('', 'user123');
-      expect(manifest.catalogs).toHaveLength(5);
-      expect(manifest.catalogs[4].id).toBe('watchlist_custom_fav1');
-      expect(manifest.catalogs[4].name).toContain('Favoritos');
+      expect(manifest.catalogs).toHaveLength(4);
+      expect(manifest.catalogs[3].id).toBe('watchlist_custom_fav1');
+      expect(manifest.catalogs[3].name).toContain('Favoritos');
     });
   });
 
@@ -82,7 +82,7 @@ describe('Stremio Addon Module (lib/stremioAddon.js)', () => {
       expect(result.metas).toHaveLength(2);
     });
 
-    test('deve retornar catálogo de assistidos para watchlist_watched', async () => {
+    test('não deve retornar catálogo para watchlist_watched já que foi removido', async () => {
       const items = [
         { id: 'tt1', name: 'Movie 1', isWatched: false },
         { id: 'tt2', name: 'Movie 2', isWatched: true },
@@ -90,8 +90,7 @@ describe('Stremio Addon Module (lib/stremioAddon.js)', () => {
       db.getItems.mockReturnValue(items);
 
       const result = await handleCatalog('movie', 'watchlist_watched', {}, 'user123');
-      expect(result.metas).toHaveLength(1);
-      expect(result.metas[0].id).toBe('tt2');
+      expect(result.metas).toHaveLength(0);
     });
 
     test('deve suportar paginação via extra.skip', async () => {
