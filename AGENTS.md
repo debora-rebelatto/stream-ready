@@ -25,6 +25,24 @@ Welcome to **Stremio Watchlist (Good Quality Tracker)**. This document serves as
 
 ---
 
+## 🛡️ Lauren Tan Constraint Engineering & "Pit of Success" Manifesto
+
+> [!IMPORTANT]
+> **"ALL CODE IS SLOP, EXCEPT WHEN PHYSICALLY CONSTRAINED."**
+>
+> This project follows the **Lauren Tan (SpaceX / xAI GrokBot)** methodology for autonomous agent collaboration:
+>
+> 1. **The Codebase is the Strict Boundary:** Rules in natural prose are fragile. Whenever a boundary, import hierarchy, or architectural restriction exists, it MUST be enforced by compiler checks and static analysis (`eslint.config.mjs`, TypeScript strict mode), making incorrect paths physically impossible to compile.
+> 2. **Mistakes Become Static Checks (Never Just Text):** When an agent or human makes a mistake or architectural deviation, the solution is **never** to just write a text reminder. It must immediately be codified into a deterministic ESLint rule (`no-restricted-imports`, custom rules) or an architecture unit test (`tests/architecture.test.ts`).
+> 3. **Mandatory "Proof of Innocence" (`npm run verify`):** An agent must **never** conclude a task by merely claiming "it is fixed". Every delivery requires running the full verification harness and providing the deterministic console output as proof.
+> 4. **Confidence Pyramid:**
+>    - Level 1: Strict TypeScript types & compiler invariants.
+>    - Level 2: ESLint architectural boundaries & static analysis.
+>    - Level 3: Automated Jest test suite (298+ unit and integration tests).
+>    - Level 4: Production build verification (`vite build` + `build:server`).
+>    - Level 5: Human review focusing solely on business logic and architecture.
+
+---
 
 ## 🏛️ Clean Architecture & Clean Code Standards
 
@@ -171,17 +189,17 @@ npm run dev:server
 npm run dev:client
 ```
 
-### Testing
+### Verification & Proof of Innocence
 
 ```bash
-# Run all automated tests
-npm test
+# Run the complete verification harness (Typecheck + Lint + Test + Build)
+npm run verify
 
-# Run tests in interactive watch mode
-npm run test:watch
-
-# Run tests with code coverage report
-npm run test:coverage
+# Individual checks if needed:
+npm run typecheck    # Runs both client and server TypeScript typecheck
+npm run lint         # Runs ESLint with Clean Architecture import boundaries
+npm test             # Runs all Jest unit/integration test suites
+npm run build        # Compiles server and client production bundles
 ```
 
 ### Production Build
@@ -201,12 +219,16 @@ npm start
 
 ## 📐 Key Rules for Agents & Contributors
 
-### 1. Verification Before Completion
+### 1. Verification Before Completion ("Proof of Innocence")
 
-Always run the following commands before completing any task:
+Always run the full verification pipeline before completing any task:
 
-1. `npm test` — Ensure all unit and integration tests pass without errors or open handle warnings.
-2. `npm run build` — Verify that Vite builds the frontend bundle into `dist/` cleanly.
+1. `npm run verify` — Must pass without errors. This runs:
+   - `typecheck:client` & `typecheck:server`
+   - `lint` (Clean Architecture import restrictions)
+   - `test` (all Jest unit & integration tests)
+   - `build` (compiles server and Vite production bundle)
+2. Present the deterministic output of `npm run verify` in the response as proof of innocence. Never mark a task as completed without this evidence.
 
 ### 2. Resource Cleanup & Asynchronous Timers
 

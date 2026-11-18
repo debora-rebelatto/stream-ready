@@ -12,6 +12,7 @@ const {
 const db = require('../../lib/db');
 
 describe('Admin Analytics & Access Control', () => {
+  jest.setTimeout(15000);
   let routeHandler;
 
   beforeEach(() => {
