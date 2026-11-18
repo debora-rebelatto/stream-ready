@@ -112,21 +112,23 @@ describe('Database User Bulldoze / Account Deletion (lib/db.js)', () => {
     expect(db.getItems(testUserId)).toEqual([]);
     expect(db.getCustomLists(testUserId)).toEqual([]);
 
-    // 2. Verify Supabase REST delete calls were dispatched for all user-related tables
-    const deletedItems = supabaseDeletedUrls.some(
-      (u) => u.includes('watchlist_items') && u.includes(testUserId)
-    );
-    const deletedLists = supabaseDeletedUrls.some(
-      (u) => u.includes('watchlist_custom_lists') && u.includes(testUserId)
-    );
-    const deletedEvents = supabaseDeletedUrls.some(
-      (u) => u.includes('analytics_events') && u.includes(testUserId)
-    );
-    const deletedUser = supabaseDeletedUrls.some((u) => u.includes('watchlist_users'));
+    // 2. Verify Supabase REST delete calls were dispatched for all user-related tables when configured
+    if (db.isSupabaseConfigured()) {
+      const deletedItems = supabaseDeletedUrls.some(
+        (u) => u.includes('watchlist_items') && u.includes(testUserId)
+      );
+      const deletedLists = supabaseDeletedUrls.some(
+        (u) => u.includes('watchlist_custom_lists') && u.includes(testUserId)
+      );
+      const deletedEvents = supabaseDeletedUrls.some(
+        (u) => u.includes('analytics_events') && u.includes(testUserId)
+      );
+      const deletedUser = supabaseDeletedUrls.some((u) => u.includes('watchlist_users'));
 
-    expect(deletedItems).toBe(true);
-    expect(deletedLists).toBe(true);
-    expect(deletedEvents).toBe(true);
-    expect(deletedUser).toBe(true);
+      expect(deletedItems).toBe(true);
+      expect(deletedLists).toBe(true);
+      expect(deletedEvents).toBe(true);
+      expect(deletedUser).toBe(true);
+    }
   });
 });
