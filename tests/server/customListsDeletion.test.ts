@@ -1,4 +1,10 @@
-const { deleteCustomList, findUserBucket, addItem, ensureLoaded } = require('../../lib/db');
+const {
+  deleteCustomList,
+  findUserBucket,
+  ensureUserBucket,
+  addItem,
+  ensureLoaded,
+} = require('../../lib/db');
 
 describe('Custom List Deletion and Movie Removal (lib/db.js)', () => {
   const testUserId = 'a0000000-0000-0000-0000-000000000001';
@@ -43,30 +49,28 @@ describe('Custom List Deletion and Movie Removal (lib/db.js)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    const bucket = findUserBucket(testUserId);
-    if (bucket) {
-      bucket.customLists = [
-        { id: 'list_netflix', name: 'New on Netflix', emoji: '🔴' },
-        { id: 'list_favorites', name: 'Favorites', emoji: '⭐' },
-      ];
-      bucket.items = [
-        {
-          id: 'tt001',
-          name: 'Netflix Only Movie',
-          customLists: ['list_netflix'],
-        },
-        {
-          id: 'tt002',
-          name: 'Shared Movie in Both Lists',
-          customLists: ['list_netflix', 'list_favorites'],
-        },
-        {
-          id: 'tt003',
-          name: 'Favorites Only Movie',
-          customLists: ['list_favorites'],
-        },
-      ];
-    }
+    const bucket = ensureUserBucket(testUserId, 'test@example.com');
+    bucket.customLists = [
+      { id: 'list_netflix', name: 'New on Netflix', emoji: '🔴' },
+      { id: 'list_favorites', name: 'Favorites', emoji: '⭐' },
+    ];
+    bucket.items = [
+      {
+        id: 'tt001',
+        name: 'Netflix Only Movie',
+        customLists: ['list_netflix'],
+      },
+      {
+        id: 'tt002',
+        name: 'Shared Movie in Both Lists',
+        customLists: ['list_netflix', 'list_favorites'],
+      },
+      {
+        id: 'tt003',
+        name: 'Favorites Only Movie',
+        customLists: ['list_favorites'],
+      },
+    ];
   });
 
   test('deleting a custom list removes movies that belong only to it from the watchlist', async () => {

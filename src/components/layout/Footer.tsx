@@ -43,14 +43,7 @@ export const Footer: React.FC<FooterProps> = ({
 
         {/* Navigation & Action Links */}
         <div className="flex items-center gap-4 text-gray-400 shrink-0 text-xs">
-          <a
-            href="https://github.com/debora-rebelatto/stremiowatchlist"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-white transition-colors cursor-pointer"
-          >
-            GitHub
-          </a>
+         
           {onCopyManifest && (
             <button
               type="button"
