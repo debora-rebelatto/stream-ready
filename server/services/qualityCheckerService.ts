@@ -323,6 +323,9 @@ export async function checkMovieQuality(
   try {
     const controller = new AbortController();
     timeout = setTimeout(() => controller.abort(), 12000);
+    if (timeout && typeof timeout.unref === 'function') {
+      timeout.unref();
+    }
 
     const res = await fetch(url, {
       signal: controller.signal,

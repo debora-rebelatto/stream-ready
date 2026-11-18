@@ -17,12 +17,18 @@ export async function searchMovies(query: string): Promise<CinemetaItem[]> {
 
   const url = `${CINEMETA_URL}/catalog/movie/top/search=${encodeURIComponent(trimmed)}.json`;
 
+  let timeout: NodeJS.Timeout | undefined;
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    timeout = setTimeout(() => controller.abort(), 8000);
+    if (timeout && typeof timeout.unref === 'function') {
+      timeout.unref();
+    }
+    if (timeout && typeof timeout.unref === 'function') {
+      timeout.unref();
+    }
 
     const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeout);
 
     if (!res.ok) return [];
 
@@ -43,6 +49,8 @@ export async function searchMovies(query: string): Promise<CinemetaItem[]> {
   } catch (err: any) {
     console.error('[Cinemeta] Erro ao buscar filmes:', err.message);
     return [];
+  } finally {
+    if (timeout) clearTimeout(timeout);
   }
 }
 
@@ -56,6 +64,9 @@ export async function getMeta(type: string = 'movie', id: string): Promise<Cinem
   try {
     const controller = new AbortController();
     timeout = setTimeout(() => controller.abort(), 8000);
+    if (timeout && typeof timeout.unref === 'function') {
+      timeout.unref();
+    }
 
     const res = await fetch(url, { signal: controller.signal });
 

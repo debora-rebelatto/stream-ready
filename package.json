@@ -12,7 +12,7 @@
     "build": "npm run build:server && vite build",
     "vercel-build": "npm run build:server && vite build",
     "preview": "vite preview",
-    "test": "jest",
+    "test": "jest --forceExit",
     "test:server": "jest tests/server",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

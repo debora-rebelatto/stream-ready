@@ -94,6 +94,9 @@ async function fetchMixedFromTmdb(apiKey: string, limit: number): Promise<Trendi
 
   try {
     timeout = setTimeout(() => controller.abort(), 12000);
+    if (timeout && typeof timeout.unref === 'function') {
+      timeout.unref();
+    }
 
     const now = Date.now();
     const todayStr = new Date(now).toISOString().slice(0, 10);
@@ -264,6 +267,9 @@ async function fetchFromCinemeta(limit: number): Promise<TrendingMovie[]> {
   let timeout: NodeJS.Timeout | null = null;
   try {
     timeout = setTimeout(() => controller.abort(), 8000);
+    if (timeout && typeof timeout.unref === 'function') {
+      timeout.unref();
+    }
     const res = await fetch('https://v3-cinemeta.strem.io/catalog/movie/top.json', {
       signal: controller.signal,
     });
