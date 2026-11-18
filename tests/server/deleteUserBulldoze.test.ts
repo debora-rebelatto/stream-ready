@@ -44,7 +44,39 @@ describe('Database User Bulldoze / Account Deletion (lib/db.js)', () => {
 
   beforeEach(async () => {
     supabaseDeletedUrls = [];
+    global.fetch = jest.fn().mockImplementation((url, options) => {
+      const urlStr = String(url);
+      if (options && options.method === 'DELETE') {
+        supabaseDeletedUrls.push(urlStr);
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => [],
+          text: async () => '',
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => [
+          {
+            id: testUserId,
+            email: testEmail,
+            stremio_auth_key: testAuthKey,
+            min_quality: '1080p',
+          },
+        ],
+        text: async () => '',
+      });
+    });
+
     await db.ensureLoaded(true);
+
+    const bucket = db.ensureUserBucket(testUserId, testEmail);
+    bucket.id = testUserId;
+    bucket.email = testEmail;
+    bucket.settings.stremioAuthKey = testAuthKey;
+
     // Populate user in memory and ensure bucket exists
     const user = await db.resolveUser(testAuthKey, () => ({ email: testEmail }));
     expect(user).toBeDefined();
