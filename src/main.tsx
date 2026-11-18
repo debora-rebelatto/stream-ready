@@ -4,6 +4,7 @@ import { ToastProvider, AppProvider } from './context/AppContext';
 import { App } from './App';
 import './index.css';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { initPostHog, isTrackingBlocked } from './utils';
 
 // Initialize PostHog if VITE_POSTHOG_KEY is configured and tracking is not blocked
@@ -17,6 +18,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <AppProvider>
         <App />
         <Analytics beforeSend={(event) => (isTrackingBlocked() ? null : event)} />
+        <SpeedInsights />
       </AppProvider>
     </ToastProvider>
   </React.StrictMode>
