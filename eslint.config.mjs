@@ -124,7 +124,7 @@ export default tseslint.config(
     }
   },
   {
-    // Frontend Isolation: never import server/backend files
+    // Frontend Isolation: never import server/backend files or legacy component file paths
     files: ["src/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [
@@ -135,6 +135,21 @@ export default tseslint.config(
               group: ["**/server/**", "**/lib/**", "express"],
               message:
                 "Boundary violation: Frontend code must not import backend server code."
+            },
+            {
+              group: [
+                "**/components/Button",
+                "**/components/Badge",
+                "**/components/Pagination",
+                "**/components/ModalShell",
+                "**/components/ToastContainer",
+                "**/components/FeaturePollCard",
+                "**/components/SettingsPage",
+                "**/components/UserDashboard",
+                "**/components/LandingPage"
+              ],
+              message:
+                "Lauren Tan Architecture constraint: Import components through their clean barrel exports (e.g. '../components'), never direct legacy component paths."
             }
           ]
         }
