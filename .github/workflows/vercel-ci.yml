@@ -15,7 +15,20 @@ jobs:
   verify:
     name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
+    outputs:
+      has_vercel_token: ${{ steps.check_token.outputs.has_token }}
     steps:
+      - name: Check Vercel Token Availability
+        id: check_token
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -43,7 +56,7 @@ jobs:
   deploy-preview:
     name: Deploy Preview to Vercel
     needs: verify
-    if: github.event_name == 'pull_request' && secrets.VERCEL_TOKEN != ''
+    if: github.event_name == 'pull_request' && needs.verify.outputs.has_vercel_token == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -98,7 +111,7 @@ jobs:
   deploy-production:
     name: Deploy to Vercel (Production)
     needs: verify
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.VERCEL_TOKEN != ''
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.verify.outputs.has_vercel_token == 'true'
     runs-on: ubuntu-latest
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
