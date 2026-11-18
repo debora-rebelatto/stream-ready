@@ -1,7 +1,7 @@
 import React from 'react';
-import { Film, CheckCircle, Users } from 'lucide-react';
+import { Film, CheckCircle, Users, Clock } from 'lucide-react';
 import type { TopMovieMetric } from '../../models';
-import { Badge } from '../Badge';
+import { Badge } from '../common';
 
 interface TopMoviesTableProps {
   movies: TopMovieMetric[];
@@ -40,8 +40,8 @@ export const TopMoviesTable: React.FC<TopMoviesTableProps> = ({ movies }) => {
             <tr className="border-b border-white/10 text-gray-400 font-semibold uppercase text-[10px] tracking-wider">
               <th className="py-2.5 px-3">#</th>
               <th className="py-2.5 px-3">Movie</th>
-              <th className="py-2.5 px-3 text-center">Trackers</th>
-              <th className="py-2.5 px-3 text-center">Quality Status</th>
+              <th className="py-2.5 px-3 text-center whitespace-nowrap">Trackers</th>
+              <th className="py-2.5 px-3 text-center whitespace-nowrap">Quality Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -78,20 +78,27 @@ export const TopMoviesTable: React.FC<TopMoviesTableProps> = ({ movies }) => {
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 px-3 text-center">
+                  <td className="py-3 px-3 text-center whitespace-nowrap">
                     <span className="inline-flex items-center gap-1 font-bold text-white">
-                      <Users size={12} className="text-purple-400" />
+                      <Users size={12} className="text-purple-400 shrink-0" />
                       {movie.userCount}
                     </span>
                   </td>
-                  <td className="py-3 px-3 text-center">
+                  <td className="py-3 px-3 text-center whitespace-nowrap">
                     {movie.readyCount > 0 ? (
-                      <Badge variant="emerald" size="xs">
-                        <CheckCircle size={10} className="mr-1" />
+                      <Badge
+                        variant="emerald"
+                        size="xs"
+                        icon={<CheckCircle size={11} className="shrink-0" />}
+                      >
                         {readyPercentage}% Ready ({movie.readyCount}/{movie.userCount})
                       </Badge>
                     ) : (
-                      <Badge variant="amber" size="xs">
+                      <Badge
+                        variant="amber"
+                        size="xs"
+                        icon={<Clock size={11} className="shrink-0" />}
+                      >
                         Waiting for Release
                       </Badge>
                     )}

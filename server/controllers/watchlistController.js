@@ -100,6 +100,17 @@ function registerWatchlistRoutes(app) {
     }
   });
 
+  app.get('/api/top-movies', async (req, res) => {
+    try {
+      await userRepository.ensureLoaded();
+      const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 3, 1), 20);
+      const movies = watchlistRepository.getTopMovies(limit);
+      res.json({ success: true, movies });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   app.post('/api/items', async (req, res) => {
     try {
       const { authKey, userId } = await getRequestUser(req);

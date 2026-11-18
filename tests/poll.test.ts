@@ -4,7 +4,7 @@ import {
   POLL_VOTED_KEY,
   BETA_NOTICE_DISMISS_KEY,
   isBetaNoticeDismissed,
-} from '../src/components/FeaturePollCard';
+} from '../src/components';
 
 describe('Feature Roadmap Poll Client API', () => {
   const originalFetch = global.fetch;

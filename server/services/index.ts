@@ -5,3 +5,4 @@ export * from './qualityCheckerService.ts';
 export * from './stremioAuthService.ts';
 export * from './stremioAddonService.ts';
 export * from './tmdbService.ts';
+export * from './adminAnalyticsService.ts';

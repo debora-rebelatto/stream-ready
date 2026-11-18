@@ -1,24 +1,27 @@
 import React from 'react';
 import { Shield } from 'lucide-react';
 import { useDashboardController } from '../controllers/useDashboardController';
-import { Button } from '../components/Button';
-import { Navbar } from '../components/Navbar';
-import { Hero } from '../components/Hero';
-import { OnboardingCallout } from '../components/OnboardingCallout';
-import { RecommendedBanner } from '../components/RecommendedBanner';
-import { SearchSection } from '../components/SearchSection';
-import { FeaturePollCard } from '../components/FeaturePollCard';
-import { CustomListPills } from '../components/CustomListPills';
-import { DashboardFilterToolbar } from '../components/DashboardFilterToolbar';
-import { WatchlistGrid } from '../components/WatchlistGrid';
-import { Footer } from '../components/Footer';
+import {
+  Button,
+  Navbar,
+  Hero,
+  OnboardingCallout,
+  RecommendedBanner,
+  TopThreeMoviesCard,
+  SearchSection,
+  FeaturePollCard,
+  CustomListPills,
+  DashboardFilterToolbar,
+  WatchlistGrid,
+  Footer,
+  ManageListsModal,
+  DeleteMovieModal,
+  DeleteAccountModal,
+  InstallGuideModal,
+  QrCodeModal,
+} from '../components';
 import { SettingsPageView } from './SettingsPageView';
 import { AdminDashboardView } from './AdminDashboardView';
-import { ManageListsModal } from '../components/ManageListsModal';
-import { DeleteMovieModal } from '../components/DeleteMovieModal';
-import { DeleteAccountModal } from '../components/DeleteAccountModal';
-import { InstallGuideModal } from '../components/InstallGuideModal';
-import { QrCodeModal } from '../components/QrCodeModal';
 
 export const UserDashboardView: React.FC = () => {
   const {
@@ -77,6 +80,10 @@ export const UserDashboardView: React.FC = () => {
     hasActiveFilters,
     clearFilters,
     activeList,
+    topMovies,
+    isAddingTopMovieId,
+    handleQuickAddTopMovie,
+    userMovieIdSet,
   } = useDashboardController();
 
   if (currentView === 'admin') {
@@ -170,6 +177,16 @@ export const UserDashboardView: React.FC = () => {
           }}
         />
         <RecommendedBanner />
+        {topMovies && topMovies.length > 0 && (
+          <div className="mb-6">
+            <TopThreeMoviesCard
+              movies={topMovies}
+              onAddMovie={handleQuickAddTopMovie}
+              userMovieIds={userMovieIdSet}
+              isAddingId={isAddingTopMovieId}
+            />
+          </div>
+        )}
         <SearchSection />
         {!isBetaNoticeVisible && (
           <FeaturePollCard

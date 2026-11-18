@@ -4,6 +4,7 @@ import {
   AdminKpiGrid,
   ServiceAdoptionCard,
   TopMoviesTable,
+  TopThreeMoviesCard,
   PollFeedbackCard,
   EventActivityFeed,
 } from '../src/components/admin';
@@ -88,6 +89,21 @@ describe('Admin Analytics Dashboard Components', () => {
     expect(React.isValidElement(el)).toBe(true);
     expect(el.props.movies).toHaveLength(1);
     expect(el.props.movies[0].name).toBe('The Shawshank Redemption');
+  });
+
+  test('TopThreeMoviesCard instantiates with top 3 movies podium', () => {
+    const multiMovies = [
+      { id: 'tt1', name: 'Movie 1', year: 2024, userCount: 20, readyCount: 18 },
+      { id: 'tt2', name: 'Movie 2', year: 2023, userCount: 15, readyCount: 10 },
+      { id: 'tt3', name: 'Movie 3', year: 2022, userCount: 10, readyCount: 0 },
+      { id: 'tt4', name: 'Movie 4', year: 2021, userCount: 5, readyCount: 2 },
+    ];
+    const el = React.createElement(TopThreeMoviesCard, { movies: multiMovies });
+    expect(React.isValidElement(el)).toBe(true);
+    expect(el.props.movies).toHaveLength(4);
+
+    const emptyEl = React.createElement(TopThreeMoviesCard, { movies: [] });
+    expect(React.isValidElement(emptyEl)).toBe(true);
   });
 
   test('PollFeedbackCard renders poll breakdown and feedback', () => {

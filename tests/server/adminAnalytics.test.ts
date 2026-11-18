@@ -1,5 +1,14 @@
 const { adminRepository } = require('../../server/repositories/adminRepository');
 const { registerAdminRoutes } = require('../../server/controllers/adminController');
+const {
+  calculatePercentage,
+  calculateActiveUsers,
+  calculateUserPreferenceMetrics,
+  calculateWatchlistItemMetrics,
+  calculateEventFunnelMetrics,
+  formatPollMetrics,
+  formatRecentEvents,
+} = require('../../lib/adminAnalytics');
 const db = require('../../lib/db');
 
 describe('Admin Analytics & Access Control', () => {
@@ -53,6 +62,87 @@ describe('Admin Analytics & Access Control', () => {
       expect(Array.isArray(analytics.topMovies)).toBe(true);
       expect(analytics.pollResults).toBeDefined();
       expect(Array.isArray(analytics.eventsBreakdown)).toBe(true);
+    });
+
+    it('correctly calculates ready, waiting, and watched movie KPIs and top movie stats', async () => {
+      const testUser = await db.resolveUser('admin_kpi_calc_user', () => ({ email: 'kpi_test@example.com' }));
+      const userId = testUser.id;
+
+      // Add a ready unwatched item
+      await db.addItem(
+        {
+          id: 'tt1111111',
+          name: 'Ready Movie',
+          has1080pPlus: true,
+          bestQuality: '1080p',
+          isWatched: false,
+        },
+        userId
+      );
+
+      // Add a waiting unwatched item
+      await db.addItem(
+        {
+          id: 'tt2222222',
+          name: 'Waiting Movie',
+          has1080pPlus: false,
+          bestQuality: 'CAM',
+          isWatched: false,
+        },
+        userId
+      );
+
+      // Add a watched item
+      await db.addItem(
+        {
+          id: 'tt3333333',
+          name: 'Watched Movie',
+          has1080pPlus: true,
+          bestQuality: '1080p',
+          isWatched: true,
+        },
+        userId
+      );
+
+      const analytics = await adminRepository.getAdminAnalytics('all');
+
+      expect(analytics.kpis.readyWatchlistItems).toBeGreaterThanOrEqual(1);
+      expect(analytics.kpis.waitingWatchlistItems).toBeGreaterThanOrEqual(1);
+      expect(analytics.kpis.watchedWatchlistItems).toBeGreaterThanOrEqual(1);
+      expect(analytics.kpis.totalWatchlistItems).toBe(
+        analytics.kpis.readyWatchlistItems + analytics.kpis.waitingWatchlistItems
+      );
+
+      // Check top movies readyCount
+      const readyMovie = analytics.topMovies.find((m) => m.id === 'tt1111111');
+      if (readyMovie) {
+        expect(readyMovie.readyCount).toBeGreaterThanOrEqual(1);
+      }
+    });
+
+    it('aggregates poll results and formats breakdown and feedback correctly', async () => {
+      const spy = jest.spyOn(db, 'getPollResults').mockResolvedValueOnce({
+        totalVotes: 5,
+        breakdown: { notifications: 3, tv_shows: 2 },
+        votes: { notifications: 3, tv_shows: 2 },
+        feedbackList: [
+          { option: 'other', text: 'Please add trakt sync!', createdAt: '2026-11-18T00:00:00Z' },
+        ],
+        customFeedback: [
+          { option: 'other', text: 'Please add trakt sync!', createdAt: '2026-11-18T00:00:00Z' },
+        ],
+      });
+
+      const analytics = await adminRepository.getAdminAnalytics('all');
+
+      expect(analytics.pollResults.totalVotes).toBe(5);
+      expect(analytics.pollResults.breakdown.length).toBeGreaterThanOrEqual(2);
+      expect(analytics.pollResults.breakdown[0].count).toBe(3);
+      expect(analytics.pollResults.breakdown[0].percentage).toBe(60);
+      expect(analytics.pollResults.customFeedback).toHaveLength(1);
+      expect(analytics.pollResults.customFeedback[0].customText).toBe('Please add trakt sync!');
+
+      spy.mockRestore();
     });
   });
 
@@ -111,6 +201,56 @@ describe('Admin Analytics & Access Control', () => {
 
       expect(res.status).toHaveBeenCalledWith(403);
       expect(res.body.success).toBe(false);
+    });
+  });
+
+  describe('adminAnalyticsService granular calculators', () => {
+    it('calculatePercentage handles zero denominator and normal percentages', () => {
+      expect(calculatePercentage(0, 0)).toBe(0);
+      expect(calculatePercentage(3, 5)).toBe(60);
+      expect(calculatePercentage(1, 3)).toBe(33);
+    });
+
+    it('calculateActiveUsers computes 24h, 7d, and 30d sets accurately', () => {
+      const now = Date.now();
+      const events = [
+        { user_id: 'u1', created_at: new Date(now - 2 * 60 * 60 * 1000).toISOString() },
+        { user_id: 'u2', created_at: new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString() },
+        { user_id: 'u3', created_at: new Date(now - 15 * 24 * 60 * 60 * 1000).toISOString() },
+      ];
+      const active = calculateActiveUsers(events, now);
+      expect(active.activeUsers24h).toBe(1);
+      expect(active.activeUsers7d).toBe(2);
+      expect(active.activeUsers30d).toBe(3);
+    });
+
+    it('calculateUserPreferenceMetrics aggregates quality, sync, and custom list counts', () => {
+      const users = [
+        { id: 'u1', settings: { minQuality: '4k', autoSyncWatched: true }, customLists: [{ id: 'l1' }] },
+        { id: 'u2', settings: { minQuality: '1080p', syncPreviouslyWatched: true }, customLists: [] },
+      ];
+      const prefs = calculateUserPreferenceMetrics(users);
+      expect(prefs.quality4kUsers).toBe(1);
+      expect(prefs.quality1080pUsers).toBe(1);
+      expect(prefs.autoSyncUsers).toBe(1);
+      expect(prefs.syncPreviouslyWatchedUsers).toBe(1);
+      expect(prefs.usersWithCustomListsCount).toBe(1);
+      expect(prefs.totalListsCount).toBe(1);
+    });
+
+    it('calculateEventFunnelMetrics and formatRecentEvents process events cleanly', () => {
+      const rawEvents = [
+        { event_name: 'addon_manifest_copied', created_at: '2026-11-18T00:00:00Z' },
+        { event_name: 'qr_code_scanned', created_at: '2026-11-18T00:01:00Z' },
+        { event_name: 'qr_code_scanned', created_at: '2026-11-18T00:02:00Z' },
+      ];
+      const funnel = calculateEventFunnelMetrics(rawEvents);
+      expect(funnel.manifestCopiedCount).toBe(1);
+      expect(funnel.qrScannedCount).toBe(2);
+      expect(funnel.eventsBreakdown[0].eventName).toBe('qr_code_scanned');
+
+      const recent = formatRecentEvents(rawEvents, 2);
+      expect(recent).toHaveLength(2);
     });
   });
 });

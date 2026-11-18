@@ -1,5 +1,5 @@
-import { ONBOARDING_DISMISS_KEY } from '../src/components/OnboardingCallout';
-import { CURATED_RECOMMENDED_MOVIES } from '../src/lib/recommendations';
+import { ONBOARDING_DISMISS_KEY } from '../src/components';
+import { CURATED_RECOMMENDED_MOVIES } from '../src/utils';
 
 describe('OnboardingCallout logic & starter recommendations', () => {
   beforeEach(() => {

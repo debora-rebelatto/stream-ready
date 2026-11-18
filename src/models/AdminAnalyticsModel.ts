@@ -4,6 +4,7 @@ export interface KpiMetrics {
   activeUsers7d: number;
   activeUsers30d: number;
   totalWatchlistItems: number;
+  totalTrackedItems?: number;
   readyWatchlistItems: number;
   waitingWatchlistItems: number;
   watchedWatchlistItems: number;
@@ -44,6 +45,7 @@ export interface TopMovieMetric {
   userCount: number;
   readyCount: number;
   poster?: string;
+  bestQuality?: string;
 }
 
 export interface PollFeedbackMetric {

@@ -1,5 +1,6 @@
 # dist/ (tracked for Vercel Serverless deployment)
 node_modules/
+.vercel
 *.log
 .DS_Store
 Thumbs.db

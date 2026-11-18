@@ -41,6 +41,11 @@ export const AdminKpiGrid: React.FC<AdminKpiGridProps> = ({ kpis }) => {
         <div className="text-2xl sm:text-3xl font-black text-white">{kpis.totalWatchlistItems}</div>
         <div className="text-[11px] text-gray-400 mt-1">
           Avg <strong className="text-gray-200">{kpis.avgMoviesPerUser}</strong> per user
+          {typeof kpis.totalTrackedItems === 'number' && (
+            <span className="block text-gray-400 text-[10px] mt-0.5">
+              ({kpis.totalTrackedItems} total tracked incl. watched)
+            </span>
+          )}
         </div>
       </div>
 

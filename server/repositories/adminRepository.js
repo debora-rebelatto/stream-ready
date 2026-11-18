@@ -1,9 +1,10 @@
 const db = require('../../lib/db');
+const { watchlistRepository } = require('./watchlistRepository');
 
 /**
  * Aggregates user metrics, service adoption funnels, and feature usage for the admin dashboard.
  */
-async function getAdminAnalytics(timeRange = 'all') {
+async function getAdminAnalytics() {
   await db.ensureLoaded();
 
   const users = db.getAllUsers() || [];
@@ -37,7 +38,9 @@ async function getAdminAnalytics(timeRange = 'all') {
 
   // 2. Watchlist Quality & Watched KPIs
   let readyCount = 0;
+  let waitingCount = 0;
   let watchedCount = 0;
+  let activeWatchlistCount = 0;
   let totalListsCount = 0;
   let usersWithCustomListsCount = 0;
 
@@ -48,7 +51,14 @@ async function getAdminAnalytics(timeRange = 'all') {
   let quality1080pUsers = 0;
   let quality4kUsers = 0;
 
+  // Map of userId -> user settings to evaluate item readiness based on preference
+  const userSettingsMap = new Map();
+
   for (const u of users) {
+    if (u && u.id) {
+      userSettingsMap.set(u.id, u.settings || {});
+    }
+
     const s = u.settings || {};
     if (s.trackWatchlistWatched !== false) trackWatchlistUsers++;
     if (s.autoSyncWatched) autoSyncUsers++;
@@ -70,16 +80,27 @@ async function getAdminAnalytics(timeRange = 'all') {
   for (const entry of allUserItems) {
     const item = entry.item;
     if (!item) continue;
-    if (item.watched) {
+
+    const isWatched = Boolean(item.isWatched || item.watched);
+    if (isWatched) {
       watchedCount++;
-    } else if (item.isReady) {
-      readyCount++;
+    } else {
+      activeWatchlistCount++;
+      const userSettings = userSettingsMap.get(entry.userId) || {};
+      const userMinQuality = userSettings.minQuality || '1080p';
+      const isReady = db.isItemReady ? db.isItemReady(item, userMinQuality) : Boolean(item.has1080pPlus || item.isReady);
+      if (isReady) {
+        readyCount++;
+      } else {
+        waitingCount++;
+      }
     }
   }
 
   const totalUsers = users.length;
-  const totalWatchlistItems = allUserItems.length;
-  const waitingCount = Math.max(0, totalWatchlistItems - readyCount - watchedCount);
+  // Active watchlist items represents movies actively on the watchlist (unwatched)
+  const totalWatchlistItems = activeWatchlistCount;
+  const totalTrackedItems = allUserItems.length;
   const avgMoviesPerUser = totalUsers > 0 ? Number((totalWatchlistItems / totalUsers).toFixed(1)) : 0;
 
   // 3. Service Adoption Funnel from Raw Events
@@ -101,41 +122,42 @@ async function getAdminAnalytics(timeRange = 'all') {
   }
 
   // 4. Community Top 10 Movies
-  const movieMap = new Map();
-
-  for (const entry of allUserItems) {
-    const it = entry.item;
-    if (!it || !it.id) continue;
-    const movieId = db.cleanImdbId(it.id);
-    if (!movieId) continue;
-
-    const existing = movieMap.get(movieId) || {
-      id: movieId,
-      name: it.name || it.title || 'Unknown Title',
-      year: it.year,
-      userCount: 0,
-      readyCount: 0,
-      poster: it.poster,
-    };
-
-    existing.userCount++;
-    if (it.isReady) existing.readyCount++;
-    if (!existing.poster && it.poster) existing.poster = it.poster;
-
-    movieMap.set(movieId, existing);
-  }
-
-  const topMovies = Array.from(movieMap.values())
-    .sort((a, b) => b.userCount - a.userCount)
-    .slice(0, 10);
+  const topMovies = watchlistRepository.getTopMovies(10);
 
   // 5. Poll Results formatting
   const totalPollVotes = pollResults.totalVotes || 0;
-  const pollBreakdown = Object.entries(pollResults.votes || {}).map(([option, count]) => ({
-    option,
-    count,
-    percentage: totalPollVotes > 0 ? Math.round((count / totalPollVotes) * 100) : 0,
-  }));
+  const rawVotes = pollResults.breakdown || pollResults.votes || {};
+
+  const OPTION_LABELS = {
+    notifications: 'Automated notifications (Telegram/Discord/Email)',
+    tv_shows: 'TV Shows and Series support',
+    import_lists: '1-Click import from Letterboxd/Trakt/IMDb',
+    debrid_filters: 'Real-Debrid and provider source filtering',
+    share_lists: 'Public list sharing with friends',
+    other: 'Other community ideas',
+  };
+
+  const pollBreakdown = Object.entries(rawVotes)
+    .map(([option, count]) => {
+      const label = OPTION_LABELS[option] || option;
+      const countNum = Number(count || 0);
+      return {
+        option: label,
+        rawOption: option,
+        count: countNum,
+        percentage: totalPollVotes > 0 ? Math.round((countNum / totalPollVotes) * 100) : 0,
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+
+  const rawFeedback = pollResults.customFeedback || pollResults.feedbackList || [];
+  const customFeedback = (Array.isArray(rawFeedback) ? rawFeedback : [])
+    .map((fb) => ({
+      customText: fb.customText || fb.text || fb.custom_text || '',
+      option: OPTION_LABELS[fb.option] || fb.option || '',
+      createdAt: fb.createdAt || fb.created_at || '',
+    }))
+    .filter((fb) => Boolean(fb.customText));
 
   // 6. Events Breakdown
   const eventsBreakdown = Object.entries(eventCounts)
@@ -155,6 +177,7 @@ async function getAdminAnalytics(timeRange = 'all') {
       activeUsers7d: active7dSet.size,
       activeUsers30d: active30dSet.size,
       totalWatchlistItems,
+      totalTrackedItems,
       readyWatchlistItems: readyCount,
       waitingWatchlistItems: waitingCount,
       watchedWatchlistItems: watchedCount,
@@ -190,7 +213,7 @@ async function getAdminAnalytics(timeRange = 'all') {
     pollResults: {
       totalVotes: totalPollVotes,
       breakdown: pollBreakdown,
-      customFeedback: pollResults.customFeedback || [],
+      customFeedback,
     },
     eventsBreakdown,
     recentEvents,

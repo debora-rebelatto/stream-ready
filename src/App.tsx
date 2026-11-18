@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAppController } from './controllers';
 import { LandingPageView, UserDashboardView } from './views';
-import { ToastContainer } from './components/ToastContainer';
+import { ToastContainer } from './components';
 
 export const App: React.FC = () => {
   const { isAuthenticated, isLoading } = useAppController();

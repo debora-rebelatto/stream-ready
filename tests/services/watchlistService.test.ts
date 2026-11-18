@@ -219,5 +219,16 @@ describe('watchlistService', () => {
       expect(spy).toHaveBeenCalledWith('tt1234', ['l1', 'l2']);
       expect(res).toEqual(mockResult);
     });
+
+    test('getTopMovies deve delegar para api.getTopMovies com limite', async () => {
+      const mockTop = [
+        { id: 'tt1', name: 'Movie 1', year: 2024, userCount: 10, readyCount: 5 },
+      ];
+      const spy = jest.spyOn(api, 'getTopMovies').mockResolvedValue(mockTop);
+
+      const res = await watchlistService.getTopMovies(3);
+      expect(spy).toHaveBeenCalledWith(3);
+      expect(res).toEqual(mockTop);
+    });
   });
 });

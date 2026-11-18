@@ -184,6 +184,19 @@ function registerSystemRoutes(app, PORT = process.env.PORT || 7000) {
 
   app.get('/api/cron', async (req, res) => {
     try {
+      const expectedSecret = process.env.CRON_SECRET;
+      if (expectedSecret) {
+        const authHeader = req.headers['authorization'];
+        const querySecret = req.query.secret;
+        const isAuthorized =
+          (authHeader && authHeader === `Bearer ${expectedSecret}`) ||
+          (querySecret && querySecret === expectedSecret);
+
+        if (!isAuthorized) {
+          return res.status(401).json({ error: 'Unauthorized: Invalid cron secret' });
+        }
+      }
+
       logPostHog('info', 'background_check_triggered', { trigger: 'cron_endpoint' });
       runBackgroundCheck().catch((err) => console.error('[Cron Error]', err.message));
       res.json({ success: true, message: 'Automated background check triggered' });

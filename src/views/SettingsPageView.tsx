@@ -9,12 +9,14 @@ import {
 } from 'lucide-react';
 import { useToast } from '../context/useAppContext';
 import { useSettingsController, type SettingsTab } from '../controllers/useSettingsController';
-import { Button } from '../components/Button';
-import { GitHubSponsorButton } from '../components/GitHubSponsorButton';
-import { QualitySettingsCard } from '../components/QualitySettingsCard';
-import { SyncSettingsCard } from '../components/SyncSettingsCard';
-import { BackupSettingsCard } from '../components/BackupSettingsCard';
-import { AccountDangerCard } from '../components/AccountDangerCard';
+import {
+  Button,
+  GitHubSponsorButton,
+  QualitySettingsCard,
+  SyncSettingsCard,
+  BackupSettingsCard,
+  AccountDangerCard,
+} from '../components';
 
 export interface SettingsPageProps {
   onBack: () => void;

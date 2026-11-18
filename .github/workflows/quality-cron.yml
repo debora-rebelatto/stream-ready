@@ -1,0 +1,42 @@
+name: Automated Quality Check
+
+on:
+  schedule:
+    # Runs every 4 hours (00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC)
+    - cron: '0 */4 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  check-quality:
+    name: Trigger Quality Tracker
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Send Cron Request to Vercel
+        env:
+          APP_URL: ${{ secrets.APP_URL || 'https://stremiowatchlist.vercel.app' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          echo "Triggering background quality check at ${APP_URL}/api/cron..."
+          
+          AUTH_HEADER=""
+          if [ -n "$CRON_SECRET" ]; then
+            AUTH_HEADER="Authorization: Bearer $CRON_SECRET"
+          fi
+
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X GET "${APP_URL}/api/cron" \
+            ${AUTH_HEADER:+-H "$AUTH_HEADER"})
+
+          HTTP_BODY=$(echo "$RESPONSE" | sed -e '$d')
+          HTTP_STATUS=$(echo "$RESPONSE" | tail -n 1 | cut -d':' -f2)
+
+          echo "Response Body: $HTTP_BODY"
+          echo "HTTP Status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "::error::Quality check request failed with HTTP status $HTTP_STATUS"
+            exit 1
+          fi
+
+          echo "Quality check successfully triggered!"

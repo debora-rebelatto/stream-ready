@@ -9,11 +9,12 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useAdminController, type AdminTab, type AdminTimeRange } from '../controllers/useAdminController';
-import { Button } from '../components/Button';
+import { Button } from '../components';
 import {
   AdminKpiGrid,
   ServiceAdoptionCard,
   TopMoviesTable,
+  TopThreeMoviesCard,
   PollFeedbackCard,
   EventActivityFeed,
 } from '../components/admin';
@@ -166,8 +167,14 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
             {activeTab === 'overview' && (
               <div className="space-y-6 animate-in fade-in duration-150">
                 <AdminKpiGrid kpis={data.kpis} />
+                <TopThreeMoviesCard movies={data.topMovies} />
                 <ServiceAdoptionCard adoption={data.serviceAdoption} />
                 <TopMoviesTable movies={data.topMovies} />
+                <PollFeedbackCard
+                  totalVotes={data.pollResults.totalVotes}
+                  breakdown={data.pollResults.breakdown}
+                  customFeedback={data.pollResults.customFeedback}
+                />
               </div>
             )}
 
@@ -183,6 +190,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
 
             {activeTab === 'movies' && (
               <div className="space-y-6 animate-in fade-in duration-150">
+                <TopThreeMoviesCard movies={data.topMovies} />
                 <TopMoviesTable movies={data.topMovies} />
               </div>
             )}

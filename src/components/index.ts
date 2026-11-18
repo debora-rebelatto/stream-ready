@@ -1,49 +1,29 @@
-export { Button } from './Button';
-export type { ButtonProps, ButtonVariant, ButtonSize, TabTheme } from './Button';
+// Common / UI Primitives
+export * from './common';
 
-export { Badge } from './Badge';
-export type { BadgeProps, BadgeVariant, BadgeSize } from './Badge';
+// Layout & Navigation
+export * from './layout';
 
-export { ModalShell } from './ModalShell';
-export type { ModalShellProps } from './ModalShell';
+// Landing Page Components
+export * from './landing';
 
-export { Navbar } from './Navbar';
-export { Hero } from './Hero';
-export { MovieCard } from './MovieCard';
-export { OnboardingCallout } from './OnboardingCallout';
-export { RecommendedBanner } from './RecommendedBanner';
-export { SearchSection } from './SearchSection';
-export { FeaturePollCard, isBetaNoticeDismissed, BETA_NOTICE_DISMISS_KEY } from './FeaturePollCard';
-export type { FeaturePollCardProps } from './FeaturePollCard';
-export { Pagination } from './Pagination';
-export { UserDashboard } from './UserDashboard';
-export { LandingPage } from './LandingPage';
-export { GitHubSponsorButton } from './GitHubSponsorButton';
-export { ToastContainer } from './ToastContainer';
-export { LoginModal } from './LoginModal';
-export { InstallGuideModal } from './InstallGuideModal';
-export { SettingsModal } from './SettingsModal';
-export { SettingsPage } from './SettingsPage';
-export { QualitySettingsCard } from './QualitySettingsCard';
-export { SyncSettingsCard } from './SyncSettingsCard';
-export { BackupSettingsCard } from './BackupSettingsCard';
-export { AccountDangerCard } from './AccountDangerCard';
-export { LandingHeroSection } from './LandingHeroSection';
-export { QualityComparisonSection } from './QualityComparisonSection';
-export { FeaturesGridSection } from './FeaturesGridSection';
-export { HowItWorksSection } from './HowItWorksSection';
-export { LandingFaqSection } from './LandingFaqSection';
-export { ManageListsModal } from './ManageListsModal';
-export { CuratedListsTab } from './CuratedListsTab';
-export { CustomListsTab } from './CustomListsTab';
-export { CustomListPills } from './CustomListPills';
-export { DashboardFilterToolbar } from './DashboardFilterToolbar';
-export { WatchlistGrid } from './WatchlistGrid';
-export { DeleteMovieModal } from './DeleteMovieModal';
-export { DeleteAccountModal } from './DeleteAccountModal';
-export { WatchInStremioButton } from './WatchInStremioButton';
-export type { WatchInStremioButtonProps } from './WatchInStremioButton';
-export { WatchlistActionButton } from './WatchlistActionButton';
-export type { WatchlistActionButtonProps } from './WatchlistActionButton';
-export { Footer } from './Footer';
-export type { FooterProps } from './Footer';
+// Watchlist & Dashboard Core
+export * from './watchlist';
+
+// Lists Management
+export * from './lists';
+
+// Settings & Preferences
+export * from './settings';
+
+// Authentication
+export * from './auth';
+
+// Addon Installation & Setup
+export * from './install';
+
+// Feedback & Feature Voting
+export * from './feedback';
+
+// Admin Dashboard Components
+export * from './admin';

@@ -7,6 +7,7 @@ import type {
   SearchMovieResult,
   CustomList,
   CuratedList,
+  TopMovieMetric,
 } from '../models';
 
 export function getAuthKey(): string | null {
@@ -169,6 +170,19 @@ export const api = {
     if (!query.trim()) return [];
     const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
     return res.json();
+  },
+
+  async getTopMovies(limit: number = 3): Promise<TopMovieMetric[]> {
+    try {
+      const res = await fetch(`/api/top-movies?limit=${limit}`, {
+        headers: getAuthHeaders(),
+      });
+      const data = await safeJsonParse(res, 'Failed to fetch top movies');
+      return Array.isArray(data?.movies) ? data.movies : [];
+    } catch (err) {
+      console.warn('Failed to fetch top movies:', err);
+      return [];
+    }
   },
 
   async addItem(

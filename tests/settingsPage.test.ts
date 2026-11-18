@@ -1,5 +1,5 @@
 import React from 'react';
-import { SettingsPage } from '../src/components/SettingsPage';
+import { SettingsPage } from '../src/components';
 
 describe('SettingsPage Component', () => {
   it('is defined and instantiates properly', () => {

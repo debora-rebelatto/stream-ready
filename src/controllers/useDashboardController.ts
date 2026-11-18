@@ -1,13 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth, useWatchlist, useToast } from '../context/useAppContext';
-import { systemService } from '../services';
+import { systemService, watchlistService } from '../services';
+import type { TopMovieMetric } from '../models';
 import {
   trackEvent,
   filterWatchlistItems,
   sortWatchlistItems,
   type WatchlistSortOption,
 } from '../utils';
-import { isBetaNoticeDismissed } from '../components/FeaturePollCard';
+import { isBetaNoticeDismissed } from '../components/feedback';
 
 export function useDashboardController() {
   const { user, deleteAccount } = useAuth();
@@ -23,9 +24,42 @@ export function useDashboardController() {
     globalMinQuality,
     isLoading: isWatchlistLoading,
     isCheckingAll,
+    addItem,
     removeItem,
     recheckAll,
   } = useWatchlist();
+
+  const [topMovies, setTopMovies] = useState<TopMovieMetric[]>([]);
+  const [isAddingTopMovieId, setIsAddingTopMovieId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isCancelled = false;
+    watchlistService
+      .getTopMovies(3)
+      .then((movies) => {
+        if (!isCancelled && Array.isArray(movies)) {
+          setTopMovies(movies);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  const userMovieIdSet = useMemo(() => {
+    return new Set((items || []).map((i) => i.id));
+  }, [items]);
+
+  const handleQuickAddTopMovie = async (movie: TopMovieMetric) => {
+    if (!movie || !movie.id) return;
+    setIsAddingTopMovieId(movie.id);
+    try {
+      await addItem(movie.id, 'manual');
+    } finally {
+      setIsAddingTopMovieId(null);
+    }
+  };
 
   const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
   const [currentView, setCurrentView] = useState<'dashboard' | 'settings' | 'admin'>(() => {
@@ -281,5 +315,9 @@ export function useDashboardController() {
     hasActiveFilters,
     clearFilters,
     activeList,
+    topMovies,
+    isAddingTopMovieId,
+    handleQuickAddTopMovie,
+    userMovieIdSet,
   };
 }

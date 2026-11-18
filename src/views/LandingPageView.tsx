@@ -4,17 +4,19 @@ import {
   useLandingController,
   type UseLandingControllerProps,
 } from '../controllers/useLandingController';
-import { Navbar } from '../components/Navbar';
-import { RecommendedBanner } from '../components/RecommendedBanner';
-import { LandingHeroSection } from '../components/LandingHeroSection';
-import { QualityComparisonSection } from '../components/QualityComparisonSection';
-import { FeaturesGridSection } from '../components/FeaturesGridSection';
-import { HowItWorksSection } from '../components/HowItWorksSection';
-import { LandingFaqSection } from '../components/LandingFaqSection';
-import { Footer } from '../components/Footer';
-import { LoginModal } from '../components/LoginModal';
-import { InstallGuideModal } from '../components/InstallGuideModal';
-import { QrCodeModal } from '../components/QrCodeModal';
+import {
+  Navbar,
+  RecommendedBanner,
+  LandingHeroSection,
+  QualityComparisonSection,
+  FeaturesGridSection,
+  HowItWorksSection,
+  LandingFaqSection,
+  Footer,
+  LoginModal,
+  InstallGuideModal,
+  QrCodeModal,
+} from '../components';
 
 export type LandingPageProps = UseLandingControllerProps;
 

@@ -130,3 +130,29 @@ export interface CatalogResponse {
 export interface MetaResponse {
   meta: any;
 }
+
+export interface CuratedListItem {
+  id: string;
+  type?: string;
+  name: string;
+  year?: string;
+  poster?: string;
+  banner?: string;
+  genres?: string[];
+  description?: string;
+  imdbRating?: string | number;
+}
+
+export interface CuratedList {
+  id: string;
+  name: string;
+  title?: string;
+  description: string;
+  badge?: string;
+  emoji?: string;
+  platform?: string;
+  color?: string;
+  gradient?: string;
+  items: CuratedListItem[];
+}
+

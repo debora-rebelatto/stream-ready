@@ -1,7 +1,7 @@
 import { api } from '../utils';
 import { cinemetaService } from './cinemetaService';
 import { customListService } from './customListService';
-import type { WatchlistItem, WatchlistStats, SearchMovieResult } from '../models';
+import type { WatchlistItem, WatchlistStats, SearchMovieResult, TopMovieMetric } from '../models';
 
 export const watchlistService = {
   /**
@@ -28,6 +28,13 @@ export const watchlistService = {
     requireAuth: boolean;
   }> {
     return api.getItems(filter);
+  },
+
+  /**
+   * Fetch top community movies added to watchlists
+   */
+  async getTopMovies(limit: number = 3): Promise<TopMovieMetric[]> {
+    return api.getTopMovies(limit);
   },
 
   /**

@@ -1,9 +1,12 @@
 import React from 'react';
-import { Button } from '../src/components/Button';
-import { Badge } from '../src/components/Badge';
-import { WatchInStremioButton } from '../src/components/WatchInStremioButton';
-import { WatchlistActionButton } from '../src/components/WatchlistActionButton';
-import { Footer } from '../src/components/Footer';
+import {
+  Button,
+  Badge,
+  WatchInStremioButton,
+  WatchlistActionButton,
+  Footer,
+  GitHubRepoButton,
+} from '../src/components';
 
 describe('UI Reusable Components (Button & Badge)', () => {
   describe('Button Component', () => {
@@ -165,6 +168,15 @@ describe('UI Reusable Components (Button & Badge)', () => {
       expect(el.props.className).toBe('custom-footer-class');
       expect(el.props.onCopyManifest).toBe(onCopy);
       expect(el.props.onOpenLogin).toBe(onLogin);
+    });
+  });
+
+  describe('GitHubRepoButton Component', () => {
+    test('is defined and renders a valid React element', () => {
+      expect(GitHubRepoButton).toBeDefined();
+      const el = React.createElement(GitHubRepoButton, { size: 'sm' });
+      expect(React.isValidElement(el)).toBe(true);
+      expect(el.props.size).toBe('sm');
     });
   });
 });

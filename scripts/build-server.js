@@ -14,6 +14,7 @@ const mapping = {
   'userDataService.ts': 'userData.js',
   'curatedListsService.ts': 'curatedLists.js',
   'tmdbService.ts': 'tmdb.js',
+  'adminAnalyticsService.ts': 'adminAnalytics.js',
 };
 
 console.log('Compiling server TypeScript services to lib/*.js (CommonJS)...');
