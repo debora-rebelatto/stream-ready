@@ -103,8 +103,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <h1 className="text-base sm:text-lg font-bold tracking-tight text-white whitespace-nowrap">
               Stremio Watchlist
             </h1>
-            <Badge variant="amber" size="xs" uppercase>
-              BETA
+            <Badge variant="purple" size="xs" uppercase>
+              v1.0
             </Badge>
           </div>
         </div>

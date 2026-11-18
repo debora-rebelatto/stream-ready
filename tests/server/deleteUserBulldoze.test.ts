@@ -44,6 +44,7 @@ describe('Database User Bulldoze / Account Deletion (lib/db.js)', () => {
 
   beforeEach(async () => {
     supabaseDeletedUrls = [];
+    await db.ensureLoaded(true);
     // Populate user in memory and ensure bucket exists
     const user = await db.resolveUser(testAuthKey, () => ({ email: testEmail }));
     expect(user).toBeDefined();

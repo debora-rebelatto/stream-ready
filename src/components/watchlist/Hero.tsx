@@ -128,24 +128,22 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
   const votedTitle = FEATURE_OPTIONS.find((opt) => opt.id === votedOption)?.title;
 
   return (
-    <div className="mb-6 rounded-2xl bg-[#131522] border border-amber-500/30 shadow-lg overflow-hidden transition-all">
-      {/* 1. Top Beta Notice Row */}
-      <div className="p-3.5 sm:p-4 bg-amber-500/10 border-b border-amber-500/20 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs text-amber-200/90 leading-relaxed">
+    <div className="mb-6 rounded-2xl bg-[#131522] border border-purple-500/30 shadow-lg overflow-hidden transition-all">
+      {/* 1. Top v1.0 Announcement Row */}
+      <div className="p-3.5 sm:p-4 bg-purple-500/10 border-b border-purple-500/20 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs text-purple-200/90 leading-relaxed">
         <div className="flex items-start gap-2.5">
-          <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5" />
+          <Sparkles size={16} className="text-purple-400 shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold text-amber-300 uppercase tracking-wide mr-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-400/20 border border-amber-400/30">
-              Beta Notice
+            <span className="font-bold text-purple-300 uppercase tracking-wide mr-1.5 text-[10px] px-1.5 py-0.5 rounded bg-purple-400/20 border border-purple-400/30">
+              v1.0 Official
             </span>
-            This addon is currently in public beta. Stream analysis and quality detection are
-            actively being improved. If you encounter any misclassified releases or wish to support
-            development, please{' '}
+            Stremio Watchlist is officially 1.0! Automated good-quality tracking (1080p / 4K), Stremio library sync, and custom catalogs are fully released. If you enjoy the tracker, please{' '}
             <a
               href="https://tally.so/r/dbazxA"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackEvent('feedback_link_clicked', { location: 'hero_text' })}
-              className="font-bold text-amber-300 underline hover:text-white transition-colors inline-flex items-center gap-0.5"
+              className="font-bold text-purple-300 underline hover:text-white transition-colors inline-flex items-center gap-0.5"
             >
               share your feedback
               <ExternalLink size={11} className="inline ml-0.5" />
@@ -162,7 +160,7 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackEvent('feedback_link_clicked', { location: 'hero_button' })}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 hover:text-white font-semibold text-xs border border-amber-400/40 transition-all cursor-pointer min-h-7.5 h-7.5"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-purple-400/20 hover:bg-purple-400/30 text-purple-200 hover:text-white font-semibold text-xs border border-purple-400/40 transition-all cursor-pointer min-h-7.5 h-7.5"
           >
             <MessageSquare size={12} />
             <span>Feedback</span>
@@ -170,7 +168,7 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
 
           <button
             onClick={handleDismiss}
-            className="p-1.5 rounded-md text-amber-400/70 hover:text-amber-200 hover:bg-amber-500/20 transition-colors cursor-pointer"
+            className="p-1.5 rounded-md text-purple-400/70 hover:text-purple-200 hover:bg-purple-500/20 transition-colors cursor-pointer"
             title="Dismiss for 24 hours"
             aria-label="Dismiss notice for 24 hours"
           >

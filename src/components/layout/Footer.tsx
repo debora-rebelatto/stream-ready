@@ -26,7 +26,7 @@ export const Footer: React.FC<FooterProps> = ({
             Stremio Watchlist <span className="hidden sm:inline">• Good Quality Tracker</span>
           </span>
           <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-            Beta
+            v1.0
           </span>
         </div>
 
