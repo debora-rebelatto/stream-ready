@@ -4,6 +4,8 @@ import {
   Badge,
   WatchInStremioButton,
   WatchlistActionButton,
+  MovieCardActionButton,
+  MOVIE_CARD_ACTION_VARIANTS,
   Footer,
   GitHubRepoButton,
 } from '../src/components';
@@ -177,6 +179,23 @@ describe('UI Reusable Components (Button & Badge)', () => {
       const el = React.createElement(GitHubRepoButton, { size: 'sm' });
       expect(React.isValidElement(el)).toBe(true);
       expect(el.props.size).toBe('sm');
+    });
+  });
+
+  describe('MovieCardActionButton Component', () => {
+    test('is defined and supports all action variants', () => {
+      expect(MovieCardActionButton).toBeDefined();
+      const variants = ['purple', 'emerald', 'danger', 'neutral'] as const;
+      variants.forEach((v) => {
+        expect(MOVIE_CARD_ACTION_VARIANTS[v]).toBeDefined();
+        const el = React.createElement(MovieCardActionButton, {
+          variant: v,
+          title: `Action ${v}`,
+          'aria-label': `Action ${v}`,
+        });
+        expect(React.isValidElement(el)).toBe(true);
+        expect(el.props.variant).toBe(v);
+      });
     });
   });
 });

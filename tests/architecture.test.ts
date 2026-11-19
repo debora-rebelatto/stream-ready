@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import db from '../lib/db';
 import { safeFetch } from '../server/utils/fetchHelper';
 
@@ -85,6 +87,32 @@ describe('Lauren Tan Constraint Engineering: Architecture & Invariant Tests', ()
         await expect(safeFetch('https://example.com/slow', {}, 30)).rejects.toThrow();
       } finally {
         global.fetch = originalFetch;
+      }
+    });
+  });
+
+  describe('Level 4: Backend Clean Architecture (Controller -> Service -> Repository)', () => {
+    const controllersDir = path.join(__dirname, '..', 'server', 'controllers');
+    const controllerFiles = fs
+      .readdirSync(controllersDir)
+      .filter((f) => f.endsWith('.js') && f !== 'index.js');
+
+    it('forbids backend controllers from requiring repositories or lib/db directly', () => {
+      for (const file of controllerFiles) {
+        const fullPath = path.join(controllersDir, file);
+        const content = fs.readFileSync(fullPath, 'utf8');
+
+        expect(content).not.toMatch(/require\(['"].*repositories['"]\)/);
+        expect(content).not.toMatch(/require\(['"].*lib\/db['"]\)/);
+        expect(content).toMatch(/require\(['"]\.\.\/services['"]\)/);
+      }
+    });
+
+    it('enforces thin HTTP controllers (< 215 lines each)', () => {
+      for (const file of controllerFiles) {
+        const fullPath = path.join(controllersDir, file);
+        const lineCount = fs.readFileSync(fullPath, 'utf8').split(/\r?\n/).length;
+        expect(lineCount).toBeLessThanOrEqual(215);
       }
     });
   });

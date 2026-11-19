@@ -1,9 +1,18 @@
 import fs from 'fs';
 import path from 'path';
 import QRCode from 'qrcode';
+import db from '../lib/db';
 import { handleCatalog, handleMeta } from '../server/services/stremioAddonService';
 
 describe('QR Code & TV Mobile Companion', () => {
+  beforeEach(() => {
+    jest.spyOn(db, 'isSupabaseConfigured').mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   test('generates valid QR Code buffer using qrcode library', async () => {
     const buf = await QRCode.toBuffer('https://stremiowatchlist.vercel.app', { width: 300 });
     expect(Buffer.isBuffer(buf)).toBe(true);

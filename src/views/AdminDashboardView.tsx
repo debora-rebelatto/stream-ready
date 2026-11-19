@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ArrowLeft,
   RefreshCw,
+  Palette,
 } from 'lucide-react';
 import { useAdminController, type AdminTimeRange } from '../controllers/useAdminController';
 import { Button } from '../components';
@@ -73,6 +74,18 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
                 </button>
               ))}
             </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                window.location.hash = '#design-system';
+              }}
+              icon={<Palette size={14} className="text-purple-400" />}
+              title="Open Design System"
+            >
+              <span className="hidden sm:inline">Design System</span>
+            </Button>
 
             <Button
               variant="outline"

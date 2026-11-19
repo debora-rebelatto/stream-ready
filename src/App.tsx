@@ -1,10 +1,11 @@
 import React from 'react';
 import { useAppController } from './controllers';
-import { LandingPageView, UserDashboardView } from './views';
+import { LandingPageView, UserDashboardView, DesignSystemView } from './views';
 import { ToastContainer } from './components';
 
 export const App: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAppController();
+  const { isAuthenticated, isLoading, isDesignSystemOpen, handleCloseDesignSystem } =
+    useAppController();
 
   if (isLoading) {
     return (
@@ -18,8 +19,15 @@ export const App: React.FC = () => {
 
   return (
     <>
-      {isAuthenticated ? <UserDashboardView /> : <LandingPageView />}
+      {isDesignSystemOpen ? (
+        <DesignSystemView onBack={handleCloseDesignSystem} />
+      ) : isAuthenticated ? (
+        <UserDashboardView />
+      ) : (
+        <LandingPageView />
+      )}
       <ToastContainer />
     </>
   );
 };
+

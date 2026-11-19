@@ -1,5 +1,31 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import type {
+  MovieCardStatus,
+  MovieComputedStatus,
+  MovieReleaseMetadata,
+  WatchlistItem,
+} from '../models';
+
+export interface MovieStatusFlags {
+  isWatched: boolean;
+  isNew: boolean;
+  ready: boolean;
+  unreleased: boolean;
+}
+
+export function resolveMovieStatus({
+  isWatched,
+  isNew,
+  ready,
+  unreleased,
+}: MovieStatusFlags): MovieCardStatus {
+  if (isWatched) return 'watched';
+  if (isNew) return 'new';
+  if (ready) return 'ready';
+  if (unreleased) return 'unreleased';
+  return 'waiting';
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -38,54 +64,82 @@ export function isItemReady(
   return Boolean(item.has1080pPlus);
 }
 
-const THREE_MONTHS_MS = 90 * 24 * 60 * 60 * 1000;
+export const THREE_MONTHS_MS = 90 * 24 * 60 * 60 * 1000;
 
-export function isItemNewRelease(item: {
-  readyAt?: string | null;
-  released?: string | null;
-  releaseDate?: string | null;
-  has1080pPlus?: boolean;
-  year?: string | number;
-}): boolean {
+export function parseTimestampMs(dateStr?: string | null): number | null {
+  if (!dateStr) return null;
+  try {
+    const time = new Date(dateStr).getTime();
+    return Number.isNaN(time) ? null : time;
+  } catch {
+    return null;
+  }
+}
+
+export function isTimestampWithinWindow(
+  timestampMs: number | null,
+  nowMs: number = Date.now(),
+  windowMs: number = THREE_MONTHS_MS
+): boolean {
+  if (timestampMs === null) return false;
+  const diffMs = nowMs - timestampMs;
+  return diffMs >= 0 && diffMs <= windowMs;
+}
+
+export function extractReleaseYear(year?: string | number): number | null {
+  if (year === undefined || year === null) return null;
+  const yearMatch = String(year).match(/\d{4}/);
+  if (!yearMatch) return null;
+  const parsed = parseInt(yearMatch[0], 10);
+  return parsed > 0 ? parsed : null;
+}
+
+export function isCatalogTitleTooOld(
+  year?: string | number,
+  currentYear: number = new Date().getFullYear()
+): boolean {
+  const releaseYear = extractReleaseYear(year);
+  if (releaseYear === null) return false;
+  return releaseYear < currentYear - 1;
+}
+
+export function evaluateExplicitReleaseDate(
+  item: MovieReleaseMetadata,
+  nowMs: number = Date.now()
+): boolean | null {
+  const explicitDateStr = item.released || item.releaseDate;
+  const releaseTimeMs = parseTimestampMs(explicitDateStr);
+  if (releaseTimeMs === null) return null;
+
+  if (isTimestampWithinWindow(releaseTimeMs, nowMs)) {
+    return item.has1080pPlus !== false;
+  }
+  return false;
+}
+
+export function evaluateReadyTimestampRelease(
+  item: MovieReleaseMetadata,
+  nowMs: number = Date.now()
+): boolean {
+  if (!item.has1080pPlus || !item.readyAt) return false;
+  if (isCatalogTitleTooOld(item.year)) return false;
+
+  const readyTimeMs = parseTimestampMs(item.readyAt);
+  return isTimestampWithinWindow(readyTimeMs, nowMs);
+}
+
+export function isItemNewRelease(
+  item: MovieReleaseMetadata | null | undefined,
+  nowMs: number = Date.now()
+): boolean {
   if (!item) return false;
 
-  const now = Date.now();
-
-  const dateStr = item.released || item.releaseDate;
-  if (dateStr) {
-    try {
-      const releaseTime = new Date(dateStr).getTime();
-      if (!isNaN(releaseTime)) {
-        const diffMs = now - releaseTime;
-        if (diffMs >= 0 && diffMs <= THREE_MONTHS_MS) {
-          return item.has1080pPlus !== false;
-        }
-        return false;
-      }
-    } catch {
-      // fallback
-    }
+  const explicitResult = evaluateExplicitReleaseDate(item, nowMs);
+  if (explicitResult !== null) {
+    return explicitResult;
   }
 
-  if (!item.has1080pPlus || !item.readyAt) return false;
-
-  if (item.year) {
-    const yearMatch = String(item.year).match(/\d{4}/);
-    if (yearMatch) {
-      const releaseYear = parseInt(yearMatch[0], 10);
-      const currentYear = new Date().getFullYear();
-      if (releaseYear > 0 && releaseYear < currentYear - 1) {
-        return false;
-      }
-    }
-  }
-
-  try {
-    const ageMs = now - new Date(item.readyAt).getTime();
-    return ageMs >= 0 && ageMs <= THREE_MONTHS_MS;
-  } catch {
-    return false;
-  }
+  return evaluateReadyTimestampRelease(item, nowMs);
 }
 
 export function isItemUnreleased(item: {
@@ -100,4 +154,45 @@ export function isItemUnreleased(item: {
     /unreleased|not released|unavailable|não lançado|indisponível/i.test(rawQuality) ||
     ((!item.streamCount || item.streamCount === 0) && !/cam/i.test(rawQuality))
   );
+}
+
+export function computeMovieStatus(
+  item: WatchlistItem,
+  globalMinQuality: '1080p' | '4k' = '1080p'
+): MovieComputedStatus {
+  const isWatched = Boolean(item.isWatched);
+  const isReady = isItemReady(item, globalMinQuality);
+  const isNewRelease = isItemNewRelease(item) && !isWatched;
+  const isUnreleased = isItemUnreleased(item);
+  const status = resolveMovieStatus({
+    isWatched,
+    isNew: isNewRelease,
+    ready: isReady,
+    unreleased: isUnreleased,
+  });
+  const rawQuality = formatQualityLabel(item.bestQuality);
+  const qualityLabel = isUnreleased ? 'Unreleased' : rawQuality;
+  const streamsLabel = item.streamCount > 0 ? `${item.streamCount} sources` : '0 sources';
+  const activeTargetQuality: '1080p' | '4k' = item.minQuality || globalMinQuality || '1080p';
+
+  return {
+    status,
+    isWatched,
+    isReady,
+    isNewRelease,
+    isUnreleased,
+    qualityLabel,
+    streamsLabel,
+    activeTargetQuality,
+  };
+}
+
+export function enrichWatchlistItem(
+  item: WatchlistItem,
+  globalMinQuality: '1080p' | '4k' = '1080p'
+): WatchlistItem {
+  return {
+    ...item,
+    computed: computeMovieStatus(item, globalMinQuality),
+  };
 }

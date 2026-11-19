@@ -133,7 +133,7 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
   return (
     <section
       aria-label="Welcome and quick start guide"
-      className="mb-8 rounded-2xl relative overflow-hidden border border-purple-500/30 bg-gradient-to-br from-[#1b1535] via-[#121424] to-[#0c0d15] shadow-2xl transition-all"
+      className="mb-8 rounded-2xl relative overflow-hidden border border-purple-500/30 bg-linear-to-br from-[#1b1535] via-[#121424] to-[#0c0d15] shadow-2xl transition-all"
     >
       {/* Decorative ambient background glow */}
       <div className="absolute -top-24 -right-24 w-72 h-72 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
@@ -226,7 +226,7 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
               return (
                 <div
                   key={movie.id}
-                  className="group relative flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-purple-500/30 transition-all"
+                  className="group relative flex items-center gap-3 p-2.5 rounded-xl bg-white/3 hover:bg-white/6 border border-white/5 hover:border-purple-500/30 transition-all"
                 >
                   <img
                     src={movie.poster}

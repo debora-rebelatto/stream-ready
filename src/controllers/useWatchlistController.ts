@@ -12,8 +12,7 @@ import {
   systemService,
 } from '../services';
 import {
-  isItemReady,
-  isItemUnreleased,
+  enrichWatchlistItem,
   trackEvent,
   resetUser as resetAnalyticsUser,
   type EventSource,
@@ -119,22 +118,23 @@ export function useWatchlistController({
           storedRatings[item.id] = String(item.imdbRating);
           updatedRatings = true;
         }
-        return rating ? { ...item, imdbRating: rating } : item;
+        const withRating = rating ? { ...item, imdbRating: rating } : item;
+        return enrichWatchlistItem(withRating, globalMinQuality);
       });
 
       if (updatedRatings) {
         saveStoredRatings(storedRatings);
       }
 
-      const unwatched = itemsWithRatings.filter((i) => !i.isWatched);
-      const ready = unwatched.filter((i) => isItemReady(i, globalMinQuality)).length;
+      const unwatched = itemsWithRatings.filter((i) => !i.computed?.isWatched);
+      const ready = unwatched.filter((i) => i.computed?.isReady).length;
       const unreleased = unwatched.filter(
-        (i) => !isItemReady(i, globalMinQuality) && isItemUnreleased(i)
+        (i) => !i.computed?.isReady && i.computed?.isUnreleased
       ).length;
       const pending = unwatched.filter(
-        (i) => !isItemReady(i, globalMinQuality) && !isItemUnreleased(i)
+        (i) => !i.computed?.isReady && !i.computed?.isUnreleased
       ).length;
-      const watched = itemsWithRatings.filter((i) => Boolean(i.isWatched)).length;
+      const watched = itemsWithRatings.filter((i) => i.computed?.isWatched).length;
 
       setItems(itemsWithRatings);
       setStats({
@@ -164,7 +164,11 @@ export function useWatchlistController({
           if (hasNew) {
             saveStoredRatings(currentStored);
             setItems((prev) =>
-              prev.map((i) => (currentStored[i.id] ? { ...i, imdbRating: currentStored[i.id] } : i))
+              prev.map((i) =>
+                currentStored[i.id]
+                  ? enrichWatchlistItem({ ...i, imdbRating: currentStored[i.id] }, globalMinQuality)
+                  : i
+              )
             );
           }
         })();
@@ -274,6 +278,7 @@ export function useWatchlistController({
   const setGlobalMinQuality = async (quality: '1080p' | '4k') => {
     trackEvent('quality_setting_updated', { minQuality: quality, scope: 'global' });
     setGlobalMinQualityState(quality);
+    setItems((prev) => prev.map((item) => enrichWatchlistItem(item, quality)));
     try {
       await systemService.saveSettings({ minQuality: quality });
       showToast(`🎯 Quality preference set to ${quality.toUpperCase()}!`, 'success');
@@ -339,7 +344,14 @@ export function useWatchlistController({
         setItems((prev) =>
           prev.map((i) =>
             i.id === id
-              ? { ...i, isWatched: watched, watchedAt: watched ? new Date().toISOString() : null }
+              ? enrichWatchlistItem(
+                  {
+                    ...i,
+                    isWatched: watched,
+                    watchedAt: watched ? new Date().toISOString() : null,
+                  },
+                  globalMinQuality
+                )
               : i
           )
         );
@@ -354,34 +366,15 @@ export function useWatchlistController({
     }
   };
 
-  const setItemMinQuality = async (id: string, minQuality: '1080p' | '4k' | null) => {
-    try {
-      const res = await watchlistService.setItemMinQuality(id, minQuality);
-      if (res.success) {
-        setItems((prev) => prev.map((i) => (i.id === id ? { ...i, minQuality } : i)));
-        if (res.stats) setStats(res.stats);
-        trackEvent('quality_setting_updated', {
-          minQuality: minQuality || 'default',
-          scope: 'item',
-          imdbId: id,
-        });
-        showToast(
-          `Target quality set to ${minQuality ? minQuality.toUpperCase() : 'Default'}.`,
-          'success'
-        );
-      }
-    } catch {
-      showToast('Failed to update item target quality.', 'error');
-    }
-  };
-
   const syncWatchedFromStremio = async () => {
     setIsSyncingWatched(true);
     showToast('Syncing watched history from Stremio...', 'info');
     try {
       const res = await watchlistService.syncWatchedFromStremio();
       if (res.success) {
-        if (res.items) setItems(res.items);
+        if (res.items) {
+          setItems(res.items.map((item) => enrichWatchlistItem(item, globalMinQuality)));
+        }
         if (res.stats) setStats(res.stats);
         const { newlyAdded, newlyMarked, totalWatched } = res.result || {};
         const count = (newlyAdded || 0) + (newlyMarked || 0);
@@ -423,7 +416,6 @@ export function useWatchlistController({
     addItem,
     removeItem,
     markWatched,
-    setItemMinQuality,
     recheckItem,
     recheckAll,
     applyLoadedSettings,

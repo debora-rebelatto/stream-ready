@@ -59,13 +59,6 @@ export const watchlistService = {
   },
 
   /**
-   * Update minimum desired quality for a single movie
-   */
-  async setItemMinQuality(id: string, minQuality: '1080p' | '4k' | null) {
-    return api.setItemMinQuality(id, minQuality);
-  },
-
-  /**
    * Sync playback & watch history directly from official Stremio account
    */
   async syncWatchedFromStremio() {

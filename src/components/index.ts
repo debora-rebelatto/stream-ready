@@ -27,3 +27,7 @@ export * from './feedback';
 
 // Admin Dashboard Components
 export * from './admin';
+
+// Design System Showcase Components
+export * from './design-system';
+

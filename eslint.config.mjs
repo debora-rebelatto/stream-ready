@@ -143,6 +143,15 @@ export default tseslint.config(
                 "**/components/Pagination",
                 "**/components/ModalShell",
                 "**/components/ToastContainer",
+                "**/components/Input",
+                "**/components/Select",
+                "**/components/Switch",
+                "**/components/Card",
+                "**/components/Alert",
+                "**/components/EmptyState",
+                "**/components/ProgressBar",
+                "**/components/StatCard",
+                "**/components/Avatar",
                 "**/components/FeaturePollCard",
                 "**/components/SettingsPage",
                 "**/components/UserDashboard",
@@ -168,6 +177,31 @@ export default tseslint.config(
               group: ["**/src/**", "react", "react-dom"],
               message:
                 "Boundary violation: Backend server code must not import frontend modules or React."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    // Backend Controllers: must delegate to server/services, never import repositories or db directly
+    files: ["server/controllers/**/*.{ts,js}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "**/repositories",
+                "**/repositories/**",
+                "**/lib/db*",
+                "**/src/**",
+                "react",
+                "react-dom"
+              ],
+              message:
+                "Clean Architecture violation: Backend controllers must be thin HTTP handlers and delegate all data/business operations to server/services."
             }
           ]
         }

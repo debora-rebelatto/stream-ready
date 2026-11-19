@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield } from 'lucide-react';
+import { Shield, Palette } from 'lucide-react';
 import { useDashboardController } from '../controllers/useDashboardController';
 import {
   Button,
@@ -153,15 +153,28 @@ export const UserDashboardView: React.FC = () => {
                 </span>
               </div>
             </div>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleOpenAdmin}
-              icon={<Shield size={14} />}
-              className="shrink-0 w-full sm:w-auto font-semibold"
-            >
-              Open Admin Dashboard
-            </Button>
+            <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  window.location.hash = '#design-system';
+                }}
+                icon={<Palette size={14} className="text-purple-300" />}
+                className="w-full sm:w-auto font-semibold border-purple-500/30 text-purple-200 hover:text-white"
+              >
+                Design System
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleOpenAdmin}
+                icon={<Shield size={14} />}
+                className="w-full sm:w-auto font-semibold"
+              >
+                Open Admin Dashboard
+              </Button>
+            </div>
           </div>
         )}
         <Hero onOpenSettings={handleOpenSettings} onDismiss={() => setIsBetaNoticeVisible(false)} />

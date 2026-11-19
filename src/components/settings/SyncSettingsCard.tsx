@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tv, RefreshCw, BookOpen, Check, Copy, Play, QrCode } from 'lucide-react';
 import type { StremioUser } from '../../models';
-import { Button } from '../common';
+import { Button, Switch, Badge } from '../common';
 
 export interface SyncSettingsCardProps {
   user: StremioUser | null;
@@ -58,96 +58,43 @@ export const SyncSettingsCard: React.FC<SyncSettingsCardProps> = ({
         </div>
 
         <div className="space-y-3">
-          <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[#1c2032] border border-white/5 transition-colors hover:border-white/10">
-            <div className="flex-1 min-w-0 pr-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-semibold text-white">Track Watchlist Movies</span>
-                <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Recommended
-                </span>
-              </div>
-              <p className="text-xs text-gray-400 leading-relaxed mt-1">
+          <Switch
+            checked={trackWatchlistWatched}
+            onChange={setTrackWatchlistWatched}
+            disabled={!user}
+            title="Toggle watchlist watched tracking"
+            label="Track Watchlist Movies"
+            badge={
+              <Badge variant="emerald" size="xs" uppercase>
+                Recommended
+              </Badge>
+            }
+            description={
+              <>
                 Monitors your watchlist movies. When you finish playing a movie on Stremio, it
                 automatically archives to your <strong className="text-purple-300">Watched</strong>{' '}
                 tab to keep your active list clean.
-              </p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={trackWatchlistWatched}
-              disabled={!user}
-              onClick={() => setTrackWatchlistWatched(!trackWatchlistWatched)}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden disabled:opacity-40 disabled:cursor-not-allowed mt-1 ${
-                trackWatchlistWatched ? 'bg-purple-600' : 'bg-white/10'
-              }`}
-              title="Toggle watchlist watched tracking"
-            >
-              <span
-                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                  trackWatchlistWatched ? 'translate-x-4' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
+              </>
+            }
+          />
 
-          <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[#1c2032] border border-white/5 transition-colors hover:border-white/10">
-            <div className="flex-1 min-w-0 pr-2">
-              <span className="text-sm font-semibold text-white">
-                Sync Previously Watched Movies
-              </span>
-              <p className="text-xs text-gray-400 leading-relaxed mt-1">
-                Synchronizes movies you watched in the past in Stremio before adding them here into
-                your Watched tab. Keep disabled to maintain items on your active watchlist.
-              </p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={syncPreviouslyWatched}
-              disabled={!user}
-              onClick={() => setSyncPreviouslyWatched(!syncPreviouslyWatched)}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden disabled:opacity-40 disabled:cursor-not-allowed mt-1 ${
-                syncPreviouslyWatched ? 'bg-purple-600' : 'bg-white/10'
-              }`}
-              title="Toggle previously watched sync"
-            >
-              <span
-                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                  syncPreviouslyWatched ? 'translate-x-4' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
+          <Switch
+            checked={syncPreviouslyWatched}
+            onChange={setSyncPreviouslyWatched}
+            disabled={!user}
+            title="Toggle previously watched sync"
+            label="Sync Previously Watched Movies"
+            description="Synchronizes movies you watched in the past in Stremio before adding them here into your Watched tab. Keep disabled to maintain items on your active watchlist."
+          />
 
-          <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[#1c2032] border border-white/5 transition-colors hover:border-white/10">
-            <div className="flex-1 min-w-0 pr-2">
-              <span className="text-sm font-semibold text-white">
-                Automatic Background Verification
-              </span>
-              <p className="text-xs text-gray-400 leading-relaxed mt-1">
-                Periodically checks your Stremio cloud account every 30 minutes to update watched
-                states without requiring manual triggers.
-              </p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={autoSyncWatched}
-              disabled={!user}
-              onClick={() => setAutoSyncWatched(!autoSyncWatched)}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden disabled:opacity-40 disabled:cursor-not-allowed mt-1 ${
-                autoSyncWatched ? 'bg-purple-600' : 'bg-white/10'
-              }`}
-              title="Toggle automatic background verification"
-            >
-              <span
-                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                  autoSyncWatched ? 'translate-x-4' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
+          <Switch
+            checked={autoSyncWatched}
+            onChange={setAutoSyncWatched}
+            disabled={!user}
+            title="Toggle automatic background verification"
+            label="Automatic Background Verification"
+            description="Periodically checks your Stremio cloud account every 30 minutes to update watched states without requiring manual triggers."
+          />
         </div>
 
         <div className="pt-2">
@@ -239,3 +186,4 @@ export const SyncSettingsCard: React.FC<SyncSettingsCardProps> = ({
     </div>
   );
 };
+

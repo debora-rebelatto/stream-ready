@@ -203,7 +203,7 @@ export async function saveAccountWatchlist(
 ): Promise<boolean> {
   if (!authKey) return false;
   try {
-    const encoded = encodeUserData(authKey, items);
+    const encoded = encodeUserData(authKey, []);
     const manifestUrl = `${baseUrl}/${encoded}/manifest.json`;
 
     const getRes = await fetch(`${STREMIO_API}/addonCollectionGet`, {

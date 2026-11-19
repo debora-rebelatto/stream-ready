@@ -2,7 +2,7 @@ import React from 'react';
 import { RotateCw, Eye, Search, X } from 'lucide-react';
 import type { WatchlistStats } from '../../models';
 import type { WatchlistTab, WatchlistSortOption } from '../../utils';
-import { Button, Badge } from '../common';
+import { Button, Badge, Input, Select } from '../common';
 
 interface DashboardFilterToolbarProps {
   listTopRef: React.RefObject<HTMLDivElement | null>;
@@ -108,44 +108,30 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
 
       <div className="bg-[#151824] border border-white/5 rounded-2xl p-3 sm:p-4 mb-6 shadow-sm">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          <div className="relative flex-1 min-w-50">
-            <Search
-              size={14}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter by title or year in your list..."
-              className="w-full bg-[#1e2235] border border-white/10 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/60 transition-colors"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-0.5 rounded transition-colors cursor-pointer"
-                title="Clear search"
-              >
-                <X size={13} />
-              </button>
-            )}
-          </div>
+          <Input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onClear={() => setSearchQuery('')}
+            leftIcon={<Search size={14} />}
+            placeholder="Filter by title or year in your list..."
+            containerClassName="flex-1 min-w-50"
+            className="text-xs"
+          />
 
           <div className="flex items-center gap-2 flex-wrap">
             {currentTab !== 'watched' && (
-              <div className="relative">
-                <select
-                  value={selectedQuality}
-                  onChange={(e) => setSelectedQuality(e.target.value)}
-                  className="bg-[#1e2235] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-purple-500/60 cursor-pointer hover:border-white/20 transition-colors"
-                >
-                  <option value="all">🎯 All Qualities</option>
-                  <option value="4k">✨ 4K / 2160p</option>
-                  <option value="1080p">💎 1080p Full HD</option>
-                  <option value="720p">📺 720p HD</option>
-                  <option value="pending">⏳ Waiting / Pending</option>
-                </select>
-              </div>
+              <Select
+                value={selectedQuality}
+                onChange={(e) => setSelectedQuality(e.target.value)}
+                options={[
+                  { value: 'all', label: '🎯 All Qualities' },
+                  { value: '4k', label: '✨ 4K / 2160p' },
+                  { value: '1080p', label: '💎 1080p Full HD' },
+                  { value: '720p', label: '📺 720p HD' },
+                  { value: 'pending', label: '⏳ Waiting / Pending' },
+                ]}
+              />
             )}
 
             {currentTab === 'all' && (
@@ -174,23 +160,22 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
               </Button>
             )}
 
-            <div className="relative flex items-center">
-              <select
-                value={sortBy}
-                onChange={(e) => onSortChange(e.target.value as WatchlistSortOption)}
-                className="bg-[#1e2235] border border-white/10 rounded-xl px-3 py-2 text-xs text-purple-300 font-medium focus:outline-none focus:border-purple-500/60 cursor-pointer hover:border-white/20 transition-colors"
-              >
-                <option value="added_desc">↕️ Added: Newest First</option>
-                <option value="added_asc">↕️ Added: Oldest First</option>
-                <option value="rating_desc">⭐ Rating: Highest First</option>
-                <option value="rating_asc">⭐ Rating: Lowest First</option>
-                <option value="year_desc">📅 Year: Newest First</option>
-                <option value="year_asc">📅 Year: Oldest First</option>
-                <option value="title_asc">🔤 Title: A → Z</option>
-                <option value="title_desc">🔤 Title: Z → A</option>
-                <option value="streams_desc">📡 Most Sources Available</option>
-              </select>
-            </div>
+            <Select
+              value={sortBy}
+              onChange={(e) => onSortChange(e.target.value as WatchlistSortOption)}
+              className="text-purple-300 font-medium"
+              options={[
+                { value: 'added_desc', label: '↕️ Added: Newest First' },
+                { value: 'added_asc', label: '↕️ Added: Oldest First' },
+                { value: 'rating_desc', label: '⭐ Rating: Highest First' },
+                { value: 'rating_asc', label: '⭐ Rating: Lowest First' },
+                { value: 'year_desc', label: '📅 Year: Newest First' },
+                { value: 'year_asc', label: '📅 Year: Oldest First' },
+                { value: 'title_asc', label: '🔤 Title: A → Z' },
+                { value: 'title_desc', label: '🔤 Title: Z → A' },
+                { value: 'streams_desc', label: '📡 Most Sources Available' },
+              ]}
+            />
 
             {hasActiveFilters && (
               <Button
@@ -222,3 +207,4 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
     </>
   );
 };
+

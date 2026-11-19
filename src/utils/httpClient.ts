@@ -222,18 +222,6 @@ export const api = {
     return res.json();
   },
 
-  async setItemMinQuality(
-    id: string,
-    minQuality: '1080p' | '4k' | null
-  ): Promise<{ success: boolean; item: WatchlistItem; stats: WatchlistStats }> {
-    const res = await fetch(`/api/items/${id}/min-quality`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ minQuality }),
-    });
-    return res.json();
-  },
-
   async syncWatchedFromStremio(): Promise<{
     success: boolean;
     result: { count: number; newlyMarked: number; newlyAdded: number; totalWatched: number };

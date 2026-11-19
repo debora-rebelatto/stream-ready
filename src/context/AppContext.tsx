@@ -73,7 +73,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addItem,
     removeItem,
     markWatched,
-    setItemMinQuality,
     recheckItem,
     recheckAll,
     applyLoadedSettings,
@@ -175,7 +174,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           addItem,
           removeItem,
           markWatched,
-          setItemMinQuality,
           recheckItem,
           recheckAll,
         }}
