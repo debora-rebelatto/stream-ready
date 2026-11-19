@@ -71,10 +71,11 @@ describe('GET /api/cron Endpoint', () => {
     });
   };
 
-  test('executes background check when no CRON_SECRET is set', async () => {
+  test('executes background check and returns summary when no CRON_SECRET is set', async () => {
     const res = await dispatchGet('/api/cron');
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
+    expect(res.body.summary).toEqual({ totalChecked: 10, qualityFound: 2 });
     expect(requestContext.runBackgroundCheck).toHaveBeenCalled();
   });
 

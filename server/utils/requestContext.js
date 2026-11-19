@@ -92,8 +92,17 @@ function triggerUserOnDemandSync(authKey, userId) {
 }
 
 async function runBackgroundCheck() {
-  if (backgroundCheckRunning) return;
+  if (backgroundCheckRunning) {
+    return { skipped: true, reason: 'already_running' };
+  }
   backgroundCheckRunning = true;
+
+  const summary = {
+    syncedUsersCount: 0,
+    totalPendingItems: 0,
+    uniqueCheckedCount: 0,
+    newlyReadyCount: 0,
+  };
 
   try {
     await db.ensureLoaded();
@@ -108,6 +117,7 @@ async function runBackgroundCheck() {
       for (const u of users) {
         try {
           const syncRes = await db.syncWatchedWithStremio(u.authKey, u.id);
+          summary.syncedUsersCount++;
           if (syncRes.count > 0) {
             console.log(`[AutoChecker:${u.email}] Synced ${syncRes.count} watched movie(s).`);
           }
@@ -120,37 +130,77 @@ async function runBackgroundCheck() {
     const allPending = db
       .getAllUsersItems()
       .filter((entry) => !entry.item.has1080pPlus && !entry.item.isWatched);
+    summary.totalPendingItems = allPending.length;
+
     if (allPending.length > 0) {
-      console.log(`[AutoChecker] Checking ${allPending.length} items waiting for good quality...`);
-      for (const { userId, item } of allPending) {
+      // Group pending items by movie ID so each unique movie is checked once per run
+      const groupedByMovieId = new Map();
+      for (const entry of allPending) {
+        const movieId = entry.item.id;
+        if (!movieId) continue;
+        if (!groupedByMovieId.has(movieId)) {
+          groupedByMovieId.set(movieId, {
+            sampleItem: entry.item,
+            entries: [],
+            oldestCheckMs: entry.item.lastChecked
+              ? new Date(entry.item.lastChecked).getTime() || 0
+              : 0,
+          });
+        }
+        groupedByMovieId.get(movieId).entries.push(entry);
+      }
+
+      // Prioritize movies that were least recently checked (or never checked)
+      const uniqueMoviesBatch = Array.from(groupedByMovieId.values())
+        .sort((a, b) => a.oldestCheckMs - b.oldestCheckMs)
+        .slice(0, 15);
+
+      console.log(
+        `[AutoChecker] Checking ${uniqueMoviesBatch.length} unique pending movie(s) (across ${allPending.length} total watchlist entries)...`
+      );
+
+      for (const group of uniqueMoviesBatch) {
+        const { sampleItem, entries } = group;
         const quality = await checkMovieQuality(
-          item.id,
-          item.type || 'movie',
-          item.name,
-          item.year
+          sampleItem.id,
+          sampleItem.type || 'movie',
+          sampleItem.name,
+          sampleItem.year
         );
+        summary.uniqueCheckedCount++;
+
         if (quality.has1080pPlus) {
-          console.log(
-            `🎉 [NEW:${userId}] "${item.name}" is now available in ${quality.bestQuality}!`
+          summary.newlyReadyCount++;
+        }
+
+        for (const { userId, item } of entries) {
+          if (quality.has1080pPlus) {
+            console.log(
+              `🎉 [NEW:${userId}] "${item.name}" is now available in ${quality.bestQuality}!`
+            );
+          }
+          await db.updateItem(
+            item.id,
+            {
+              has1080pPlus: quality.has1080pPlus,
+              bestQuality: quality.bestQuality,
+              streamCount: quality.streamCount,
+              count1080pPlus: quality.count1080pPlus,
+              lastChecked: quality.checkedAt,
+              checkError: quality.error || null,
+            },
+            userId
           );
         }
-        db.updateItem(
-          item.id,
-          {
-            has1080pPlus: quality.has1080pPlus,
-            bestQuality: quality.bestQuality,
-            streamCount: quality.streamCount,
-            count1080pPlus: quality.count1080pPlus,
-            lastChecked: quality.checkedAt,
-            checkError: quality.error || null,
-          },
-          userId
-        );
-        await new Promise((r) => setTimeout(r, 800));
+
+        await new Promise((r) => setTimeout(r, 150));
       }
     }
+
+    return summary;
   } catch (err) {
     console.error('[AutoChecker Error]', err.message);
+    return summary;
   } finally {
     backgroundCheckRunning = false;
   }

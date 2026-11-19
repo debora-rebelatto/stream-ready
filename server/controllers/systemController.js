@@ -198,8 +198,12 @@ function registerSystemRoutes(app, PORT = process.env.PORT || 7000) {
       }
 
       logPostHog('info', 'background_check_triggered', { trigger: 'cron_endpoint' });
-      runBackgroundCheck().catch((err) => console.error('[Cron Error]', err.message));
-      res.json({ success: true, message: 'Automated background check triggered' });
+      const summary = await runBackgroundCheck();
+      res.json({
+        success: true,
+        message: 'Automated background check triggered',
+        summary,
+      });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

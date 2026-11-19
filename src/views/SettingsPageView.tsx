@@ -92,7 +92,7 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
             {user && (
               <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 border border-white/5 text-xs text-gray-300">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="truncate max-w-[200px]" title={user.email}>
+                <span className="truncate max-w-50" title={user.email}>
                   {user.email}
                 </span>
               </div>
