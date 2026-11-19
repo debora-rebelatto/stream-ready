@@ -52,6 +52,45 @@ describe('Lauren Tan Constraint Engineering: Architecture & Invariant Tests', ()
       expect(db.findUserBucket(uniqueEmail)).toBeNull();
       expect(db.findUserBucket(authKey)).toBeNull();
     });
+
+    it('defaults onboardingCompleted to false and requires at least one movie to mark true', async () => {
+      const email = `onboarding_inv_${Date.now()}@test.com`;
+      const authKey = `auth_key_onb_${Date.now()}`;
+
+      const user = await db.resolveUser(authKey, () => ({ email }));
+      expect(user).toBeDefined();
+      expect(user!.onboardingCompleted).toBe(false);
+      expect(db.getSettings(user!.id!).onboardingCompleted).toBe(false);
+
+      // Cannot mark onboardingCompleted = true while user has 0 movies
+      const settingsWithZeroMovies = await db.updateSettings(
+        { onboardingCompleted: true },
+        user!.id!
+      );
+      expect(settingsWithZeroMovies.onboardingCompleted).toBe(false);
+      expect(db.getSettings(user!.id!).onboardingCompleted).toBe(false);
+      expect((await db.resolveUser(authKey))?.onboardingCompleted).toBe(false);
+
+      // Once user has at least 1 movie, onboardingCompleted persists as true
+      await db.addItem(
+        {
+          id: 'tt0133093',
+          name: 'The Matrix',
+          has1080pPlus: true,
+          bestQuality: '1080p FHD',
+          streamCount: 5,
+        },
+        user!.id!
+      );
+
+      const updatedSettings = await db.updateSettings({ onboardingCompleted: true }, user!.id!);
+      expect(updatedSettings.onboardingCompleted).toBe(true);
+      expect(db.getSettings(user!.id!).onboardingCompleted).toBe(true);
+
+      const resolvedAgain = await db.resolveUser(authKey);
+      expect(resolvedAgain).toBeDefined();
+      expect(resolvedAgain!.onboardingCompleted).toBe(true);
+    });
   });
 
   describe('Level 3: Resource Cleanup & Event Loop Safety', () => {

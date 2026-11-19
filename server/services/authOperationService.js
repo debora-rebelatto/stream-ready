@@ -93,6 +93,7 @@ async function getSessionStatus({ authKey }) {
         id: user.id,
         email: user.email,
         isAdmin: Boolean(user.isAdmin),
+        onboardingCompleted: Boolean(user.onboardingCompleted),
       },
       itemsCount: watchlistRepository.getItems(userId).length,
       supabaseConfigured: userRepository.isSupabaseConfigured(),

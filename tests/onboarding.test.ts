@@ -1,4 +1,5 @@
 import { ONBOARDING_DISMISS_KEY } from '../src/components';
+import { SETUP_WIZARD_STEPS } from '../src/models';
 import { CURATED_RECOMMENDED_MOVIES } from '../src/utils';
 
 describe('OnboardingCallout logic & starter recommendations', () => {
@@ -46,5 +47,22 @@ describe('OnboardingCallout logic & starter recommendations', () => {
     const isExpiredDismissed =
       parseInt(localStorage.getItem(ONBOARDING_DISMISS_KEY) || '0', 10) > now;
     expect(isExpiredDismissed).toBe(false);
+  });
+
+  it('defines 4 sequential setup wizard steps with valid metadata', () => {
+    expect(SETUP_WIZARD_STEPS).toHaveLength(4);
+    expect(SETUP_WIZARD_STEPS.map((step) => step.id)).toEqual([
+      'welcome',
+      'install',
+      'features',
+      'movies',
+    ]);
+    expect(SETUP_WIZARD_STEPS.map((step) => step.stepNumber)).toEqual([1, 2, 3, 4]);
+
+    for (const step of SETUP_WIZARD_STEPS) {
+      expect(step.shortTitle.trim().length).toBeGreaterThan(0);
+      expect(step.title.trim().length).toBeGreaterThan(0);
+      expect(step.subtitle.trim().length).toBeGreaterThan(0);
+    }
   });
 });

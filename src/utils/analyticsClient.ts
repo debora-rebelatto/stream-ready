@@ -7,7 +7,8 @@ export type AddonActionLocation =
   | 'landing_page'
   | 'hero'
   | 'dashboard_guide'
-  | 'install_modal';
+  | 'install_modal'
+  | 'setup_wizard';
 
 export interface EventDataMap {
   movie_added: {
@@ -39,6 +40,22 @@ export interface EventDataMap {
   onboarding_viewed: { watchlistCount: number };
   onboarding_quick_add_clicked: { movieIds: string[]; source: string };
   onboarding_dismissed: { reason?: string };
+  onboarding_step_viewed: {
+    stepId: string;
+    stepNumber: number;
+    mode: 'first-login' | 'review';
+  };
+  onboarding_step_completed: {
+    stepId: string;
+    stepNumber: number;
+    actionTaken?: string;
+  };
+  onboarding_completed: {
+    mode: 'first-login' | 'review';
+    installedInWizard: boolean;
+    moviesAddedCount: number;
+    minQuality: '1080p' | '4k';
+  };
   qr_code_scanned: { source: string; context?: string; userAgent?: string };
 }
 

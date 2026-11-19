@@ -122,6 +122,70 @@ describe('analytics.trackEvent (PostHog & Supabase)', () => {
     );
   });
 
+  it('tracks setup wizard step and completion events', () => {
+    trackEvent('onboarding_step_viewed', {
+      stepId: 'welcome',
+      stepNumber: 1,
+      mode: 'first-login',
+    });
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/events',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          event: 'onboarding_step_viewed',
+          data: {
+            stepId: 'welcome',
+            stepNumber: 1,
+            mode: 'first-login',
+          },
+        }),
+      })
+    );
+
+    trackEvent('onboarding_step_completed', {
+      stepId: 'install',
+      stepNumber: 2,
+      actionTaken: 'cloud_install',
+    });
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/events',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          event: 'onboarding_step_completed',
+          data: {
+            stepId: 'install',
+            stepNumber: 2,
+            actionTaken: 'cloud_install',
+          },
+        }),
+      })
+    );
+
+    trackEvent('onboarding_completed', {
+      mode: 'first-login',
+      installedInWizard: true,
+      moviesAddedCount: 2,
+      minQuality: '1080p',
+    });
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/events',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          event: 'onboarding_completed',
+          data: {
+            mode: 'first-login',
+            installedInWizard: true,
+            moviesAddedCount: 2,
+            minQuality: '1080p',
+          },
+        }),
+      })
+    );
+  });
+
   it('captures with PostHog once initialized', () => {
     initPostHog('phc_test_key_123', 'https://us.i.posthog.com');
     expect(posthog.init).toHaveBeenCalledWith(
