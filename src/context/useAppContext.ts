@@ -56,7 +56,6 @@ export interface WatchlistContextType {
   ) => Promise<void>;
   removeItem: (id: string, name: string) => Promise<boolean>;
   markWatched: (id: string, watched: boolean) => Promise<void>;
-  setItemMinQuality: (id: string, minQuality: '1080p' | '4k' | null) => Promise<void>;
   syncWatchedFromStremio: () => Promise<void>;
   isSyncingWatched: boolean;
   recheckItem: (id: string) => Promise<void>;

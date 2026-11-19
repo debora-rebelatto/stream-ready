@@ -152,7 +152,7 @@ describe('API Client (src/lib/api.ts)', () => {
       expect(res).toEqual([{ id: 'tt1' }]);
     });
 
-    test('addItem, deleteItem, setWatched, setItemMinQuality', async () => {
+    test('addItem, deleteItem, setWatched', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         json: async () => ({ success: true }),
       });
@@ -172,12 +172,6 @@ describe('API Client (src/lib/api.ts)', () => {
       await api.setWatched('tt123', true);
       expect(global.fetch).toHaveBeenCalledWith(
         '/api/items/tt123/watched',
-        expect.objectContaining({ method: 'POST' })
-      );
-
-      await api.setItemMinQuality('tt123', '4k');
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/items/tt123/min-quality',
         expect.objectContaining({ method: 'POST' })
       );
     });

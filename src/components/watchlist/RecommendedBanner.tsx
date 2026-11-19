@@ -268,7 +268,7 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({
             {currentMovie.genres && currentMovie.genres.length > 0 && (
               <>
                 <span className="hidden sm:inline text-gray-500">•</span>
-                <span className="hidden sm:inline text-gray-300 truncate max-w-[200px] sm:max-w-none">
+                <span className="hidden sm:inline text-gray-300 truncate max-w-50 sm:max-w-none">
                   {currentMovie.genres.slice(0, 3).join(', ')}
                 </span>
               </>

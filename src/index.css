@@ -2,28 +2,59 @@
 
 @layer base {
   :root {
+    /* Surface & Background Tokens */
     --bg-main: #0c0d14;
+    --bg-elevated: #0e101a;
     --bg-card: #151824;
     --bg-card-hover: #1c2030;
     --bg-surface: #1f2438;
+    --bg-surface-hover: #252b42;
+    --bg-input: #1e2235;
+    --bg-overlay: rgba(0, 0, 0, 0.8);
+
+    /* Border Tokens */
+    --border-subtle: rgba(255, 255, 255, 0.05);
     --border-color: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.15);
     --border-active: rgba(138, 75, 255, 0.5);
 
+    /* Brand Primary Tokens (Stremio Purple) */
     --primary: #7b42f6;
     --primary-hover: #6a34e0;
+    --primary-soft: rgba(123, 66, 246, 0.15);
     --primary-glow: rgba(123, 66, 246, 0.35);
 
+    /* Semantic Status: Ready / Good Quality (Emerald) */
     --ready-color: #10b981;
     --ready-bg: rgba(16, 185, 129, 0.15);
     --ready-border: rgba(16, 185, 129, 0.4);
 
+    /* Semantic Status: Waiting / Pending (Amber) */
     --pending-color: #f59e0b;
     --pending-bg: rgba(245, 158, 11, 0.15);
     --pending-border: rgba(245, 158, 11, 0.4);
 
+    /* Semantic Status: Unreleased / Info (Blue) */
+    --info-color: #3b82f6;
+    --info-bg: rgba(59, 130, 246, 0.15);
+    --info-border: rgba(59, 130, 246, 0.4);
+
+    /* Semantic Status: Danger / Destructive (Rose) */
+    --danger-color: #f43f5e;
+    --danger-bg: rgba(244, 63, 94, 0.15);
+    --danger-border: rgba(244, 63, 94, 0.4);
+
+    /* Typography Colors */
     --text-main: #f3f4f6;
     --text-muted: #9ca3af;
     --text-dim: #6b7280;
+
+    /* Radius Scale */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-2xl: 1.25rem;
   }
 }
 
@@ -42,3 +73,4 @@
 .pulse-btn {
   animation: gentle-pulse 3s infinite;
 }
+

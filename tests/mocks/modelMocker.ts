@@ -126,7 +126,6 @@ export class ModelMocker {
       readyAt: new Date('2024-01-02T12:00:00.000Z').toISOString(),
       isWatched: false,
       watchedAt: null,
-      minQuality: '1080p',
       customLists: [],
     };
 

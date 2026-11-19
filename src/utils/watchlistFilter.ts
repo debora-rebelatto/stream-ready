@@ -1,5 +1,5 @@
 import type { WatchlistItem } from '../models';
-import { isItemReady, isItemUnreleased } from './qualityAdapter';
+import { computeMovieStatus, enrichWatchlistItem } from './qualityAdapter';
 
 export type WatchlistTab = 'all' | 'ready' | 'unreleased' | 'pending' | 'watched';
 
@@ -36,50 +36,62 @@ export function filterWatchlistItems(
     globalMinQuality,
   } = criteria;
 
-  return items.filter((item) => {
-    if (activeCustomListId) {
-      if (!Array.isArray(item.customLists) || !item.customLists.includes(activeCustomListId)) {
-        return false;
-      }
-    }
+  return items
+    .map((item) =>
+      item.computed && item.computed.activeTargetQuality === (item.minQuality || globalMinQuality)
+        ? item
+        : enrichWatchlistItem(item, globalMinQuality)
+    )
+    .filter((item) => {
+      const computed = item.computed ?? computeMovieStatus(item, globalMinQuality);
 
-    if (currentTab === 'watched') {
-      if (!item.isWatched) return false;
-    } else if (currentTab === 'all') {
-      if (!includeWatchedInAll && item.isWatched) return false;
-    } else {
-      if (item.isWatched) return false;
-
-      const ready = isItemReady(item, globalMinQuality);
-      if (currentTab === 'ready' && !ready) return false;
-      if (currentTab === 'unreleased' && !isItemUnreleased(item)) return false;
-      if (currentTab === 'pending' && (ready || isItemUnreleased(item))) return false;
-    }
-
-    if (currentTab !== 'watched' && selectedQuality !== 'all') {
-      const q = String(item.bestQuality || '').toLowerCase();
-      if (selectedQuality === '4k') {
-        if (!q.includes('4k') && !q.includes('2160p')) return false;
-      } else if (selectedQuality === '1080p') {
-        if (!q.includes('1080p')) return false;
-      } else if (selectedQuality === '720p') {
-        if (!q.includes('720p')) return false;
-      } else if (selectedQuality === 'pending') {
-        if (q.includes('1080p') || q.includes('4k') || q.includes('2160p') || q.includes('720p')) {
+      if (activeCustomListId) {
+        if (!Array.isArray(item.customLists) || !item.customLists.includes(activeCustomListId)) {
           return false;
         }
       }
-    }
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      const matchName = (item.name || '').toLowerCase().includes(q);
-      const matchYear = String(item.year || '').includes(q);
-      if (!matchName && !matchYear) return false;
-    }
+      if (currentTab === 'watched') {
+        if (!computed.isWatched) return false;
+      } else if (currentTab === 'all') {
+        if (!includeWatchedInAll && computed.isWatched) return false;
+      } else {
+        if (computed.isWatched) return false;
 
-    return true;
-  });
+        if (currentTab === 'ready' && !computed.isReady) return false;
+        if (currentTab === 'unreleased' && !computed.isUnreleased) return false;
+        if (currentTab === 'pending' && (computed.isReady || computed.isUnreleased)) return false;
+      }
+
+      if (currentTab !== 'watched' && selectedQuality !== 'all') {
+        const q = String(item.bestQuality || '').toLowerCase();
+        if (selectedQuality === '4k') {
+          if (!q.includes('4k') && !q.includes('2160p')) return false;
+        } else if (selectedQuality === '1080p') {
+          if (!q.includes('1080p')) return false;
+        } else if (selectedQuality === '720p') {
+          if (!q.includes('720p')) return false;
+        } else if (selectedQuality === 'pending') {
+          if (
+            q.includes('1080p') ||
+            q.includes('4k') ||
+            q.includes('2160p') ||
+            q.includes('720p')
+          ) {
+            return false;
+          }
+        }
+      }
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchName = (item.name || '').toLowerCase().includes(q);
+        const matchYear = String(item.year || '').includes(q);
+        if (!matchName && !matchYear) return false;
+      }
+
+      return true;
+    });
 }
 
 function getYearNum(y?: string | number): number {

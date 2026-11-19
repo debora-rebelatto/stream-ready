@@ -3,7 +3,7 @@ import { Sparkles, Search, X } from 'lucide-react';
 import type { WatchlistItem } from '../../models';
 import type { WatchlistTab } from '../../utils';
 import { MovieCard } from './MovieCard';
-import { Pagination, Button } from '../common';
+import { Pagination, Button, EmptyState } from '../common';
 
 interface WatchlistGridProps {
   isLoading: boolean;
@@ -46,83 +46,87 @@ export const WatchlistGrid: React.FC<WatchlistGridProps> = ({
   }
 
   if (sortedCount === 0) {
-    return (
-      <div className="py-20 text-center rounded-2xl border border-white/5 bg-white/[0.01]">
-        <div className="text-4xl mb-3">
-          {hasActiveFilters
-            ? '🔍'
-            : currentTab === 'ready'
-              ? '🎬'
-              : currentTab === 'pending'
-                ? '⏳'
-                : currentTab === 'watched'
-                  ? '👁️'
-                  : currentTab === 'unreleased'
-                    ? '📅'
-                    : '📋'}
-        </div>
-        <h4 className="text-base font-bold text-white mb-1">
-          {hasActiveFilters
-            ? 'No titles found with active filters'
-            : currentTab === 'ready'
-              ? 'No movies ready in good quality yet'
-              : currentTab === 'pending'
-                ? 'No movies waiting for good quality!'
-                : currentTab === 'unreleased'
-                  ? 'No unreleased movies found!'
-                  : currentTab === 'watched'
-                    ? 'No movies in your watched history'
-                    : 'Your watchlist is empty'}
-        </h4>
-        <p className="text-xs text-gray-400 max-w-sm mx-auto mb-3">
-          {hasActiveFilters
-            ? 'Try searching for another title or clearing the selected filters.'
+    const emptyIcon = hasActiveFilters
+      ? '🔍'
+      : currentTab === 'ready'
+        ? '🎬'
+        : currentTab === 'pending'
+          ? '⏳'
+          : currentTab === 'watched'
+            ? '👁️'
+            : currentTab === 'unreleased'
+              ? '📅'
+              : '📋';
+
+    const emptyTitle = hasActiveFilters
+      ? 'No titles found with active filters'
+      : currentTab === 'ready'
+        ? 'No movies ready in good quality yet'
+        : currentTab === 'pending'
+          ? 'No movies waiting for good quality!'
+          : currentTab === 'unreleased'
+            ? 'No unreleased movies found!'
             : currentTab === 'watched'
-              ? 'Click the eye icon on any movie card to mark it as watched and archive it.'
-              : itemsCount === 0
-                ? 'Use the recommendations or search bar above to start tracking movies.'
-                : 'Switch tabs or add more items to monitor.'}
-        </p>
-        {itemsCount === 0 && !hasActiveFilters && (
-          <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
-            <Button
-              variant="primary"
-              className="font-bold shadow-lg shadow-purple-900/30"
-              onClick={() => {
-                const el = document.getElementById('recommended-banner');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
-              icon={<Sparkles size={14} />}
-            >
-              Explore Recommendations
-            </Button>
-            <Button
-              variant="outline"
-              className="hover:text-white"
-              onClick={() => {
-                window.scrollTo({ top: 350, behavior: 'smooth' });
-                const searchInput = document.querySelector(
-                  'input[type="text"]'
-                ) as HTMLInputElement;
-                if (searchInput) searchInput.focus();
-              }}
-              icon={<Search size={14} />}
-            >
-              Search Movies
-            </Button>
-          </div>
-        )}
-        {hasActiveFilters && (
-          <Button
-            variant="solid"
-            className="font-semibold px-3.5"
-            onClick={onClearFilters}
-            icon={<X size={12} />}
-          >
-            Clear all filters
-          </Button>
-        )}
-      </div>
+              ? 'No movies in your watched history'
+              : 'Your watchlist is empty';
+
+    const emptyDescription = hasActiveFilters
+      ? 'Try searching for another title or clearing the selected filters.'
+      : currentTab === 'watched'
+        ? 'Click the eye icon on any movie card to mark it as watched and archive it.'
+        : itemsCount === 0
+          ? 'Use the recommendations or search bar above to start tracking movies.'
+          : 'Switch tabs or add more items to monitor.';
+
+    return (
+      <EmptyState
+        icon={emptyIcon}
+        title={emptyTitle}
+        description={emptyDescription}
+        actions={
+          <>
+            {itemsCount === 0 && !hasActiveFilters && (
+              <>
+                <Button
+                  variant="primary"
+                  className="font-bold shadow-lg shadow-purple-900/30"
+                  onClick={() => {
+                    const el = document.getElementById('recommended-banner');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  icon={<Sparkles size={14} />}
+                >
+                  Explore Recommendations
+                </Button>
+                <Button
+                  variant="outline"
+                  className="hover:text-white"
+                  onClick={() => {
+                    window.scrollTo({ top: 350, behavior: 'smooth' });
+                    const searchInput = document.querySelector(
+                      'input[type="text"]'
+                    ) as HTMLInputElement;
+                    if (searchInput) searchInput.focus();
+                  }}
+                  icon={<Search size={14} />}
+                >
+                  Search Movies
+                </Button>
+              </>
+            )}
+            {hasActiveFilters && (
+              <Button
+                variant="solid"
+                className="font-semibold px-3.5"
+                onClick={onClearFilters}
+                icon={<X size={12} />}
+              >
+                Clear all filters
+              </Button>
+            )}
+          </>
+        }
+      />
     );
   }
 
@@ -145,3 +149,4 @@ export const WatchlistGrid: React.FC<WatchlistGridProps> = ({
     </>
   );
 };
+

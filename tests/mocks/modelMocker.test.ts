@@ -80,7 +80,6 @@ describe('ModelMocker', () => {
         name: 'Custom Overridden Movie',
         isWatched: true,
         watchedAt: '2024-02-01T00:00:00.000Z',
-        minQuality: '4k',
         customLists: ['list_001'],
       });
 
@@ -88,7 +87,6 @@ describe('ModelMocker', () => {
       expect(item.name).toBe('Custom Overridden Movie');
       expect(item.isWatched).toBe(true);
       expect(item.watchedAt).toBe('2024-02-01T00:00:00.000Z');
-      expect(item.minQuality).toBe('4k');
       expect(item.customLists).toEqual(['list_001']);
     });
   });

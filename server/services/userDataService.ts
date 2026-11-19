@@ -4,7 +4,7 @@ import type { UserDataDecoded, UserDataDecodedItem } from '../types';
 /**
  * Codifica de forma ultracompacta o authKey e os filmes na URL
  */
-export function encodeUserData(authKey: string, itemsOrIds: any[]): string {
+export function encodeUserData(authKey: string, itemsOrIds: any[] = []): string {
   try {
     let compactItems: any[] = [];
     if (Array.isArray(itemsOrIds)) {

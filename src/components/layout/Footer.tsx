@@ -12,6 +12,7 @@ export const Footer: React.FC<FooterProps> = ({
   onCopyManifest,
   onOpenLogin,
 }) => {
+
   return (
     <footer className={`border-t border-white/5 py-6 px-4 text-center text-xs text-gray-500 ${className}`}>
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 flex-wrap">
@@ -43,7 +44,6 @@ export const Footer: React.FC<FooterProps> = ({
 
         {/* Navigation & Action Links */}
         <div className="flex items-center gap-4 text-gray-400 shrink-0 text-xs">
-         
           {onCopyManifest && (
             <button
               type="button"
@@ -67,3 +67,5 @@ export const Footer: React.FC<FooterProps> = ({
     </footer>
   );
 };
+
+

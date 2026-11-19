@@ -1,4 +1,13 @@
-export { MovieCard } from './MovieCard';
+export { MovieCard, MOVIE_STATUS_BADGE_MAP } from './MovieCard';
+export type { MovieStatusBadgeConfig } from './MovieCard';
+export {
+  MovieCardActionButton,
+  MOVIE_CARD_ACTION_VARIANTS,
+} from './MovieCardActionButton';
+export type {
+  MovieCardActionButtonProps,
+  MovieCardActionVariant,
+} from './MovieCardActionButton';
 export { WatchlistGrid } from './WatchlistGrid';
 export { DashboardFilterToolbar } from './DashboardFilterToolbar';
 export { RecommendedBanner } from './RecommendedBanner';

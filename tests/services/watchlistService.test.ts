@@ -110,15 +110,6 @@ describe('watchlistService', () => {
       expect(res).toEqual(mockResult);
     });
 
-    test('setItemMinQuality deve delegar para api.setItemMinQuality', async () => {
-      const mockResult = { success: true, item: {} as any, stats: {} as any };
-      const spy = jest.spyOn(api, 'setItemMinQuality').mockResolvedValue(mockResult);
-
-      const res = await watchlistService.setItemMinQuality('tt1234', '4k');
-      expect(spy).toHaveBeenCalledWith('tt1234', '4k');
-      expect(res).toEqual(mockResult);
-    });
-
     test('syncWatchedFromStremio deve delegar para api.syncWatchedFromStremio', async () => {
       const mockResult = {
         success: true,

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import type { WatchlistItem } from '../../models';
-import { formatQualityLabel, isItemReady, isItemNewRelease, isItemUnreleased } from '../../utils';
+import type { MovieCardStatus, WatchlistItem } from '../../models';
+import { computeMovieStatus } from '../../utils';
 import { useWatchlist } from '../../context/useAppContext';
-import { Badge } from '../common';
+import { Badge, type BadgeVariant } from '../common';
+import { MovieCardActionButton } from './MovieCardActionButton';
 import {
   Trash2,
   Star,
@@ -11,11 +12,52 @@ import {
   Calendar,
   Eye,
   Flame,
-  SlidersHorizontal,
   RotateCcw,
   Folder,
   Check,
 } from 'lucide-react';
+
+export interface MovieStatusBadgeConfig {
+  variant: BadgeVariant;
+  label: string;
+  icon: React.ReactNode;
+  pulse?: boolean;
+  className: string;
+}
+
+export const MOVIE_STATUS_BADGE_MAP: Record<MovieCardStatus, MovieStatusBadgeConfig> = {
+  watched: {
+    variant: 'purple',
+    label: 'Watched',
+    icon: <Eye size={10} />,
+    className: 'backdrop-blur-md shadow-md bg-purple-900/90 text-purple-200 border-purple-500/40',
+  },
+  new: {
+    variant: 'gradient',
+    label: 'NEW RELEASE',
+    icon: <Flame size={11} className="fill-current text-yellow-200" />,
+    pulse: true,
+    className: 'backdrop-blur-md',
+  },
+  ready: {
+    variant: 'emerald',
+    label: 'Good Quality',
+    icon: <CheckCircle size={10} />,
+    className: 'backdrop-blur-md shadow-md bg-emerald-500/90 text-white border-emerald-400/40',
+  },
+  unreleased: {
+    variant: 'blue',
+    label: 'Unreleased',
+    icon: <Calendar size={10} />,
+    className: 'backdrop-blur-md shadow-md bg-blue-600/90 text-white border-blue-400/40',
+  },
+  waiting: {
+    variant: 'amber',
+    label: 'Waiting',
+    icon: <Clock size={10} />,
+    className: 'backdrop-blur-md shadow-md bg-amber-500/90 text-black border-amber-300/40',
+  },
+};
 
 interface MovieCardProps {
   item: WatchlistItem;
@@ -23,11 +65,10 @@ interface MovieCardProps {
 }
 
 export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
-  const { markWatched, setItemMinQuality, globalMinQuality, customLists, toggleItemCustomList } =
-    useWatchlist();
+  const { markWatched, globalMinQuality, customLists, toggleItemCustomList } = useWatchlist();
   const [isListMenuOpen, setIsListMenuOpen] = useState(false);
 
-  // Fecha menu ao clicar fora
+  // Close menu when clicking outside
   useEffect(() => {
     if (!isListMenuOpen) return;
     const handleOutsideClick = () => setIsListMenuOpen(false);
@@ -35,13 +76,15 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
     return () => window.removeEventListener('click', handleOutsideClick);
   }, [isListMenuOpen]);
 
-  const isWatched = Boolean(item.isWatched);
-  const ready = isItemReady(item, globalMinQuality);
-  const isNew = isItemNewRelease(item) && !isWatched;
-  const unreleased = isItemUnreleased(item);
-  const rawQuality = formatQualityLabel(item.bestQuality);
-  const qualityText = unreleased ? 'Unreleased' : rawQuality;
-  const streamsText = item.streamCount > 0 ? `${item.streamCount} sources` : '0 sources';
+  const {
+    status,
+    isWatched,
+    isReady: ready,
+    isNewRelease: isNew,
+    qualityLabel: qualityText,
+    streamsLabel: streamsText,
+  } = item.computed ?? computeMovieStatus(item, globalMinQuality);
+  const badgeConfig = MOVIE_STATUS_BADGE_MAP[status];
 
   const itemLists = customLists.filter((l) => (item.customLists || []).includes(l.id));
 
@@ -59,26 +102,10 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
     markWatched(item.id, !isWatched);
   };
 
-  const handleCycleTargetQuality = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Cycles: Default (inherits global) -> 1080p -> 4k -> Default
-    let next: '1080p' | '4k' | null;
-    if (!item.minQuality) {
-      next = globalMinQuality === '1080p' ? '4k' : '1080p';
-    } else if (item.minQuality === '1080p') {
-      next = '4k';
-    } else {
-      next = null; // back to default (inherits global)
-    }
-    setItemMinQuality(item.id, next);
-  };
-
-  const activeTargetQuality = item.minQuality || globalMinQuality || '1080p';
-
   return (
     <div
       onClick={handleClick}
-      className={`group relative flex flex-col bg-[#151824] border rounded-xl transition-all duration-200 hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
+      className={`group relative flex flex-col bg-[#151824] border rounded-xl hover:shadow-xl cursor-pointer ${
         isWatched
           ? 'border-white/5 opacity-75 hover:opacity-100 hover:border-purple-500/30'
           : isNew
@@ -88,7 +115,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
       title="Click to open in Stremio Web"
     >
       {/* Poster */}
-      <div className="relative aspect-[2/3] w-full bg-[#1e2235] overflow-hidden rounded-t-xl">
+      <div className="relative aspect-2/3 w-full bg-[#1e2235] overflow-hidden rounded-t-xl">
         <img
           src={
             item.poster ||
@@ -96,95 +123,44 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
           }
           alt={item.name}
           loading="lazy"
-          className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${
-            isWatched ? 'grayscale-[30%]' : ''
+          className={`w-full h-full object-cover ${
+            isWatched ? 'grayscale-30' : ''
           }`}
         />
 
         {/* Status Badge (Top-Left) */}
         <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start">
-          {isWatched ? (
-            <Badge
-              variant="purple"
-              size="sm"
-              uppercase
-              icon={<Eye size={10} />}
-              className="backdrop-blur-md shadow-md bg-purple-900/90 text-purple-200 border-purple-500/40"
-            >
-              Watched
-            </Badge>
-          ) : isNew ? (
-            <Badge
-              variant="gradient"
-              size="sm"
-              uppercase
-              icon={<Flame size={11} className="fill-current text-yellow-200" />}
-              pulse
-              className="backdrop-blur-md"
-            >
-              NEW RELEASE
-            </Badge>
-          ) : ready ? (
-            <Badge
-              variant="emerald"
-              size="sm"
-              uppercase
-              icon={<CheckCircle size={10} />}
-              className="backdrop-blur-md shadow-md bg-emerald-500/90 text-white border-emerald-400/40"
-            >
-              Good Quality
-            </Badge>
-          ) : unreleased ? (
-            <Badge
-              variant="blue"
-              size="sm"
-              uppercase
-              icon={<Calendar size={10} />}
-              className="backdrop-blur-md shadow-md bg-blue-600/90 text-white border-blue-400/40"
-            >
-              Unreleased
-            </Badge>
-          ) : (
-            <Badge
-              variant="amber"
-              size="sm"
-              uppercase
-              icon={<Clock size={10} />}
-              className="backdrop-blur-md shadow-md bg-amber-500/90 text-black border-amber-300/40"
-            >
-              Waiting
-            </Badge>
-          )}
+          <Badge
+            variant={badgeConfig.variant}
+            size="sm"
+            uppercase
+            icon={badgeConfig.icon}
+            pulse={badgeConfig.pulse}
+            className={badgeConfig.className}
+          >
+            {badgeConfig.label}
+          </Badge>
         </div>
 
         {/* Action Buttons (Top-Right) */}
         <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-all">
           {/* Mark as Watched / Restore Button */}
-          <button
+          <MovieCardActionButton
+            variant={isWatched ? 'purple' : 'emerald'}
             onClick={handleToggleWatched}
-            className={`p-1.5 rounded-full backdrop-blur-md border transition-all cursor-pointer shadow-md ${
-              isWatched
-                ? 'bg-purple-600/80 hover:bg-purple-500 text-white border-purple-400/40'
-                : 'bg-black/60 hover:bg-emerald-600 text-gray-300 hover:text-white border-white/20'
-            }`}
             title={isWatched ? 'Restore to active Watchlist' : 'Mark as Watched (Archive)'}
             aria-label={isWatched ? 'Restore movie' : 'Mark as watched'}
-          >
-            {isWatched ? <RotateCcw size={13} /> : <Eye size={13} />}
-          </button>
+            icon={isWatched ? <RotateCcw size={13} /> : <Eye size={13} />}
+          />
 
           {/* Delete Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(item.id, item.name);
-            }}
-            className="p-1.5 rounded-full bg-black/60 hover:bg-red-500 text-gray-300 hover:text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer shadow-md"
+          <MovieCardActionButton
+            variant="danger"
+            onClick={() => onDelete(item.id, item.name)}
             title={`Remove ${item.name} from watchlist`}
             aria-label={`Remove ${item.name}`}
-          >
-            <Trash2 size={13} />
-          </button>
+            icon={<Trash2 size={13} />}
+          />
         </div>
       </div>
 
@@ -221,7 +197,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
           </div>
         </div>
 
-        {/* Quality Info & Min Quality Target Selector */}
+        {/* Quality Info */}
         <div className="flex flex-col gap-1.5 pt-1 border-t border-white/5">
           {/* Detected Quality Pill */}
           <div
@@ -243,30 +219,6 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
               </>
             )}
           </div>
-
-          {/* Target Quality Override Pill - only for active watchlist items */}
-          {!isWatched && (
-            <button
-              type="button"
-              onClick={handleCycleTargetQuality}
-              className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md border font-medium transition-colors cursor-pointer self-start ${
-                item.minQuality === '4k'
-                  ? 'bg-purple-900/30 text-purple-300 border-purple-500/40 hover:bg-purple-900/50'
-                  : item.minQuality === '1080p'
-                    ? 'bg-blue-900/30 text-blue-300 border-blue-500/40 hover:bg-blue-900/50'
-                    : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-gray-200'
-              }`}
-              title="Click to toggle minimum quality target (Auto / 1080p / 4K)"
-            >
-              <SlidersHorizontal size={9} />
-              <span>
-                Target:{' '}
-                {item.minQuality
-                  ? item.minQuality.toUpperCase()
-                  : `Auto (${activeTargetQuality.toUpperCase()})`}
-              </span>
-            </button>
-          )}
 
           {/* Custom Lists Tags & Menu */}
           <div className="relative pt-1 border-t border-white/5">

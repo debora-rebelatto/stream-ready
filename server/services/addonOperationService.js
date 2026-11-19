@@ -1,0 +1,212 @@
+const QRCode = require('qrcode');
+const { userRepository, watchlistRepository, analyticsRepository } = require('../repositories');
+const { checkMovieQuality } = require('../../lib/qualityChecker');
+const { getMeta } = require('../../lib/cinemeta');
+const { getManifest, handleCatalog, handleMeta } = require('../../lib/stremioAddon');
+const { getAccountWatchlist } = require('../../lib/stremioAuth');
+const { triggerUserOnDemandSync } = require('../utils/requestContext');
+
+function parseCatalogExtra(extraParam) {
+  const extra = {};
+  if (!extraParam) return extra;
+
+  const parts = String(extraParam).replace(/\.json$/, '').split('&');
+  for (const part of parts) {
+    const [k, v] = part.split('=');
+    if (k && v) {
+      extra[k] = decodeURIComponent(v);
+    }
+  }
+  return extra;
+}
+
+async function hydrateUserWatchlistIfEmpty({ userId, userData, authKey }) {
+  if (!userId || watchlistRepository.getItems(userId).length > 0) {
+    return;
+  }
+
+  if (userData && Array.isArray(userData.items) && userData.items.length > 0) {
+    for (const item of userData.items) {
+      if (!watchlistRepository.getItem(item.id, userId)) {
+        watchlistRepository.addItem(item, userId);
+      }
+    }
+    return;
+  }
+
+  if (userData && Array.isArray(userData.ids) && userData.ids.length > 0) {
+    for (const movieId of userData.ids) {
+      if (!watchlistRepository.getItem(movieId, userId)) {
+        watchlistRepository.addItem(
+          {
+            id: movieId,
+            type: 'movie',
+            name: movieId,
+            has1080pPlus: false,
+            bestQuality: 'Pending',
+            streamCount: 0,
+          },
+          userId
+        );
+        getMeta('movie', movieId)
+          .then((meta) => {
+            if (meta) {
+              watchlistRepository.updateItem(
+                movieId,
+                {
+                  name: meta.name,
+                  poster: meta.poster,
+                  year: meta.year,
+                  genres: meta.genres,
+                },
+                userId
+              );
+            }
+          })
+          .catch(() => {});
+        checkMovieQuality(movieId, 'movie')
+          .then((q) => {
+            if (q) {
+              watchlistRepository.updateItem(
+                movieId,
+                {
+                  has1080pPlus: q.has1080pPlus,
+                  bestQuality: q.bestQuality,
+                  streamCount: q.streamCount,
+                },
+                userId
+              );
+            }
+          })
+          .catch(() => {});
+      }
+    }
+    return;
+  }
+
+  if (authKey) {
+    const cloudItems = await getAccountWatchlist(authKey);
+    if (Array.isArray(cloudItems) && cloudItems.length > 0) {
+      for (const it of cloudItems) {
+        if (!watchlistRepository.getItem(it.id, userId)) {
+          watchlistRepository.addItem(it, userId);
+        }
+      }
+    }
+  }
+}
+
+async function getAddonManifest({ baseUrl, userId }) {
+  await userRepository.ensureLoaded();
+  return getManifest(baseUrl, userId);
+}
+
+async function getCatalog({ type, id, extraParam, authKey, userId, userData }) {
+  await userRepository.ensureLoaded();
+  const cleanId = String(id || '').replace(/\.json$/, '');
+  const extra = parseCatalogExtra(extraParam);
+
+  if (!userId) {
+    return handleCatalog(type, cleanId, extra, '');
+  }
+
+  triggerUserOnDemandSync(authKey, userId);
+  await hydrateUserWatchlistIfEmpty({ userId, userData, authKey });
+
+  return handleCatalog(type, cleanId, extra, userId);
+}
+
+async function getMetaItem({ type, id, userId }) {
+  const cleanId = String(id || '').replace(/\.json$/, '');
+  return handleMeta(type, cleanId, userId);
+}
+
+async function generateQrCode({ text, format = 'png', size = 320 }) {
+  const clampedSize = Math.min(Math.max(parseInt(size, 10) || 320, 100), 1000);
+
+  if (format === 'svg') {
+    const svg = await QRCode.toString(text, {
+      type: 'svg',
+      margin: 2,
+      color: { dark: '#ffffff', light: '#0c0d14' },
+    });
+    return {
+      contentType: 'image/svg+xml',
+      payload: svg,
+    };
+  }
+
+  const buffer = await QRCode.toBuffer(text, {
+    type: 'png',
+    width: clampedSize,
+    margin: 2,
+    color: { dark: '#000000', light: '#ffffff' },
+  });
+  return {
+    contentType: 'image/png',
+    payload: buffer,
+  };
+}
+
+function recordQrScanAndGetRedirectUrl({ baseUrl, context = 'stremio_tv', userAgent = 'unknown', ip = 'unknown' }) {
+  console.log(
+    `[QR Code Scan] User scanned QR code from Stremio TV - Context: ${context}, IP: ${ip}, User-Agent: ${userAgent}`
+  );
+
+  analyticsRepository
+    .recordAnalyticsEvent('qr_code_scanned', {
+      source: 'stremio_tv_qr',
+      context,
+      ip,
+      userAgent,
+    })
+    .catch((err) => {
+      console.warn('[QR Analytics Warning] Failed to log QR event:', err.message);
+    });
+
+  return `${baseUrl}/?source=stremio_tv_qr&context=${encodeURIComponent(context)}`;
+}
+
+async function generateQrPosterSvg({ baseUrl, context = 'stremio_tv', customUrl }) {
+  const targetUrl = customUrl || `${baseUrl}/r/qr?context=${encodeURIComponent(context)}`;
+
+  const qrDataUrl = await QRCode.toDataURL(targetUrl, {
+    width: 280,
+    margin: 1,
+    color: { dark: '#000000', light: '#ffffff' },
+  });
+
+  const cleanDisplayUrl = String(baseUrl || '').replace(/^https?:\/\//, '');
+
+  return `<svg width="500" height="750" viewBox="0 0 500 750" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1b1338"/>
+      <stop offset="50%" stop-color="#0e101f"/>
+      <stop offset="100%" stop-color="#080911"/>
+    </linearGradient>
+  </defs>
+  <rect width="500" height="750" fill="url(#bgGrad)" rx="24"/>
+  <rect x="14" y="14" width="472" height="722" fill="none" stroke="#7c3aed" stroke-width="2" stroke-opacity="0.4" rx="16"/>
+  <text x="250" y="80" font-family="Arial, sans-serif" font-size="24" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="2">STREMIO WATCHLIST</text>
+  <text x="250" y="115" font-family="Arial, sans-serif" font-size="14" font-weight="600" fill="#c4b5fd" text-anchor="middle">Good Quality Tracker • 1080p &amp; 4K</text>
+  <rect x="100" y="165" width="300" height="300" fill="#ffffff" rx="20"/>
+  <image href="${qrDataUrl}" x="110" y="175" width="280" height="280"/>
+  <text x="250" y="525" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#ffffff" text-anchor="middle">📱 Scan with Phone Camera</text>
+  <text x="250" y="560" font-family="Arial, sans-serif" font-size="14" fill="#9ca3af" text-anchor="middle">to open web app &amp; add movies</text>
+  <text x="250" y="640" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#34d399" text-anchor="middle">${cleanDisplayUrl}</text>
+</svg>`;
+}
+
+const addonOperationService = {
+  parseCatalogExtra,
+  hydrateUserWatchlistIfEmpty,
+  getAddonManifest,
+  getCatalog,
+  getMetaItem,
+  generateQrCode,
+  recordQrScanAndGetRedirectUrl,
+  generateQrPosterSvg,
+};
+
+module.exports = { addonOperationService };

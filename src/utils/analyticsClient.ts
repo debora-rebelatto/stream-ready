@@ -24,7 +24,7 @@ export interface EventDataMap {
   search_query_performed: { resultsCount: number };
   filter_tab_switched: { tab: string };
   sort_changed: { sortBy: string };
-  quality_setting_updated: { minQuality: string; scope?: 'global' | 'item'; imdbId?: string };
+  quality_setting_updated: { minQuality: string; scope?: 'global' };
   sync_setting_updated: { setting: string; enabled: boolean };
   recheck_all_triggered: { totalItems?: number; newlyReady?: number };
   custom_list_created: { listName: string };
