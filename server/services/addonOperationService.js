@@ -171,7 +171,7 @@ async function generateQrPosterSvg({ baseUrl, context = 'stremio_tv', customUrl 
   const targetUrl = customUrl || `${baseUrl}/r/qr?context=${encodeURIComponent(context)}`;
 
   const qrDataUrl = await QRCode.toDataURL(targetUrl, {
-    width: 280,
+    width: 340,
     margin: 1,
     color: { dark: '#000000', light: '#ffffff' },
   });
@@ -181,20 +181,42 @@ async function generateQrPosterSvg({ baseUrl, context = 'stremio_tv', customUrl 
   return `<svg width="500" height="750" viewBox="0 0 500 750" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1b1338"/>
-      <stop offset="50%" stop-color="#0e101f"/>
-      <stop offset="100%" stop-color="#080911"/>
+      <stop offset="0%" stop-color="#1e1338"/>
+      <stop offset="50%" stop-color="#0e1122"/>
+      <stop offset="100%" stop-color="#070913"/>
+    </linearGradient>
+    <linearGradient id="btnGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#6366f1"/>
     </linearGradient>
   </defs>
+
+  <!-- Background Card -->
   <rect width="500" height="750" fill="url(#bgGrad)" rx="24"/>
-  <rect x="14" y="14" width="472" height="722" fill="none" stroke="#7c3aed" stroke-width="2" stroke-opacity="0.4" rx="16"/>
-  <text x="250" y="80" font-family="Arial, sans-serif" font-size="24" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="2">STREMIO WATCHLIST</text>
-  <text x="250" y="115" font-family="Arial, sans-serif" font-size="14" font-weight="600" fill="#c4b5fd" text-anchor="middle">Good Quality Tracker • 1080p &amp; 4K</text>
-  <rect x="100" y="165" width="300" height="300" fill="#ffffff" rx="20"/>
-  <image href="${qrDataUrl}" x="110" y="175" width="280" height="280"/>
-  <text x="250" y="525" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#ffffff" text-anchor="middle">📱 Scan with Phone Camera</text>
-  <text x="250" y="560" font-family="Arial, sans-serif" font-size="14" fill="#9ca3af" text-anchor="middle">to open web app &amp; add movies</text>
-  <text x="250" y="640" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#34d399" text-anchor="middle">${cleanDisplayUrl}</text>
+  <rect x="10" y="10" width="480" height="730" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-opacity="0.5" rx="20"/>
+
+  <!-- Top Badge: Brand -->
+  <rect x="40" y="28" width="420" height="52" rx="14" fill="#7c3aed" fill-opacity="0.25" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="250" y="63" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="25" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="2">STREMIO WATCHLIST</text>
+
+  <!-- Subtitle -->
+  <text x="250" y="112" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#c4b5fd" text-anchor="middle" letter-spacing="0.5">Good Quality Tracker • 1080p &amp; 4K</text>
+
+  <!-- Large QR Code Card Container -->
+  <rect x="65" y="132" width="370" height="370" fill="#ffffff" rx="24" stroke="#a78bfa" stroke-width="4"/>
+  <image href="${qrDataUrl}" x="80" y="147" width="340" height="340"/>
+
+  <!-- Primary Action Callout: Scan with Phone -->
+  <rect x="35" y="522" width="430" height="76" rx="18" fill="url(#btnGrad)"/>
+  <text x="250" y="556" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="900" fill="#ffffff" text-anchor="middle">📱 SCAN WITH PHONE CAMERA</text>
+  <text x="250" y="584" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#ede9fe" text-anchor="middle">Open web app to search &amp; add movies</text>
+
+  <!-- High-Contrast Direct Website Pill -->
+  <rect x="35" y="614" width="430" height="62" rx="16" fill="#0f172a" stroke="#10b981" stroke-width="2.5"/>
+  <text x="250" y="653" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="22" font-weight="900" fill="#34d399" text-anchor="middle" letter-spacing="0.5">${cleanDisplayUrl}</text>
+
+  <!-- Footer Tip -->
+  <text x="250" y="708" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#94a3b8" text-anchor="middle">Empty Watchlist • Connect &amp; Track Releases</text>
 </svg>`;
 }
 
