@@ -2,16 +2,20 @@ const { watchlistOperationService } = require('../services');
 const { getBaseUrl, getRequestUser } = require('../utils/requestContext');
 
 async function getItemsHandler(req, res) {
-  const { authKey, userId } = await getRequestUser(req);
-  const { filter, tab, listId } = req.query;
-  const result = await watchlistOperationService.listUserItems({
-    authKey,
-    userId,
-    filter,
-    tab,
-    listId,
-  });
-  res.json(result);
+  try {
+    const { authKey, userId } = await getRequestUser(req);
+    const { filter, tab, listId } = req.query;
+    const result = await watchlistOperationService.listUserItems({
+      authKey,
+      userId,
+      filter,
+      tab,
+      listId,
+    });
+    return res.json(result);
+  } catch (err) {
+    return res.status(err.statusCode || 500).json({ error: err.message });
+  }
 }
 
 async function searchMoviesHandler(req, res) {
@@ -93,16 +97,20 @@ async function checkAllItemsHandler(req, res) {
 }
 
 async function deleteItemHandler(req, res) {
-  const { authKey, userId } = await getRequestUser(req);
-  if (!authKey || !userId) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const { authKey, userId } = await getRequestUser(req);
+    if (!authKey || !userId) return res.status(401).json({ error: 'Unauthorized' });
 
-  const result = await watchlistOperationService.removeMovie({
-    authKey,
-    userId,
-    id: req.params.id,
-    baseUrl: getBaseUrl(req),
-  });
-  return res.json(result);
+    const result = await watchlistOperationService.removeMovie({
+      authKey,
+      userId,
+      id: req.params.id,
+      baseUrl: getBaseUrl(req),
+    });
+    return res.json(result);
+  } catch (err) {
+    return res.status(err.statusCode || 500).json({ error: err.message });
+  }
 }
 
 async function toggleWatchedHandler(req, res) {
