@@ -1,4 +1,4 @@
-name: Vercel CI/CD
+name: CI / Verification
 
 on:
   push:
@@ -15,27 +15,14 @@ jobs:
   verify:
     name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
-    outputs:
-      has_vercel_token: ${{ steps.check_token.outputs.has_token }}
     steps:
-      - name: Check Vercel Token Availability
-        id: check_token
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          if [ -n "$VERCEL_TOKEN" ]; then
-            echo "has_token=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_token=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -52,92 +39,3 @@ jobs:
 
       - name: Build Application (Server & Client)
         run: npm run build
-
-  deploy-preview:
-    name: Deploy Preview to Vercel
-    needs: verify
-    if: github.event_name == 'pull_request' && needs.verify.outputs.has_vercel_token == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      issues: write
-    env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-
-      - name: Pull Vercel Environment Information (Preview)
-        run: vercel pull --yes --environment=preview
-
-      - name: Build Project Artifacts (Preview)
-        run: vercel build
-
-      - name: Deploy Prebuilt Artifacts to Vercel
-        id: deploy
-        run: |
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt)
-          echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-
-      - name: Post Preview URL to Pull Request
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const deployUrl = '${{ steps.deploy.outputs.url }}';
-            const body = `### 🚀 Vercel Preview Deployment Ready!\n\n- **Preview URL:** [${deployUrl}](${deployUrl})\n- **Commit:** \`${context.sha.substring(0, 7)}\`\n- **Workflow Run:** [#${context.runNumber}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
-
-  deploy-production:
-    name: Deploy to Vercel (Production)
-    needs: verify
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.verify.outputs.has_vercel_token == 'true'
-    runs-on: ubuntu-latest
-    env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-
-      - name: Pull Vercel Environment Information (Production)
-        run: vercel pull --yes --environment=production
-
-      - name: Build Project Artifacts (Production)
-        run: vercel build --prod
-
-      - name: Deploy Prebuilt Artifacts to Vercel
-        run: vercel deploy --prebuilt --prod
