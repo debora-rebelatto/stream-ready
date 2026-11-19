@@ -6,10 +6,15 @@ function redirectToManifest(req, res) {
 }
 
 async function getManifestHandler(req, res) {
-  const baseUrl = getBaseUrl(req);
-  const { userId } = await getRequestUser(req);
-  const manifest = await addonOperationService.getAddonManifest({ baseUrl, userId });
-  res.json(manifest);
+  try {
+    const baseUrl = getBaseUrl(req);
+    const { userId } = await getRequestUser(req);
+    const manifest = await addonOperationService.getAddonManifest({ baseUrl, userId });
+    res.json(manifest);
+  } catch (err) {
+    console.error('[Manifest Error]', err);
+    res.status(500).json({ error: err.message });
+  }
 }
 
 function redirectToConfigure(req, res) {

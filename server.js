@@ -57,6 +57,17 @@ app.get('*', (req, res) => {
   res.status(404).send('Not found');
 });
 
+// Global Express error-handling middleware
+app.use((err, req, res, next) => {
+  console.error('[Unhandled Server Error]', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(err.statusCode || err.status || 500).json({
+    error: err.message || 'Internal Server Error',
+  });
+});
+
 module.exports = app;
 
 if (!process.env.VERCEL && require.main === module) {

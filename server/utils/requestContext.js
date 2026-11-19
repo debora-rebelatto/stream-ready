@@ -151,9 +151,10 @@ async function runBackgroundCheck() {
       }
 
       // Prioritize movies that were least recently checked (or never checked)
+      const batchLimit = process.env.VERCEL ? 5 : 15;
       const uniqueMoviesBatch = Array.from(groupedByMovieId.values())
         .sort((a, b) => a.oldestCheckMs - b.oldestCheckMs)
-        .slice(0, 15);
+        .slice(0, batchLimit);
 
       console.log(
         `[AutoChecker] Checking ${uniqueMoviesBatch.length} unique pending movie(s) (across ${allPending.length} total watchlist entries)...`

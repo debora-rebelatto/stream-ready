@@ -6,8 +6,12 @@ function getHealthHandler(req, res) {
 }
 
 async function getSettingsHandler(req, res) {
-  const { userId } = await getRequestUser(req);
-  res.json(systemOperationService.getUserSettings(userId));
+  try {
+    const { userId } = await getRequestUser(req);
+    res.json(systemOperationService.getUserSettings(userId));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 }
 
 async function updateSettingsHandler(req, res) {
@@ -30,16 +34,20 @@ async function updateSettingsHandler(req, res) {
 
 function createInfoHandler(port) {
   return async function getInfoHandler(req, res) {
-    const host = req.get('host') || `localhost:${port}`;
-    const baseUrl = getBaseUrl(req);
-    const { authKey } = await getRequestUser(req);
-    const info = await systemOperationService.getSystemInfo({
-      host,
-      baseUrl,
-      authKey,
-      port,
-    });
-    res.json(info);
+    try {
+      const host = req.get('host') || `localhost:${port}`;
+      const baseUrl = getBaseUrl(req);
+      const { authKey } = await getRequestUser(req);
+      const info = await systemOperationService.getSystemInfo({
+        host,
+        baseUrl,
+        authKey,
+        port,
+      });
+      res.json(info);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   };
 }
 
