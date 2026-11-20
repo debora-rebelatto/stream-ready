@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth, useWatchlist, useToast } from '../context/useAppContext';
 import { systemService, watchlistService } from '../services';
-import type { TopMovieMetric } from '../models';
+import type { TopMovieMetric, SetupWizardMode } from '../models';
 import {
   trackEvent,
   filterWatchlistItems,
@@ -9,9 +9,10 @@ import {
   type WatchlistSortOption,
 } from '../utils';
 import { isBetaNoticeDismissed } from '../components/feedback';
+import { isUserOnboardingCompleted } from './useSetupWizardController';
 
 export function useDashboardController() {
-  const { user, deleteAccount } = useAuth();
+  const { user, deleteAccount, markOnboardingCompleted } = useAuth();
   const { showToast } = useToast();
   const {
     items,
@@ -81,7 +82,53 @@ export function useDashboardController() {
   const [isBetaNoticeVisible, setIsBetaNoticeVisible] = useState<boolean>(
     () => !isBetaNoticeDismissed()
   );
+  const [isSetupWizardOpen, setIsSetupWizardOpen] = useState(false);
+  const [setupWizardMode, setSetupWizardMode] = useState<SetupWizardMode>('first-login');
+  const [completedInSessionUserId, setCompletedInSessionUserId] = useState<string | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setIsSetupWizardOpen(false);
+      setCompletedInSessionUserId(null);
+      return;
+    }
+    const userKey = user.id || user.email;
+    if (!isUserOnboardingCompleted(user) && completedInSessionUserId !== userKey) {
+      setSetupWizardMode('first-login');
+      setIsSetupWizardOpen(true);
+    }
+  }, [user, completedInSessionUserId]);
+
+  useEffect(() => {
+    if (!user) return;
+    const userKey = user.id || user.email;
+    if (completedInSessionUserId === userKey && !user.onboardingCompleted && items.length > 0) {
+      void markOnboardingCompleted(true);
+    }
+  }, [user, completedInSessionUserId, items.length, markOnboardingCompleted]);
+
+  const handleOpenSetupWizardReview = () => {
+    setSetupWizardMode('review');
+    setIsSetupWizardOpen(true);
+  };
+
+  const handleCloseSetupWizard = () => {
+    if (setupWizardMode === 'review') {
+      setIsSetupWizardOpen(false);
+    }
+  };
+
+  const handleSetupWizardComplete = async (hasMovies: boolean) => {
+    const userKey = user?.id || user?.email || null;
+    if (setupWizardMode === 'first-login') {
+      setCompletedInSessionUserId(userKey);
+    }
+    if (hasMovies && !user?.onboardingCompleted) {
+      await markOnboardingCompleted(true);
+    }
+    setIsSetupWizardOpen(false);
+  };
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -319,5 +366,10 @@ export function useDashboardController() {
     isAddingTopMovieId,
     handleQuickAddTopMovie,
     userMovieIdSet,
+    isSetupWizardOpen,
+    setupWizardMode,
+    handleOpenSetupWizardReview,
+    handleCloseSetupWizard,
+    handleSetupWizardComplete,
   };
 }

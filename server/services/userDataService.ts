@@ -87,8 +87,8 @@ export function decodeUserData(param: string): UserDataDecoded {
         ids,
       };
     }
-  } catch (e) {
-    // Retorna fallback
+  } catch (err) {
+    console.warn('[UserData] Failed to decode user data param, using raw fallback:', err);
   }
   return { authKey: param, items: [], ids: [] };
 }

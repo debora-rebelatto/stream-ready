@@ -13,6 +13,7 @@ import {
   useManageListsController,
   useSearchController,
   useSettingsController,
+  useSetupWizardController,
   useWatchlistController,
   LANDING_FAQS,
   EMOJI_OPTIONS,
@@ -33,6 +34,12 @@ import {
   FeaturesGridSection,
   HowItWorksSection,
   LandingFaqSection,
+  FirstTimeSetupModal,
+  SetupProgressStepper,
+  SetupStepWelcome,
+  SetupStepInstallStremio,
+  SetupStepFeaturesTour,
+  SetupStepFirstMovies,
 } from '../../src/components';
 import type { WatchlistItem } from '../../src/models';
 
@@ -144,6 +151,7 @@ describe('Clean Architecture Layers (models, utils, controllers, views, server r
       expect(typeof useManageListsController).toBe('function');
       expect(typeof useSearchController).toBe('function');
       expect(typeof useSettingsController).toBe('function');
+      expect(typeof useSetupWizardController).toBe('function');
       expect(typeof useWatchlistController).toBe('function');
       expect(Array.isArray(LANDING_FAQS)).toBe(true);
       expect(LANDING_FAQS.length).toBeGreaterThan(0);
@@ -164,6 +172,15 @@ describe('Clean Architecture Layers (models, utils, controllers, views, server r
       expect(typeof FeaturesGridSection).toBe('function');
       expect(typeof HowItWorksSection).toBe('function');
       expect(typeof LandingFaqSection).toBe('function');
+    });
+
+    test('exports all first-login setup wizard components', () => {
+      expect(typeof FirstTimeSetupModal).toBe('function');
+      expect(typeof SetupProgressStepper).toBe('function');
+      expect(typeof SetupStepWelcome).toBe('function');
+      expect(typeof SetupStepInstallStremio).toBe('function');
+      expect(typeof SetupStepFeaturesTour).toBe('function');
+      expect(typeof SetupStepFirstMovies).toBe('function');
     });
 
     test('exports quality adapter helpers via utils barrel', () => {

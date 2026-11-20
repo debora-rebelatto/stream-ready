@@ -57,8 +57,8 @@ export function useSearchController() {
         showToast('Only movies are supported. Series cannot be added.', 'error');
         return;
       }
-    } catch {
-      // proceed to add
+    } catch (err) {
+      console.warn('[Search] Metadata check skipped:', err);
     }
     await addItem(id, 'search');
   };

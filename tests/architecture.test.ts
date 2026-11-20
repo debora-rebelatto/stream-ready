@@ -13,6 +13,19 @@ describe('Lauren Tan Constraint Engineering: Architecture & Invariant Tests', ()
     jest.restoreAllMocks();
   });
 
+  test('Invariant: FirstTimeSetupModal is mounted in every UserDashboardView branch and gated to the controller state', () => {
+    const viewSource = fs.readFileSync(
+      path.join(__dirname, '../src/views/UserDashboardView.tsx'),
+      'utf8'
+    );
+    expect(viewSource).toMatch(/<FirstTimeSetupModal[\s\S]*isOpen=\{isSetupWizardOpen\}/);
+    expect(viewSource).toMatch(/onCompleted=\{handleSetupWizardComplete\}/);
+    // Rendered in both the settings branch and the main dashboard branch
+    expect((viewSource.match(/\{setupWizard\}/g) || []).length).toBeGreaterThanOrEqual(2);
+    // The inline fallback callout must never overlap the full-screen wizard
+    expect(viewSource).toMatch(/!isSetupWizardOpen && <OnboardingCallout \/>/);
+  });
+
   describe('Level 1 & 2: User Persistence & Cache Invariants', () => {
     it('always generates a non-null valid UUID even when user is created with only an email', () => {
       const email = `test_invariant_${Date.now()}@example.com`;
@@ -90,6 +103,13 @@ describe('Lauren Tan Constraint Engineering: Architecture & Invariant Tests', ()
       const resolvedAgain = await db.resolveUser(authKey);
       expect(resolvedAgain).toBeDefined();
       expect(resolvedAgain!.onboardingCompleted).toBe(true);
+    });
+
+    it('never loads production Supabase credentials or writes to Supabase during Jest runs', () => {
+      jest.restoreAllMocks();
+      expect(db.isSupabaseConfigured()).toBe(false);
+      expect(process.env.SUPABASE_URL).toBeUndefined();
+      expect(process.env.SUPABASE_KEY).toBeUndefined();
     });
   });
 

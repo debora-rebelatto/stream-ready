@@ -1,5 +1,6 @@
 import posthog from 'posthog-js';
 import { getAuthHeaders } from './httpClient';
+import { safeStorage } from './safeStorage';
 
 export type EventSource = 'search' | 'recommendations' | 'curated_list' | 'manual';
 export type AddonActionLocation =
@@ -72,32 +73,20 @@ export const BUILTIN_EXCLUDED_USER_IDS: string[] = [
 
 let isPostHogInitialized = false;
 
-const safeStorage = {
-  get(key: string): string | null {
-    try {
-      return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
-    } catch {
-      return null;
-    }
-  },
-  set(key: string, value: string): void {
-    try {
-      if (typeof localStorage !== 'undefined') localStorage.setItem(key, value);
-    } catch {}
-  },
-  remove(key: string): void {
-    try {
-      if (typeof localStorage !== 'undefined') localStorage.removeItem(key);
-    } catch {}
-  },
-};
+function isDevMode(): boolean {
+  return typeof process !== 'undefined' && process.env?.NODE_ENV === 'development';
+}
+
+function logAnalyticsError(context: string, err: unknown): void {
+  if (isDevMode()) {
+    console.warn(`[Analytics] ${context}:`, err);
+  }
+}
 
 function getEnvVar(key: string): string {
-  try {
-    if (typeof process !== 'undefined' && process.env) {
-      return (process.env as Record<string, string | undefined>)[key] || '';
-    }
-  } catch {}
+  if (typeof process !== 'undefined' && process.env) {
+    return (process.env as Record<string, string | undefined>)[key] || '';
+  }
   return '';
 }
 
@@ -157,7 +146,9 @@ export function setExcludedTrackingEmails(emails: string[]): void {
   if (currentEmail && (cleanList.includes(currentEmail) || isTrackingBlocked(currentEmail))) {
     try {
       posthog.opt_out_capturing?.();
-    } catch {}
+    } catch (err) {
+      logAnalyticsError('Failed to opt out capturing for excluded email', err);
+    }
   }
 }
 
@@ -192,7 +183,9 @@ export function setTrackingDisabled(disabled: boolean): void {
     } else {
       posthog.opt_in_capturing?.();
     }
-  } catch {}
+  } catch (err) {
+    logAnalyticsError('Failed to toggle tracking preference', err);
+  }
 }
 
 export function initPostHog(apiKey?: string, host?: string): void {
@@ -201,7 +194,9 @@ export function initPostHog(apiKey?: string, host?: string): void {
   if (isTrackingBlocked()) {
     try {
       posthog.opt_out_capturing?.();
-    } catch {}
+    } catch (err) {
+      logAnalyticsError('Failed to opt out blocked session on init', err);
+    }
     return;
   }
 
@@ -228,8 +223,8 @@ export function initPostHog(apiKey?: string, host?: string): void {
       },
     });
     isPostHogInitialized = true;
-  } catch {
-    // Fail silently to never impact user experience
+  } catch (err) {
+    logAnalyticsError('Failed to initialize PostHog', err);
   }
 }
 
@@ -237,7 +232,9 @@ export function identifyUser(userId: string, traits?: Record<string, any>): void
   if (isTrackingBlocked(userId) || (traits?.email && isTrackingBlocked(traits.email))) {
     try {
       posthog.opt_out_capturing?.();
-    } catch {}
+    } catch (err) {
+      logAnalyticsError('Failed to opt out blocked user during identify', err);
+    }
     return;
   }
 
@@ -245,7 +242,9 @@ export function identifyUser(userId: string, traits?: Record<string, any>): void
     if (isPostHogInitialized || (posthog as any).__loaded) {
       posthog.identify?.(userId, traits);
     }
-  } catch {}
+  } catch (err) {
+    logAnalyticsError('Failed to identify user in PostHog', err);
+  }
 }
 
 export function resetUser(): void {
@@ -253,7 +252,9 @@ export function resetUser(): void {
     if (isPostHogInitialized || (posthog as any).__loaded) {
       posthog.reset?.();
     }
-  } catch {}
+  } catch (err) {
+    logAnalyticsError('Failed to reset PostHog session', err);
+  }
 }
 
 export function trackEvent<T extends EventName>(name: T, data?: EventDataMap[T]): void {
@@ -267,7 +268,9 @@ export function trackEvent<T extends EventName>(name: T, data?: EventDataMap[T])
     if (isPostHogInitialized || (posthog as any).__loaded) {
       posthog.capture?.(name, payload);
     }
-  } catch {}
+  } catch (err) {
+    logAnalyticsError(`Failed to capture PostHog event "${name}"`, err);
+  }
 
   try {
     if (typeof window !== 'undefined' && typeof fetch === 'function') {
@@ -276,14 +279,15 @@ export function trackEvent<T extends EventName>(name: T, data?: EventDataMap[T])
         headers: getAuthHeaders(),
         body: JSON.stringify({ event: name, data: payload }),
         keepalive: true,
-      }).catch(() => {});
+      }).catch((err) => {
+        logAnalyticsError(`Failed to send event "${name}" to /api/events`, err);
+      });
     }
-  } catch {}
+  } catch (err) {
+    logAnalyticsError(`Failed to dispatch event "${name}"`, err);
+  }
 
-  try {
-    const isDev = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
-    if (isDev) {
-      console.log(`[Analytics] Event: "${name}"`, payload);
-    }
-  } catch {}
+  if (isDevMode()) {
+    console.log(`[Analytics] Event: "${name}"`, payload);
+  }
 }

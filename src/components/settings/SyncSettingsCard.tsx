@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tv, RefreshCw, BookOpen, Check, Copy, Play, QrCode } from 'lucide-react';
+import { Tv, RefreshCw, BookOpen, Check, Copy, Play, QrCode, Sparkles } from 'lucide-react';
 import type { StremioUser } from '../../models';
 import { Button, Switch, Badge } from '../common';
 
@@ -19,6 +19,7 @@ export interface SyncSettingsCardProps {
   onCopyManifest: () => void;
   onOpenInstallGuide?: () => void;
   onOpenQrModal?: () => void;
+  onOpenSetupWizard?: () => void;
 }
 
 export const SyncSettingsCard: React.FC<SyncSettingsCardProps> = ({
@@ -37,6 +38,7 @@ export const SyncSettingsCard: React.FC<SyncSettingsCardProps> = ({
   onCopyManifest,
   onOpenInstallGuide,
   onOpenQrModal,
+  onOpenSetupWizard,
 }) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
@@ -170,16 +172,28 @@ export const SyncSettingsCard: React.FC<SyncSettingsCardProps> = ({
           </div>
         </div>
 
-        {onOpenQrModal && (
-          <div className="pt-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onOpenQrModal}
-              icon={<QrCode size={13} className="text-purple-400" />}
-            >
-              Scan QR Code for Mobile &amp; TV
-            </Button>
+        {(onOpenQrModal || onOpenSetupWizard) && (
+          <div className="pt-1 flex flex-wrap gap-2">
+            {onOpenQrModal && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onOpenQrModal}
+                icon={<QrCode size={13} className="text-purple-400" />}
+              >
+                Scan QR Code for Mobile &amp; TV
+              </Button>
+            )}
+            {onOpenSetupWizard && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onOpenSetupWizard}
+                icon={<Sparkles size={13} className="text-purple-400" />}
+              >
+                Re-run Setup Guide
+              </Button>
+            )}
           </div>
         )}
       </div>

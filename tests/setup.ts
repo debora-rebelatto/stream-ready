@@ -1,3 +1,8 @@
+delete process.env.SUPABASE_URL;
+delete process.env.SUPABASE_KEY;
+delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+delete process.env.SUPABASE_ANON_KEY;
+
 const createLocalStorageMock = () => {
   let store: Record<string, string> = {};
   return {

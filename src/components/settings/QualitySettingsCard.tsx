@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sliders, Check, Sparkles } from 'lucide-react';
+import { Sliders, Check } from 'lucide-react';
 import type { WatchlistStats } from '../../models';
 import { Badge } from '../common';
 
@@ -88,14 +88,6 @@ export const QualitySettingsCard: React.FC<QualitySettingsCardProps> = ({
               genuine <strong>4K UHD (2160p)</strong> release is confirmed.
             </p>
           </button>
-        </div>
-
-        <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 text-xs text-gray-400 leading-relaxed flex items-center gap-2 mt-2">
-          <Sparkles size={15} className="text-purple-400 shrink-0" />
-          <span>
-            <strong>Per-movie override:</strong> You can also customize the quality threshold for
-            individual movies directly on each movie card in your watchlist.
-          </span>
         </div>
       </div>
 

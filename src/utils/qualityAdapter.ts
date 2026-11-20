@@ -5,6 +5,7 @@ import type {
   MovieComputedStatus,
   MovieReleaseMetadata,
   WatchlistItem,
+  WatchlistStats,
 } from '../models';
 
 export interface MovieStatusFlags {
@@ -194,5 +195,39 @@ export function enrichWatchlistItem(
   return {
     ...item,
     computed: computeMovieStatus(item, globalMinQuality),
+  };
+}
+
+export function computeWatchlistStats(
+  items: WatchlistItem[],
+  globalMinQuality: '1080p' | '4k' = '1080p'
+): WatchlistStats {
+  let ready = 0;
+  let pending = 0;
+  let unreleased = 0;
+  let watched = 0;
+
+  for (const item of items) {
+    const computed =
+      item.computed && item.computed.activeTargetQuality === globalMinQuality
+        ? item.computed
+        : computeMovieStatus(item, globalMinQuality);
+    if (computed.isWatched) {
+      watched++;
+    } else if (computed.isReady) {
+      ready++;
+    } else if (computed.isUnreleased) {
+      unreleased++;
+    } else {
+      pending++;
+    }
+  }
+
+  return {
+    total: items.length,
+    ready,
+    pending,
+    unreleased,
+    watched,
   };
 }

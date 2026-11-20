@@ -5,18 +5,16 @@ import {
   trackEvent,
   identifyUser as identifyAnalyticsUser,
   resetUser as resetAnalyticsUser,
+  safeStorage,
 } from '../utils';
+import { getSetupCompletedStorageKey } from './useSetupWizardController';
 
 function identifyUser(user: StremioUser) {
-  try {
-    identifyAnalyticsUser(user.id || user.email, { email: user.email });
-  } catch {}
+  identifyAnalyticsUser(user.id || user.email, { email: user.email });
 }
 
 function resetUser() {
-  try {
-    resetAnalyticsUser();
-  } catch {}
+  resetAnalyticsUser();
 }
 
 export interface UseAuthControllerOptions {
@@ -34,34 +32,50 @@ export function useAuthController({
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [loadedSettings, setLoadedSettings] = useState<AppSettings | null>(null);
 
+  const hydrateUserSettings = useCallback(async () => {
+    try {
+      const settings = await systemService.getSettings();
+      if (settings) {
+        setLoadedSettings(settings);
+        if (onSettingsLoaded) onSettingsLoaded(settings);
+      }
+    } catch (err) {
+      console.warn('[Auth] Failed to hydrate user settings:', err);
+    }
+  }, [onSettingsLoaded]);
+
   const checkAuth = useCallback(async () => {
+    const authKey = authService.getAuthKey();
+    if (!authKey) {
+      setUser(null);
+      setIsLoadingAuth(false);
+      return;
+    }
+
     setIsLoadingAuth(true);
-    const hadStoredSession = Boolean(authService.getAuthKey());
     try {
       const res = await authService.getStatus();
       if (res.loggedIn && res.user) {
         identifyUser(res.user);
         setUser(res.user);
-        try {
-          const settings = await systemService.getSettings();
-          if (settings) {
-            setLoadedSettings(settings);
-            if (onSettingsLoaded) onSettingsLoaded(settings);
-          }
-        } catch {}
+        await hydrateUserSettings();
       } else if (res.isUnauthorized) {
-        if (hadStoredSession) resetUser();
-        setUser(null);
+        console.warn('[Auth] Session expired or invalid. Clearing session.');
+        resetUser();
         authService.clearAuth();
+        setUser(null);
+        if (onSessionCleared) onSessionCleared();
       } else {
+        console.warn('[Auth] Could not verify session with server. Keeping stored session for retry.');
         setUser(null);
       }
-    } catch {
+    } catch (err) {
+      console.error('[Auth] Unexpected error during checkAuth:', err);
       setUser(null);
     } finally {
       setIsLoadingAuth(false);
     }
-  }, [onSettingsLoaded]);
+  }, [hydrateUserSettings, onSessionCleared]);
 
   useEffect(() => {
     checkAuth();
@@ -75,6 +89,7 @@ export function useAuthController({
         identifyUser(res.user);
         authService.setAuthKey(res.authKey, res.user.email);
         setUser(res.user);
+        await hydrateUserSettings();
         trackEvent('auth_login_success', { method: 'credentials' });
         showToast(`🎉 Welcome, ${res.user.email}!`, 'success');
         return { success: true };
@@ -93,6 +108,7 @@ export function useAuthController({
         identifyUser(res.user);
         authService.setAuthKey(res.authKey, res.user.email);
         setUser(res.user);
+        await hydrateUserSettings();
         trackEvent('auth_login_success', { method: 'authKey' });
         showToast(`🎉 Connected as ${res.user.email}!`, 'success');
         return { success: true };
@@ -109,15 +125,9 @@ export function useAuthController({
     if (onSessionCleared) onSessionCleared();
     showToast('Signed out successfully.', 'info');
 
-    try {
-      trackEvent('auth_logout', {});
-    } catch {}
-    try {
-      resetUser();
-    } catch {}
-    try {
-      await authService.logout();
-    } catch {}
+    trackEvent('auth_logout', {});
+    resetUser();
+    await authService.logout();
   };
 
   const deleteAccount = async () => {
@@ -159,6 +169,22 @@ export function useAuthController({
     }
   };
 
+  const markOnboardingCompleted = useCallback(
+    async (hasMovies: boolean): Promise<boolean> => {
+      if (!user || !hasMovies) return false;
+      const userKey = user.id || user.email;
+      safeStorage.set(getSetupCompletedStorageKey(userKey), 'true');
+      setUser((prev) => (prev ? { ...prev, onboardingCompleted: true } : prev));
+      try {
+        await systemService.saveSettings({ onboardingCompleted: true });
+      } catch (err) {
+        console.warn('[Onboarding] Failed to persist completion state:', err);
+      }
+      return true;
+    },
+    [user]
+  );
+
   return {
     user,
     setUser,
@@ -169,5 +195,6 @@ export function useAuthController({
     logout,
     deleteAccount,
     installToAccount,
+    markOnboardingCompleted,
   };
 }

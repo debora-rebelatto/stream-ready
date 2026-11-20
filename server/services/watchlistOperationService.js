@@ -27,7 +27,7 @@ async function restoreCloudWatchlistIfEmpty(authKey, userId, logPrefix = 'watchl
 }
 
 async function listUserItems({ authKey, userId, filter, tab, listId }) {
-  await userRepository.ensureLoaded();
+  await userRepository.ensureLoaded(Boolean(process.env.VERCEL));
 
   if (!authKey || !userId) {
     return {
@@ -115,6 +115,7 @@ async function addMovieToWatchlist({ authKey, userId, id, type = 'movie', baseUr
     return {
       success: true,
       item: existing,
+      stats: watchlistRepository.getStats(userId),
       message: 'Item is already in your watchlist',
     };
   }
@@ -148,7 +149,7 @@ async function addMovieToWatchlist({ authKey, userId, id, type = 'movie', baseUr
     syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
   }
 
-  return { success: true, item: saved };
+  return { success: true, item: saved, stats: watchlistRepository.getStats(userId) };
 }
 
 async function recheckSingleMovie({ userId, id }) {

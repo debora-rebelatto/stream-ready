@@ -19,6 +19,7 @@ import {
   DeleteAccountModal,
   InstallGuideModal,
   QrCodeModal,
+  FirstTimeSetupModal,
 } from '../components';
 import { SettingsPageView } from './SettingsPageView';
 import { AdminDashboardView } from './AdminDashboardView';
@@ -84,7 +85,23 @@ export const UserDashboardView: React.FC = () => {
     isAddingTopMovieId,
     handleQuickAddTopMovie,
     userMovieIdSet,
+    isSetupWizardOpen,
+    setupWizardMode,
+    handleOpenSetupWizardReview,
+    handleCloseSetupWizard,
+    handleSetupWizardComplete,
   } = useDashboardController();
+
+  const setupWizard = (
+    <FirstTimeSetupModal
+      isOpen={isSetupWizardOpen}
+      mode={setupWizardMode}
+      manifestUrl={manifestInfo.manifestUrl}
+      installUrl={manifestInfo.stremioInstallUrl}
+      onClose={handleCloseSetupWizard}
+      onCompleted={handleSetupWizardComplete}
+    />
+  );
 
   if (currentView === 'admin') {
     return <AdminDashboardView onBack={handleBackFromAdmin} />;
@@ -98,9 +115,11 @@ export const UserDashboardView: React.FC = () => {
           onOpenDeleteAccount={() => setIsDeleteAccountOpen(true)}
           onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
           onOpenQrModal={() => setIsQrModalOpen(true)}
+          onOpenSetupWizard={handleOpenSetupWizardReview}
           manifestUrl={manifestInfo.manifestUrl}
           installUrl={manifestInfo.stremioInstallUrl}
         />
+        {setupWizard}
         <InstallGuideModal
           isOpen={isInstallGuideOpen}
           onClose={() => setIsInstallGuideOpen(false)}
@@ -178,17 +197,7 @@ export const UserDashboardView: React.FC = () => {
           </div>
         )}
         <Hero onOpenSettings={handleOpenSettings} onDismiss={() => setIsBetaNoticeVisible(false)} />
-        <OnboardingCallout
-          onScrollToRecommendations={() => {
-            const el = document.getElementById('recommended-banner');
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }}
-          onFocusSearch={() => {
-            window.scrollTo({ top: 350, behavior: 'smooth' });
-            const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
-            if (searchInput) searchInput.focus();
-          }}
-        />
+        {!isSetupWizardOpen && <OnboardingCallout />}
         <RecommendedBanner />
         {topMovies && topMovies.length > 0 && (
           <div className="mb-6">
@@ -298,6 +307,8 @@ export const UserDashboardView: React.FC = () => {
         manifestUrl={manifestInfo.manifestUrl}
         installUrl={manifestInfo.stremioInstallUrl}
       />
+
+      {setupWizard}
 
       <Footer />
     </div>

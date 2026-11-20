@@ -10,17 +10,6 @@ export interface SetupStepDefinition {
   subtitle: string;
 }
 
-export interface SetupGateState {
-  acknowledgedModel: boolean;
-  installedToAccount: boolean;
-  hasOpenedStremioApp: boolean;
-  hasCopiedManifest: boolean;
-  confirmedInstallLater: boolean;
-  confirmedFeatures: boolean;
-  watchlistCount: number;
-  confirmedAddLater: boolean;
-}
-
 export const SETUP_WIZARD_STEPS: readonly SetupStepDefinition[] = [
   {
     id: 'welcome',
@@ -39,9 +28,9 @@ export const SETUP_WIZARD_STEPS: readonly SetupStepDefinition[] = [
   {
     id: 'features',
     stepNumber: 3,
-    shortTitle: 'Core Features',
-    title: 'Configure Quality, Sync & Lists',
-    subtitle: 'Customize how releases are detected, archived, and organized in Stremio',
+    shortTitle: 'Preferences',
+    title: 'Configure Quality & Watched Sync',
+    subtitle: 'Customize how releases are detected and watched movies are automatically archived',
   },
   {
     id: 'movies',

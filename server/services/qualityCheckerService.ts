@@ -313,7 +313,9 @@ export async function checkMovieQuality(
           movieYear = meta.year;
         }
       }
-    } catch {}
+    } catch (err: any) {
+      console.warn(`[QualityChecker] Metadata lookup skipped for ${imdbId}:`, err?.message || err);
+    }
   }
 
   // Stremio stream URL format: {baseUrl}/stream/{type}/{id}.json

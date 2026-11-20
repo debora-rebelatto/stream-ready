@@ -34,8 +34,8 @@ export function isItemNewRelease(item: any): boolean {
         }
         return false;
       }
-    } catch {
-      // fallback
+    } catch (err) {
+      console.warn('[StremioAddon] Failed to parse release date:', err);
     }
   }
 
@@ -104,7 +104,9 @@ export function getManifest(hostUrl: string = '', userId: string = ''): AddonMan
           });
         }
       }
-    } catch (e) {}
+    } catch (err) {
+      console.warn('[StremioAddon] Failed to load custom lists for manifest:', err);
+    }
   }
 
   const isConfigured = Boolean(userId);
