@@ -89,7 +89,30 @@ async function getTrendingMovies(rawLimit) {
 async function getTopCommunityMovies(rawLimit) {
   await userRepository.ensureLoaded();
   const limit = Math.min(Math.max(parseInt(rawLimit, 10) || 3, 1), 20);
-  return watchlistRepository.getTopMovies(limit);
+  const topMovies = watchlistRepository.getTopMovies(limit);
+
+  return Promise.all(
+    topMovies.map(async (movie) => {
+      if (movie.description && movie.genres && movie.genres.length > 0) {
+        return movie;
+      }
+      try {
+        const meta = await getMeta('movie', movie.id);
+        if (meta) {
+          return {
+            ...movie,
+            description: movie.description || meta.description || '',
+            genres: movie.genres && movie.genres.length > 0 ? movie.genres : (meta.genres || []),
+            poster: movie.poster || meta.poster || '',
+            year: movie.year || meta.year || '',
+          };
+        }
+      } catch (err) {
+        console.warn(`[getTopCommunityMovies] Failed to enrich metadata for ${movie.id}:`, err.message);
+      }
+      return movie;
+    })
+  );
 }
 
 async function addMovieToWatchlist({ authKey, userId, id, type = 'movie', baseUrl }) {

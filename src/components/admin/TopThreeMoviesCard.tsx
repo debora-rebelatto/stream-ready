@@ -125,16 +125,12 @@ export const TopThreeMoviesCard: React.FC<TopThreeMoviesCardProps> = ({
                     )}
                   </div>
 
-                  {movie.description ? (
+                  {movie.description && (
                     <p
                       className="mt-1 text-[11px] text-gray-400 line-clamp-2 leading-relaxed"
                       title={movie.description}
                     >
                       {movie.description}
-                    </p>
-                  ) : (
-                    <p className="mt-1 text-[11px] text-gray-500 italic line-clamp-2">
-                      Popular release tracked by the community.
                     </p>
                   )}
 

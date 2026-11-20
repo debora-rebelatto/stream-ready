@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth, useWatchlist, useToast } from '../context/useAppContext';
-import { systemService, watchlistService, adminService } from '../services';
+import { systemService, watchlistService, adminService, cinemetaService } from '../services';
 import type { TopMovieMetric, SetupWizardMode, KpiMetrics } from '../models';
 import {
   trackEvent,
@@ -38,12 +38,41 @@ export function useDashboardController() {
     let isCancelled = false;
     watchlistService
       .getTopMovies(3)
-      .then((movies) => {
-        if (!isCancelled && Array.isArray(movies)) {
-          setTopMovies(movies);
+      .then(async (movies) => {
+        if (isCancelled || !Array.isArray(movies)) return;
+
+        setTopMovies(movies);
+
+        const needsEnrichment = movies.some((m) => !m.description);
+        if (needsEnrichment) {
+          const enriched = await Promise.all(
+            movies.map(async (m) => {
+              if (m.description) return m;
+              try {
+                const meta = await cinemetaService.getMeta('movie', m.id);
+                if (meta?.description) {
+                  return {
+                    ...m,
+                    description: meta.description,
+                    genres: m.genres && m.genres.length > 0 ? m.genres : meta.genres,
+                    poster: m.poster || meta.poster,
+                    year: m.year || meta.year,
+                  };
+                }
+              } catch (err) {
+                console.warn(`[useDashboardController] Failed to enrich metadata for ${m.id}:`, err);
+              }
+              return m;
+            })
+          );
+          if (!isCancelled) {
+            setTopMovies(enriched);
+          }
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn('[useDashboardController] Failed to fetch top movies:', err);
+      });
     return () => {
       isCancelled = true;
     };
