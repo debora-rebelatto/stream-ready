@@ -20,6 +20,7 @@ import {
   InstallGuideModal,
   QrCodeModal,
   FirstTimeSetupModal,
+  AdminKpiGrid,
 } from '../components';
 import { SettingsPageView } from './SettingsPageView';
 import { AdminDashboardView } from './AdminDashboardView';
@@ -85,6 +86,7 @@ export const UserDashboardView: React.FC = () => {
     isAddingTopMovieId,
     handleQuickAddTopMovie,
     userMovieIdSet,
+    adminKpis,
     isSetupWizardOpen,
     setupWizardMode,
     handleOpenSetupWizardReview,
@@ -158,42 +160,46 @@ export const UserDashboardView: React.FC = () => {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {user?.isAdmin && (
-          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-purple-900/25 to-indigo-950/30 border border-purple-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg shadow-purple-950/20">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-300 shrink-0">
-                <Shield size={20} />
+          <div className="mb-6 space-y-4">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-purple-900/25 to-indigo-950/30 border border-purple-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg shadow-purple-950/20">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-300 shrink-0">
+                  <Shield size={20} />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-white block">
+                    Admin Analytics &amp; Service Adoption Available
+                  </span>
+                  <span className="text-[11px] text-gray-300">
+                    Track platform conversion funnels, active user retention, and feature usage.
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="text-xs font-bold text-white block">
-                  Admin Analytics &amp; Service Adoption Available
-                </span>
-                <span className="text-[11px] text-gray-300">
-                  Track platform conversion funnels, active user retention, and feature usage.
-                </span>
+              <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    window.location.hash = '#design-system';
+                  }}
+                  icon={<Palette size={14} className="text-purple-300" />}
+                  className="w-full sm:w-auto font-semibold border-purple-500/30 text-purple-200 hover:text-white"
+                >
+                  Design System
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleOpenAdmin}
+                  icon={<Shield size={14} />}
+                  className="w-full sm:w-auto font-semibold"
+                >
+                  Open Admin Dashboard
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  window.location.hash = '#design-system';
-                }}
-                icon={<Palette size={14} className="text-purple-300" />}
-                className="w-full sm:w-auto font-semibold border-purple-500/30 text-purple-200 hover:text-white"
-              >
-                Design System
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleOpenAdmin}
-                icon={<Shield size={14} />}
-                className="w-full sm:w-auto font-semibold"
-              >
-                Open Admin Dashboard
-              </Button>
-            </div>
+
+            {adminKpis && <AdminKpiGrid kpis={adminKpis} />}
           </div>
         )}
         <Hero onOpenSettings={handleOpenSettings} onDismiss={() => setIsBetaNoticeVisible(false)} />
@@ -206,6 +212,7 @@ export const UserDashboardView: React.FC = () => {
               onAddMovie={handleQuickAddTopMovie}
               userMovieIds={userMovieIdSet}
               isAddingId={isAddingTopMovieId}
+              isAdmin={user?.isAdmin}
             />
           </div>
         )}

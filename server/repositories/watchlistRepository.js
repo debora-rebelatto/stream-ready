@@ -24,10 +24,15 @@ const watchlistRepository = {
       const movieId = db.cleanImdbId(it.id);
       if (!movieId) continue;
 
+      const description = it.description || it.overview || it.synopsis || '';
+      const genres = Array.isArray(it.genres) ? it.genres : [];
+
       const existing = movieMap.get(movieId) || {
         id: movieId,
         name: it.name || it.title || 'Unknown Title',
         year: it.year,
+        description,
+        genres,
         userCount: 0,
         readyCount: 0,
         poster: it.poster,
@@ -37,6 +42,8 @@ const watchlistRepository = {
       const isReady = db.isItemReady ? db.isItemReady(it) : Boolean(it.has1080pPlus || it.isReady);
       if (isReady) existing.readyCount++;
       if (!existing.poster && it.poster) existing.poster = it.poster;
+      if (!existing.description && description) existing.description = description;
+      if ((!existing.genres || existing.genres.length === 0) && genres.length > 0) existing.genres = genres;
       if (it.bestQuality && (!existing.bestQuality || existing.bestQuality === 'Pending' || existing.bestQuality === 'Watched')) {
         existing.bestQuality = it.bestQuality;
       }

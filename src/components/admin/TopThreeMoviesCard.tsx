@@ -9,6 +9,7 @@ export interface TopThreeMoviesCardProps {
   onAddMovie?: (movie: TopMovieMetric) => Promise<void> | void;
   userMovieIds?: Set<string>;
   isAddingId?: string | null;
+  isAdmin?: boolean;
 }
 
 const PODIUM_CONFIG = [
@@ -44,6 +45,7 @@ export const TopThreeMoviesCard: React.FC<TopThreeMoviesCardProps> = ({
   onAddMovie,
   userMovieIds,
   isAddingId,
+  isAdmin = false,
 }) => {
   const topThree = (movies || []).slice(0, 3);
 
@@ -74,6 +76,7 @@ export const TopThreeMoviesCard: React.FC<TopThreeMoviesCardProps> = ({
           const isAdding = isAddingId === movie.id;
           const readyPercentage =
             movie.userCount > 0 ? Math.round((movie.readyCount / movie.userCount) * 100) : 0;
+          const genresLabel = Array.isArray(movie.genres) ? movie.genres.slice(0, 2).join(', ') : '';
 
           return (
             <div
@@ -91,7 +94,7 @@ export const TopThreeMoviesCard: React.FC<TopThreeMoviesCardProps> = ({
               </div>
 
               {/* Poster & Movie Details */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3">
                 {movie.poster ? (
                   <img
                     src={movie.poster}
@@ -107,21 +110,40 @@ export const TopThreeMoviesCard: React.FC<TopThreeMoviesCardProps> = ({
 
                 <div className="min-w-0 flex-1">
                   <h4
-                    className="font-bold text-white text-xs sm:text-sm line-clamp-2 leading-snug group-hover:text-purple-300 transition-colors"
+                    className="font-bold text-white text-xs sm:text-sm line-clamp-1 leading-snug group-hover:text-purple-300 transition-colors"
                     title={movie.name}
                   >
                     {movie.name}
                   </h4>
-                  <div className="flex items-center gap-1.5 mt-1 text-[11px] text-gray-400">
+                  <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-gray-400">
                     {movie.year && <span>{movie.year}</span>}
-                    <span>•</span>
-                    <span className="font-mono text-[10px] text-gray-500">{movie.id}</span>
+                    {genresLabel && (
+                      <>
+                        {movie.year && <span>•</span>}
+                        <span className="truncate">{genresLabel}</span>
+                      </>
+                    )}
                   </div>
 
-                  <div className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-white">
-                    <Users size={12} className="text-purple-400 shrink-0" />
-                    <span>{movie.userCount} {movie.userCount === 1 ? 'user' : 'users'}</span>
-                  </div>
+                  {movie.description ? (
+                    <p
+                      className="mt-1 text-[11px] text-gray-400 line-clamp-2 leading-relaxed"
+                      title={movie.description}
+                    >
+                      {movie.description}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-[11px] text-gray-500 italic line-clamp-2">
+                      Popular release tracked by the community.
+                    </p>
+                  )}
+
+                  {isAdmin && (
+                    <div className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-white">
+                      <Users size={12} className="text-purple-400 shrink-0" />
+                      <span>{movie.userCount} {movie.userCount === 1 ? 'user' : 'users'}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -174,7 +196,7 @@ export const TopThreeMoviesCard: React.FC<TopThreeMoviesCardProps> = ({
                   </div>
                 )}
 
-                {!onAddMovie && (
+                {!onAddMovie && isAdmin && (
                   <span className="text-[10px] text-gray-400">
                     {movie.readyCount}/{movie.userCount} ready
                   </span>

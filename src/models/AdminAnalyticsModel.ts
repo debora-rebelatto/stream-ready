@@ -42,6 +42,8 @@ export interface TopMovieMetric {
   id: string;
   name: string;
   year?: string | number;
+  description?: string;
+  genres?: string[];
   userCount: number;
   readyCount: number;
   poster?: string;

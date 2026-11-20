@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth, useWatchlist, useToast } from '../context/useAppContext';
-import { systemService, watchlistService } from '../services';
-import type { TopMovieMetric, SetupWizardMode } from '../models';
+import { systemService, watchlistService, adminService } from '../services';
+import type { TopMovieMetric, SetupWizardMode, KpiMetrics } from '../models';
 import {
   trackEvent,
   filterWatchlistItems,
@@ -32,6 +32,7 @@ export function useDashboardController() {
 
   const [topMovies, setTopMovies] = useState<TopMovieMetric[]>([]);
   const [isAddingTopMovieId, setIsAddingTopMovieId] = useState<string | null>(null);
+  const [adminKpis, setAdminKpis] = useState<KpiMetrics | null>(null);
 
   useEffect(() => {
     let isCancelled = false;
@@ -47,6 +48,27 @@ export function useDashboardController() {
       isCancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!user?.isAdmin) {
+      setAdminKpis(null);
+      return;
+    }
+    let isCancelled = false;
+    adminService
+      .fetchAnalytics('all')
+      .then((data) => {
+        if (!isCancelled && data?.kpis) {
+          setAdminKpis(data.kpis);
+        }
+      })
+      .catch((err) => {
+        console.warn('[useDashboardController] Failed to load admin analytics summary:', err);
+      });
+    return () => {
+      isCancelled = true;
+    };
+  }, [user?.isAdmin]);
 
   const userMovieIdSet = useMemo(() => {
     return new Set((items || []).map((i) => i.id));
@@ -366,6 +388,7 @@ export function useDashboardController() {
     isAddingTopMovieId,
     handleQuickAddTopMovie,
     userMovieIdSet,
+    adminKpis,
     isSetupWizardOpen,
     setupWizardMode,
     handleOpenSetupWizardReview,
