@@ -157,6 +157,16 @@ describe('Admin Analytics Dashboard Components', () => {
     expect(el.props.eventsBreakdown).toHaveLength(1);
   });
 
+  test('EventActivityFeed handles empty events breakdown and feed gracefully', () => {
+    const el = React.createElement(EventActivityFeed, {
+      eventsBreakdown: [],
+      recentEvents: [],
+    });
+    expect(React.isValidElement(el)).toBe(true);
+    expect(el.props.eventsBreakdown).toEqual([]);
+    expect(el.props.recentEvents).toEqual([]);
+  });
+
   test('AdminDashboardView instantiates with onBack callback', () => {
     const onBackMock = jest.fn();
     const el = React.createElement(AdminDashboardView, { onBack: onBackMock });
