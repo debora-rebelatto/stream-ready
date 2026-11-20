@@ -16,8 +16,8 @@ export function loadCuratedListsData(): CuratedList[] {
       const content = fs.readFileSync(dataPath, 'utf8');
       return JSON.parse(content);
     }
-  } catch {
-    // fallback
+  } catch (err) {
+    console.warn('[CuratedLists] Failed to load curatedListsData.json from disk, using bundled fallback:', err);
   }
   return Array.isArray(curatedDataRaw) ? curatedDataRaw : [];
 }

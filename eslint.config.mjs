@@ -28,7 +28,7 @@ export default tseslint.config(
     },
     rules: {
       "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
-      "no-empty": ["error", { "allowEmptyCatch": true }],
+      "no-empty": ["error", { "allowEmptyCatch": false }],
       "no-undef": "off" // TypeScript checks types like NodeJS.Timeout natively
     }
   },
@@ -45,7 +45,7 @@ export default tseslint.config(
     },
     rules: {
       "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
-      "no-empty": ["error", { "allowEmptyCatch": true }],
+      "no-empty": ["error", { "allowEmptyCatch": false }],
       "no-constant-binary-expression": "off", // Allowed in tests to verify falsy values
       "no-undef": "off"
     }
@@ -68,7 +68,7 @@ export default tseslint.config(
     rules: {
       "no-unused-vars": "off",
       "no-undef": "off",
-      "no-empty": ["error", { "allowEmptyCatch": true }]
+      "no-empty": ["error", { "allowEmptyCatch": false }]
     }
   },
   // ==========================================================

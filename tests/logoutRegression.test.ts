@@ -1,6 +1,5 @@
 import { authService } from '../src/services/authService';
 import { resetUser, trackEvent } from '../src/lib/analytics';
-import posthog from 'posthog-js';
 
 jest.mock('posthog-js', () => ({
   __esModule: true,
@@ -44,17 +43,9 @@ describe('Logout Regression Test (ReferenceError resetUser fix)', () => {
     expect(authService.getAuthKey()).toBeNull();
     expect(clearAuthSpy).toHaveBeenCalled();
 
-    try {
-      trackEvent('auth_logout', {});
-    } catch {}
-
-    try {
-      resetUser();
-    } catch {}
-
-    try {
-      await authService.logout();
-    } catch {}
+    trackEvent('auth_logout', {});
+    resetUser();
+    await authService.logout();
 
     expect(logoutSpy).toHaveBeenCalled();
   });
@@ -66,15 +57,11 @@ describe('Logout Regression Test (ReferenceError resetUser fix)', () => {
     await expect(
       (async () => {
         authService.clearAuth();
-        try {
-          trackEvent('auth_logout', {});
-        } catch {}
-        try {
-          resetUser();
-        } catch {}
-        try {
-          await authService.logout();
-        } catch {}
+        trackEvent('auth_logout', {});
+        resetUser();
+        await authService.logout().catch((err) => {
+          expect(err).toBeInstanceOf(Error);
+        });
       })()
     ).resolves.toBeUndefined();
   });

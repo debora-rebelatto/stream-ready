@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth, useWatchlist, useToast } from '../context/useAppContext';
-import { systemService, watchlistService } from '../services';
-import type { TopMovieMetric } from '../models';
+import { systemService, watchlistService, adminService, cinemetaService } from '../services';
+import type { TopMovieMetric, SetupWizardMode, KpiMetrics } from '../models';
 import {
   trackEvent,
   filterWatchlistItems,
@@ -9,9 +9,10 @@ import {
   type WatchlistSortOption,
 } from '../utils';
 import { isBetaNoticeDismissed } from '../components/feedback';
+import { isUserOnboardingCompleted } from './useSetupWizardController';
 
 export function useDashboardController() {
-  const { user, deleteAccount } = useAuth();
+  const { user, deleteAccount, markOnboardingCompleted } = useAuth();
   const { showToast } = useToast();
   const {
     items,
@@ -31,21 +32,72 @@ export function useDashboardController() {
 
   const [topMovies, setTopMovies] = useState<TopMovieMetric[]>([]);
   const [isAddingTopMovieId, setIsAddingTopMovieId] = useState<string | null>(null);
+  const [adminKpis, setAdminKpis] = useState<KpiMetrics | null>(null);
 
   useEffect(() => {
     let isCancelled = false;
     watchlistService
       .getTopMovies(3)
-      .then((movies) => {
-        if (!isCancelled && Array.isArray(movies)) {
-          setTopMovies(movies);
+      .then(async (movies) => {
+        if (isCancelled || !Array.isArray(movies)) return;
+
+        setTopMovies(movies);
+
+        const needsEnrichment = movies.some((m) => !m.description);
+        if (needsEnrichment) {
+          const enriched = await Promise.all(
+            movies.map(async (m) => {
+              if (m.description) return m;
+              try {
+                const meta = await cinemetaService.getMeta('movie', m.id);
+                if (meta?.description) {
+                  return {
+                    ...m,
+                    description: meta.description,
+                    genres: m.genres && m.genres.length > 0 ? m.genres : meta.genres,
+                    poster: m.poster || meta.poster,
+                    year: m.year || meta.year,
+                  };
+                }
+              } catch (err) {
+                console.warn(`[useDashboardController] Failed to enrich metadata for ${m.id}:`, err);
+              }
+              return m;
+            })
+          );
+          if (!isCancelled) {
+            setTopMovies(enriched);
+          }
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn('[useDashboardController] Failed to fetch top movies:', err);
+      });
     return () => {
       isCancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!user?.isAdmin) {
+      setAdminKpis(null);
+      return;
+    }
+    let isCancelled = false;
+    adminService
+      .fetchAnalytics('all')
+      .then((data) => {
+        if (!isCancelled && data?.kpis) {
+          setAdminKpis(data.kpis);
+        }
+      })
+      .catch((err) => {
+        console.warn('[useDashboardController] Failed to load admin analytics summary:', err);
+      });
+    return () => {
+      isCancelled = true;
+    };
+  }, [user?.isAdmin]);
 
   const userMovieIdSet = useMemo(() => {
     return new Set((items || []).map((i) => i.id));
@@ -81,7 +133,53 @@ export function useDashboardController() {
   const [isBetaNoticeVisible, setIsBetaNoticeVisible] = useState<boolean>(
     () => !isBetaNoticeDismissed()
   );
+  const [isSetupWizardOpen, setIsSetupWizardOpen] = useState(false);
+  const [setupWizardMode, setSetupWizardMode] = useState<SetupWizardMode>('first-login');
+  const [completedInSessionUserId, setCompletedInSessionUserId] = useState<string | null>(null);
   const listTopRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setIsSetupWizardOpen(false);
+      setCompletedInSessionUserId(null);
+      return;
+    }
+    const userKey = user.id || user.email;
+    if (!isUserOnboardingCompleted(user) && completedInSessionUserId !== userKey) {
+      setSetupWizardMode('first-login');
+      setIsSetupWizardOpen(true);
+    }
+  }, [user, completedInSessionUserId]);
+
+  useEffect(() => {
+    if (!user) return;
+    const userKey = user.id || user.email;
+    if (completedInSessionUserId === userKey && !user.onboardingCompleted && items.length > 0) {
+      void markOnboardingCompleted(true);
+    }
+  }, [user, completedInSessionUserId, items.length, markOnboardingCompleted]);
+
+  const handleOpenSetupWizardReview = () => {
+    setSetupWizardMode('review');
+    setIsSetupWizardOpen(true);
+  };
+
+  const handleCloseSetupWizard = () => {
+    if (setupWizardMode === 'review') {
+      setIsSetupWizardOpen(false);
+    }
+  };
+
+  const handleSetupWizardComplete = async (hasMovies: boolean) => {
+    const userKey = user?.id || user?.email || null;
+    if (setupWizardMode === 'first-login') {
+      setCompletedInSessionUserId(userKey);
+    }
+    if (hasMovies && !user?.onboardingCompleted) {
+      await markOnboardingCompleted(true);
+    }
+    setIsSetupWizardOpen(false);
+  };
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -319,5 +417,11 @@ export function useDashboardController() {
     isAddingTopMovieId,
     handleQuickAddTopMovie,
     userMovieIdSet,
+    adminKpis,
+    isSetupWizardOpen,
+    setupWizardMode,
+    handleOpenSetupWizardReview,
+    handleCloseSetupWizard,
+    handleSetupWizardComplete,
   };
 }

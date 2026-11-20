@@ -24,9 +24,10 @@ function triggerPostLoginBackgroundSync(authKey, baseUrl, userId) {
 }
 
 async function authenticateUser({ email, password, authKey, baseUrl }) {
-  await userRepository.ensureLoaded(true);
+  const forceRefresh = Boolean(process.env.VERCEL);
 
   if (authKey) {
+    await userRepository.ensureLoaded(forceRefresh);
     const user = await userRepository.resolveUser(authKey, getUserInfo);
     if (!user || !user.email) {
       const err = new Error('Invalid or expired authentication key (AuthKey)');
@@ -46,7 +47,10 @@ async function authenticateUser({ email, password, authKey, baseUrl }) {
     throw err;
   }
 
-  const authResult = await loginStremio(email, password);
+  const [authResult] = await Promise.all([
+    loginStremio(email, password),
+    userRepository.ensureLoaded(forceRefresh),
+  ]);
   if (!authResult.success) {
     const err = new Error(authResult.error || 'Authentication failed');
     err.statusCode = 401;
@@ -93,6 +97,7 @@ async function getSessionStatus({ authKey }) {
         id: user.id,
         email: user.email,
         isAdmin: Boolean(user.isAdmin),
+        onboardingCompleted: Boolean(user.onboardingCompleted),
       },
       itemsCount: watchlistRepository.getItems(userId).length,
       supabaseConfigured: userRepository.isSupabaseConfigured(),

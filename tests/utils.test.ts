@@ -15,6 +15,7 @@ import {
   evaluateReadyTimestampRelease,
   computeMovieStatus,
   enrichWatchlistItem,
+  computeWatchlistStats,
 } from '../src/lib/utils';
 import type { WatchlistItem } from '../src/models';
 
@@ -320,6 +321,82 @@ describe('Frontend Utils (src/lib/utils.ts)', () => {
       expect(source).not.toMatch(/\bisItemUnreleased\b/);
       expect(source).not.toMatch(/\bresolveMovieStatus\b/);
       expect(source).not.toMatch(/\bformatQualityLabel\b/);
+    });
+  });
+
+  describe('computeWatchlistStats', () => {
+    const sampleItems: WatchlistItem[] = [
+      {
+        id: 'tt001',
+        type: 'movie',
+        name: 'Movie 4K',
+        has1080pPlus: true,
+        bestQuality: '4K UHD',
+        streamCount: 15,
+        isWatched: false,
+      },
+      {
+        id: 'tt002',
+        type: 'movie',
+        name: 'Movie 1080p',
+        has1080pPlus: true,
+        bestQuality: '1080p FHD',
+        streamCount: 10,
+        isWatched: false,
+      },
+      {
+        id: 'tt003',
+        type: 'movie',
+        name: 'Movie CAM',
+        has1080pPlus: false,
+        bestQuality: 'CAM / Theater Rip',
+        streamCount: 4,
+        isWatched: false,
+      },
+      {
+        id: 'tt004',
+        type: 'movie',
+        name: 'Movie Unreleased',
+        has1080pPlus: false,
+        bestQuality: 'Unreleased',
+        streamCount: 0,
+        isWatched: false,
+      },
+      {
+        id: 'tt005',
+        type: 'movie',
+        name: 'Movie Watched',
+        has1080pPlus: true,
+        bestQuality: '4K UHD',
+        streamCount: 20,
+        isWatched: true,
+      },
+    ];
+
+    test('computes accurate counts under 1080p and 4k thresholds', () => {
+      expect(computeWatchlistStats(sampleItems, '1080p')).toEqual({
+        total: 5,
+        ready: 2,
+        pending: 1,
+        unreleased: 1,
+        watched: 1,
+      });
+
+      expect(computeWatchlistStats(sampleItems, '4k')).toEqual({
+        total: 5,
+        ready: 1,
+        pending: 2,
+        unreleased: 1,
+        watched: 1,
+      });
+    });
+
+    test('updates counts immediately when new items are added', () => {
+      const initial = computeWatchlistStats([], '1080p');
+      expect(initial).toEqual({ total: 0, ready: 0, pending: 0, unreleased: 0, watched: 0 });
+
+      const updated = computeWatchlistStats(sampleItems.slice(0, 3), '1080p');
+      expect(updated).toEqual({ total: 3, ready: 2, pending: 1, unreleased: 0, watched: 0 });
     });
   });
 });

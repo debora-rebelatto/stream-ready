@@ -9,6 +9,7 @@ import type {
   CuratedList,
   TopMovieMetric,
 } from '../models';
+import { safeStorage } from './safeStorage';
 
 export function getAuthKey(): string | null {
   return localStorage.getItem('stremioAuthKey');
@@ -28,19 +29,12 @@ export function clearAuth(): void {
 
 export function getAuthHeaders(): HeadersInit {
   const key = getAuthKey();
-  let isOptOut = false;
-  try {
-    if (typeof localStorage !== 'undefined') {
-      if (localStorage.getItem('stremio_tracking_disabled') === 'true') {
-        isOptOut = true;
-      }
-      const email = localStorage.getItem('stremioEmail')?.toLowerCase().trim();
-      const excluded = localStorage.getItem('stremio_excluded_tracking_emails');
-      if (email && excluded && excluded.toLowerCase().includes(email)) {
-        isOptOut = true;
-      }
-    }
-  } catch {}
+  let isOptOut = safeStorage.get('stremio_tracking_disabled') === 'true';
+  const email = safeStorage.get('stremioEmail')?.toLowerCase().trim();
+  const excluded = safeStorage.get('stremio_excluded_tracking_emails');
+  if (email && excluded && excluded.toLowerCase().includes(email)) {
+    isOptOut = true;
+  }
 
   return {
     'Content-Type': 'application/json',
@@ -103,12 +97,29 @@ export const api = {
     user: StremioUser;
     error?: string;
   }> {
-    try {
-      const res = await fetch('/api/auth/login', {
+    const transientStatuses = new Set([502, 503, 504]);
+
+    const sendLoginRequest = () =>
+      fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(creds),
       });
+
+    try {
+      let res = await sendLoginRequest();
+      if (transientStatuses.has(res.status)) {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          await new Promise<void>((resolve) => {
+            timer = setTimeout(resolve, 400);
+          });
+        } finally {
+          if (timer) clearTimeout(timer);
+        }
+        res = await sendLoginRequest();
+      }
+
       const data = await safeJsonParse(res, 'Login failed: Invalid server response');
       if (!res.ok) {
         return {
@@ -132,8 +143,8 @@ export const api = {
   async logout(): Promise<void> {
     try {
       await fetch('/api/auth/logout', { method: 'POST', headers: getAuthHeaders() });
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn('[Auth] Logout request failed:', err);
     }
     clearAuth();
   },

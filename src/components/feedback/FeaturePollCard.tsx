@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { pollService } from '../../services';
-import { trackEvent } from '../../utils';
+import { trackEvent, safeStorage } from '../../utils';
 import { Check, X, Send, Vote } from 'lucide-react';
 
 export const POLL_DISMISS_KEY = 'stremio_dismiss_poll_until';
@@ -9,18 +9,14 @@ export const BETA_NOTICE_DISMISS_KEY = 'dismiss_beta_notice_until';
 const COOLDOWN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function isBetaNoticeDismissed(): boolean {
-  try {
-    const dismissUntil = localStorage.getItem(BETA_NOTICE_DISMISS_KEY);
-    if (dismissUntil) {
-      const expiry = parseInt(dismissUntil, 10);
-      if (!isNaN(expiry) && Date.now() < expiry) {
-        return true;
-      }
+  const dismissUntil = safeStorage.get(BETA_NOTICE_DISMISS_KEY);
+  if (dismissUntil) {
+    const expiry = parseInt(dismissUntil, 10);
+    if (!isNaN(expiry) && Date.now() < expiry) {
+      return true;
     }
-    return false;
-  } catch {
-    return false;
   }
+  return false;
 }
 
 export interface FeatureOption {
@@ -92,30 +88,26 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({
       return;
     }
 
-    try {
-      if (localStorage.getItem(POLL_VOTED_KEY) === 'true') {
+    if (safeStorage.get(POLL_VOTED_KEY) === 'true') {
+      setIsVisible(false);
+      return;
+    }
+
+    const dismissedUntil = safeStorage.get(POLL_DISMISS_KEY);
+    if (dismissedUntil) {
+      const expiry = parseInt(dismissedUntil, 10);
+      if (!isNaN(expiry) && Date.now() < expiry) {
         setIsVisible(false);
         return;
       }
-
-      const dismissedUntil = localStorage.getItem(POLL_DISMISS_KEY);
-      if (dismissedUntil) {
-        const expiry = parseInt(dismissedUntil, 10);
-        if (!isNaN(expiry) && Date.now() < expiry) {
-          setIsVisible(false);
-          return;
-        }
-      }
-    } catch {}
+    }
 
     // Verify with backend if user has already voted in Supabase
     pollService
       .getPollStatus()
       .then((status) => {
         if (status.hasVoted) {
-          try {
-            localStorage.setItem(POLL_VOTED_KEY, 'true');
-          } catch {}
+          safeStorage.set(POLL_VOTED_KEY, 'true');
           setIsVisible(false);
         } else {
           setIsVisible(true);
@@ -129,10 +121,8 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({
   const handleDismiss = () => {
     setIsVisible(false);
     trackEvent('poll_dismissed', { reason: 'user_closed' });
-    try {
-      const expiry = Date.now() + COOLDOWN_DAYS_MS;
-      localStorage.setItem(POLL_DISMISS_KEY, String(expiry));
-    } catch {}
+    const expiry = Date.now() + COOLDOWN_DAYS_MS;
+    safeStorage.set(POLL_DISMISS_KEY, String(expiry));
   };
 
   const handleSelect = async (optionId: string) => {
@@ -150,9 +140,7 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({
       const res = await pollService.submitPollVote(optionId);
       if (res.success) {
         trackEvent('poll_voted', { option: optionId, hasCustomText: false });
-        try {
-          localStorage.setItem(POLL_VOTED_KEY, 'true');
-        } catch {}
+        safeStorage.set(POLL_VOTED_KEY, 'true');
         setHasSubmitted(true);
         setTimeout(() => {
           setIsVisible(false);
@@ -172,9 +160,7 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({
       const res = await pollService.submitPollVote('other', customText.trim());
       if (res.success) {
         trackEvent('poll_voted', { option: 'other', hasCustomText: Boolean(customText.trim()) });
-        try {
-          localStorage.setItem(POLL_VOTED_KEY, 'true');
-        } catch {}
+        safeStorage.set(POLL_VOTED_KEY, 'true');
         setHasSubmitted(true);
         setTimeout(() => {
           setIsVisible(false);

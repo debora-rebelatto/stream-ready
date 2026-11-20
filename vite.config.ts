@@ -37,10 +37,10 @@ export default defineConfig(({ mode }) => {
         usePolling: true,
       },
       proxy: {
-        '/api': 'http://localhost:7000',
-        '/manifest.json': 'http://localhost:7000',
-        '/catalog': 'http://localhost:7000',
-        '/meta': 'http://localhost:7000',
+        '/api': 'http://127.0.0.1:7000',
+        '/manifest.json': 'http://127.0.0.1:7000',
+        '/catalog': 'http://127.0.0.1:7000',
+        '/meta': 'http://127.0.0.1:7000',
       },
     },
   };

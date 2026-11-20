@@ -23,6 +23,7 @@ export interface SettingsPageProps {
   onOpenDeleteAccount?: () => void;
   onOpenInstallGuide?: () => void;
   onOpenQrModal?: () => void;
+  onOpenSetupWizard?: () => void;
   manifestUrl?: string;
   installUrl?: string;
 }
@@ -32,6 +33,7 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
   onOpenDeleteAccount,
   onOpenInstallGuide,
   onOpenQrModal,
+  onOpenSetupWizard,
   manifestUrl = 'https://stremiowatchlist.vercel.app/manifest.json',
   installUrl,
 }) => {
@@ -179,6 +181,7 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
                 onCopyManifest={handleCopyManifest}
                 onOpenInstallGuide={onOpenInstallGuide}
                 onOpenQrModal={onOpenQrModal}
+                onOpenSetupWizard={onOpenSetupWizard}
               />
             )}
 

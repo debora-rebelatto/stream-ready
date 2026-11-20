@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { ToastProvider, AppProvider } from './context/AppContext';
+import { AppInitializer } from './context/AppContext';
 import { App } from './App';
 import './index.css';
 import { Analytics } from '@vercel/analytics/react';
@@ -14,12 +14,10 @@ if (!isTrackingBlocked()) {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ToastProvider>
-      <AppProvider>
-        <App />
-        <Analytics beforeSend={(event) => (isTrackingBlocked() ? null : event)} />
-        <SpeedInsights />
-      </AppProvider>
-    </ToastProvider>
+    <AppInitializer>
+      <App />
+      <Analytics beforeSend={(event) => (isTrackingBlocked() ? null : event)} />
+      <SpeedInsights />
+    </AppInitializer>
   </React.StrictMode>
 );
