@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   RefreshCw,
   Palette,
+  AlertCircle,
 } from 'lucide-react';
 import { useAdminController, type AdminTimeRange } from '../controllers/useAdminController';
 import { Button } from '../components';
@@ -10,7 +11,9 @@ import {
   AdminKpiGrid,
   ServiceAdoptionCard,
   TopMoviesTable,
+  TopThreeMoviesCard,
   PollFeedbackCard,
+  EventActivityFeed,
 } from '../components/admin';
 
 export interface AdminDashboardViewProps {
@@ -21,6 +24,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
   const {
     data,
     isLoading,
+    error,
     timeRange,
     setTimeRange,
     handleRefresh,
@@ -109,19 +113,44 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
           </div>
         )}
 
-        {/* Tab Views */}
-        {data && (
-          <div className="space-y-6">
-            <div className="space-y-6 animate-in fade-in duration-150">
-              <AdminKpiGrid kpis={data.kpis} />
-              <ServiceAdoptionCard adoption={data.serviceAdoption} />
-              <TopMoviesTable movies={data.topMovies} />
-              <PollFeedbackCard
-                totalVotes={data.pollResults.totalVotes}
-                breakdown={data.pollResults.breakdown}
-                customFeedback={data.pollResults.customFeedback}
-              />
+        {error && (
+          <div className="p-6 rounded-2xl bg-red-950/40 border border-red-500/30 text-center space-y-4">
+            <AlertCircle size={32} className="text-red-400 mx-auto" />
+            <div>
+              <h3 className="text-base font-bold text-red-200">Admin Authorization Required</h3>
+              <p className="text-xs text-gray-300 mt-1">{error}</p>
             </div>
+            <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 text-left text-xs font-mono text-gray-300 space-y-2">
+              <span className="text-[11px] text-purple-300 block font-sans font-semibold">
+                To grant admin access, run this command in your Supabase SQL Editor:
+              </span>
+              <code className="block select-all text-emerald-400 bg-white/5 p-2 rounded-lg break-all">
+                ALTER TABLE watchlist_users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
+                <br />
+                UPDATE watchlist_users SET is_admin = TRUE WHERE email = 'your-stremio-email';
+              </code>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
+              Retry Verification
+            </Button>
+          </div>
+        )}
+
+        {data && (
+          <div className="space-y-6 animate-in fade-in duration-150">
+            <AdminKpiGrid kpis={data.kpis} />
+            <TopThreeMoviesCard movies={data.topMovies} />
+            <ServiceAdoptionCard adoption={data.serviceAdoption} />
+            <TopMoviesTable movies={data.topMovies} />
+            <EventActivityFeed
+              eventsBreakdown={data.eventsBreakdown}
+              recentEvents={data.recentEvents}
+            />
+            <PollFeedbackCard
+              totalVotes={data.pollResults.totalVotes}
+              breakdown={data.pollResults.breakdown}
+              customFeedback={data.pollResults.customFeedback}
+            />
           </div>
         )}
       </main>
