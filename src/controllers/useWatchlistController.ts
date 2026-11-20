@@ -1,7 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type {
   WatchlistItem,
-  WatchlistStats,
   StremioUser,
   AppSettings,
 } from '../models';
@@ -13,36 +12,27 @@ import {
 } from '../services';
 import {
   enrichWatchlistItem,
+  computeWatchlistStats,
   trackEvent,
   resetUser as resetAnalyticsUser,
+  safeStorage,
   type EventSource,
 } from '../utils';
 
 const RATINGS_CACHE_KEY = 'stremio_ratings_cache';
 
-const EMPTY_STATS: WatchlistStats = {
-  total: 0,
-  ready: 0,
-  pending: 0,
-  unreleased: 0,
-  watched: 0,
-};
-
 function getStoredRatings(): Record<string, string> {
+  const raw = safeStorage.get(RATINGS_CACHE_KEY);
+  if (!raw) return {};
   try {
-    const raw = localStorage.getItem(RATINGS_CACHE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    return JSON.parse(raw);
   } catch {
     return {};
   }
 }
 
 function saveStoredRatings(ratings: Record<string, string>) {
-  try {
-    localStorage.setItem(RATINGS_CACHE_KEY, JSON.stringify(ratings));
-  } catch {
-    // ignore
-  }
+  safeStorage.set(RATINGS_CACHE_KEY, JSON.stringify(ratings));
 }
 
 export interface UseWatchlistControllerOptions {
@@ -57,11 +47,14 @@ export function useWatchlistController({
   showToast,
 }: UseWatchlistControllerOptions) {
   const [items, setItems] = useState<WatchlistItem[]>([]);
-  const [stats, setStats] = useState<WatchlistStats>(EMPTY_STATS);
   const [currentTab, setCurrentTab] = useState<
     'all' | 'ready' | 'pending' | 'unreleased' | 'watched'
   >('all');
   const [globalMinQuality, setGlobalMinQualityState] = useState<'1080p' | '4k'>('1080p');
+  const stats = useMemo(
+    () => computeWatchlistStats(items, globalMinQuality),
+    [items, globalMinQuality]
+  );
   const [autoSyncWatched, setAutoSyncWatchedState] = useState<boolean>(false);
   const [trackWatchlistWatched, setTrackWatchlistWatchedState] = useState<boolean>(true);
   const [syncPreviouslyWatched, setSyncPreviouslyWatchedState] = useState<boolean>(false);
@@ -86,13 +79,11 @@ export function useWatchlistController({
 
   const clearWatchlistState = useCallback(() => {
     setItems([]);
-    setStats(EMPTY_STATS);
   }, []);
 
   const refreshWatchlist = useCallback(async () => {
     if (!user) {
       setItems([]);
-      setStats(EMPTY_STATS);
       return;
     }
 
@@ -126,24 +117,7 @@ export function useWatchlistController({
         saveStoredRatings(storedRatings);
       }
 
-      const unwatched = itemsWithRatings.filter((i) => !i.computed?.isWatched);
-      const ready = unwatched.filter((i) => i.computed?.isReady).length;
-      const unreleased = unwatched.filter(
-        (i) => !i.computed?.isReady && i.computed?.isUnreleased
-      ).length;
-      const pending = unwatched.filter(
-        (i) => !i.computed?.isReady && !i.computed?.isUnreleased
-      ).length;
-      const watched = itemsWithRatings.filter((i) => i.computed?.isWatched).length;
-
       setItems(itemsWithRatings);
-      setStats({
-        total: itemsWithRatings.length,
-        ready,
-        pending,
-        unreleased,
-        watched,
-      });
 
       const missingRatings = itemsWithRatings.filter((i) => !i.imdbRating && i.id);
       if (missingRatings.length > 0) {
@@ -157,8 +131,8 @@ export function useWatchlistController({
                 currentStored[item.id] = String(meta.imdbRating);
                 hasNew = true;
               }
-            } catch {
-              // ignore
+            } catch (err) {
+              console.warn('[Watchlist] Rating lookup skipped:', err);
             }
           }
           if (hasNew) {
@@ -180,15 +154,28 @@ export function useWatchlistController({
     }
   }, [user, globalMinQuality, showToast, setUser]);
 
-  const addItem = async (id: string, source: EventSource = 'manual') => {
+  const addItem = async (id: string, source: EventSource = 'manual'): Promise<boolean> => {
     showToast('Adding movie and checking quality...', 'info');
     try {
       const res = await watchlistService.addItem(id);
-      if (!res.success || res.error) {
+      if (!res.success || res.error || !res.item) {
         showToast(res.error || 'Error adding movie.', 'error');
-        return;
+        return false;
       }
       const item = res.item;
+      const storedRatings = getStoredRatings();
+      const rating =
+        item.imdbRating && String(item.imdbRating) !== 'N/A'
+          ? String(item.imdbRating)
+          : storedRatings[item.id] || '';
+      if (item.imdbRating && String(item.imdbRating) !== 'N/A' && !storedRatings[item.id]) {
+        storedRatings[item.id] = String(item.imdbRating);
+        saveStoredRatings(storedRatings);
+      }
+      const withRating = rating ? { ...item, imdbRating: rating } : item;
+      const enriched = enrichWatchlistItem(withRating, globalMinQuality);
+      setItems((prev) => [enriched, ...prev.filter((i) => i.id !== enriched.id)]);
+
       trackEvent('movie_added', {
         title: item.name,
         year: item.year ? String(item.year) : undefined,
@@ -204,9 +191,10 @@ export function useWatchlistController({
       } else {
         showToast(`⏳ "${item.name}" added! Waiting for good quality release.`, 'info');
       }
-      await refreshWatchlist();
+      return true;
     } catch {
       showToast('Error communicating with server.', 'error');
+      return false;
     }
   };
 
@@ -217,7 +205,6 @@ export function useWatchlistController({
         trackEvent('movie_removed', { title: name, imdbId: id });
         showToast(`"${name}" removed from watchlist.`, 'info');
         setItems((prev) => prev.filter((i) => i.id !== id));
-        setStats(res.stats);
         return true;
       }
       showToast('Error removing item.', 'error');
@@ -355,7 +342,6 @@ export function useWatchlistController({
               : i
           )
         );
-        if (res.stats) setStats(res.stats);
         showToast(
           watched ? '👁️ Movie moved to Watched History.' : '↩️ Movie restored to active watchlist.',
           'success'
@@ -375,7 +361,6 @@ export function useWatchlistController({
         if (res.items) {
           setItems(res.items.map((item) => enrichWatchlistItem(item, globalMinQuality)));
         }
-        if (res.stats) setStats(res.stats);
         const { newlyAdded, newlyMarked, totalWatched } = res.result || {};
         const count = (newlyAdded || 0) + (newlyMarked || 0);
         if (count > 0) {
@@ -397,7 +382,6 @@ export function useWatchlistController({
     items,
     setItems,
     stats,
-    setStats,
     currentTab,
     setCurrentTab,
     globalMinQuality,

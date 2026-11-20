@@ -67,9 +67,7 @@ export const QrCodeModal: React.FC<QrCodeModalProps> = ({
   // Track impression when opened
   useEffect(() => {
     if (isOpen) {
-      try {
-        trackEvent('addon_manifest_copied', { location: 'navbar' });
-      } catch {}
+      trackEvent('addon_manifest_copied', { location: 'navbar' });
     }
   }, [isOpen]);
 

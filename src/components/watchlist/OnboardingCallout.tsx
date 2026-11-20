@@ -1,37 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Plus, X, Film, ChevronRight, Tv, Compass, Search } from 'lucide-react';
-import { CURATED_RECOMMENDED_MOVIES, trackEvent } from '../../utils';
+import { Sparkles, Plus, X, Film, Tv } from 'lucide-react';
+import { CURATED_RECOMMENDED_MOVIES, trackEvent, safeStorage } from '../../utils';
 import { useWatchlist, useToast } from '../../context/useAppContext';
 import { Button } from '../common';
 
 export const ONBOARDING_DISMISS_KEY = 'stremio_onboarding_dismissed';
 const COOLDOWN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-interface OnboardingCalloutProps {
-  onScrollToRecommendations?: () => void;
-  onFocusSearch?: () => void;
-}
-
-export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
-  onScrollToRecommendations,
-  onFocusSearch,
-}) => {
+export const OnboardingCallout: React.FC = () => {
   const { items: watchlistItems, addItem } = useWatchlist();
   const { showToast } = useToast();
 
   const [isDismissed, setIsDismissed] = useState<boolean>(() => {
-    try {
-      const dismissedUntil = localStorage.getItem(ONBOARDING_DISMISS_KEY);
-      if (dismissedUntil) {
-        const expiry = parseInt(dismissedUntil, 10);
-        if (!isNaN(expiry) && Date.now() < expiry) {
-          return true;
-        }
+    const dismissedUntil = safeStorage.get(ONBOARDING_DISMISS_KEY);
+    if (dismissedUntil) {
+      const expiry = parseInt(dismissedUntil, 10);
+      if (!isNaN(expiry) && Date.now() < expiry) {
+        return true;
       }
-      return false;
-    } catch {
-      return false;
     }
+    return false;
   });
 
   const [isBatchAdding, setIsBatchAdding] = useState(false);
@@ -52,30 +40,29 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
     }
   }, [watchlistItems.length, isDismissed]);
 
-  // Don't render if user already has movies in their watchlist or dismissed the callout
-  if (watchlistItems.length > 0 || isDismissed) {
+  // Don't render if user already has movies in their watchlist (unless batch-add is still in progress) or dismissed the callout
+  if ((watchlistItems.length > 0 && !isBatchAdding) || isDismissed) {
     return null;
   }
 
   const handleDismiss = () => {
     setIsDismissed(true);
     trackEvent('onboarding_dismissed', { reason: 'user_closed' });
-    try {
-      const expiry = Date.now() + COOLDOWN_DAYS_MS;
-      localStorage.setItem(ONBOARDING_DISMISS_KEY, String(expiry));
-    } catch {}
+    const expiry = Date.now() + COOLDOWN_DAYS_MS;
+    safeStorage.set(ONBOARDING_DISMISS_KEY, String(expiry));
   };
 
   const handleAddSingle = async (movieId: string, movieName: string) => {
     if (addingId || isBatchAdding) return;
     setAddingId(movieId);
     try {
-      await addItem(movieId, 'recommendations');
-      trackEvent('onboarding_quick_add_clicked', {
-        movieIds: [movieId],
-        source: 'onboarding_callout_single',
-      });
-      showToast(`🎬 "${movieName}" added to your watchlist!`, 'success');
+      const ok = await addItem(movieId, 'recommendations');
+      if (ok) {
+        trackEvent('onboarding_quick_add_clicked', {
+          movieIds: [movieId],
+          source: 'onboarding_callout_single',
+        });
+      }
     } catch {
       showToast(`Failed to add "${movieName}"`, 'error');
     } finally {
@@ -94,20 +81,15 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
       for (let i = 0; i < starterMovies.length; i++) {
         const movie = starterMovies[i];
         setBatchProgress({ current: i + 1, total: starterMovies.length });
-        try {
-          await addItem(movie.id, 'recommendations');
-          addedCount++;
-        } catch {
-          // Continue adding remaining items even if one fails
-        }
+        const ok = await addItem(movie.id, 'recommendations');
+        if (ok) addedCount++;
       }
 
-      trackEvent('onboarding_quick_add_clicked', {
-        movieIds: idsToAdd,
-        source: 'onboarding_callout_batch',
-      });
-
       if (addedCount > 0) {
+        trackEvent('onboarding_quick_add_clicked', {
+          movieIds: idsToAdd,
+          source: 'onboarding_callout_batch',
+        });
         showToast(
           `🎉 ${addedCount} movies added! Check your Stremio home screen or catalog.`,
           'success'
@@ -116,17 +98,6 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
     } finally {
       setIsBatchAdding(false);
       setBatchProgress(null);
-    }
-  };
-
-  const handleExploreClick = () => {
-    if (onScrollToRecommendations) {
-      onScrollToRecommendations();
-    } else {
-      const el = document.getElementById('recommended-banner');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      }
     }
   };
 
@@ -199,22 +170,6 @@ export const OnboardingCallout: React.FC<OnboardingCalloutProps> = ({
                   ? `Adding (${batchProgress.current}/${batchProgress.total})...`
                   : 'Add Top 3 Hits'}
               </Button>
-
-              <Button variant="indigo" onClick={handleExploreClick} icon={<Compass size={13} />}>
-                <span>Browse All</span>
-                <ChevronRight size={13} className="inline ml-1" />
-              </Button>
-
-              {onFocusSearch && (
-                <Button
-                  variant="outline"
-                  onClick={onFocusSearch}
-                  icon={<Search size={13} className="text-purple-400" />}
-                  title="Search movies to add"
-                >
-                  Search
-                </Button>
-              )}
             </div>
           </div>
 

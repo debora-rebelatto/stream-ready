@@ -11,7 +11,7 @@ import {
   Send,
 } from 'lucide-react';
 import { pollService } from '../../services';
-import { trackEvent } from '../../utils';
+import { trackEvent, safeStorage } from '../../utils';
 import { GitHubSponsorButton } from '../common';
 import {
   FEATURE_OPTIONS,
@@ -37,13 +37,9 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [customText, setCustomText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(POLL_VOTED_KEY) === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [hasSubmitted, setHasSubmitted] = useState<boolean>(
+    () => safeStorage.get(POLL_VOTED_KEY) === 'true'
+  );
   const [votedOption, setVotedOption] = useState<string | null>(null);
 
   useEffect(() => {
@@ -51,9 +47,7 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
       .getPollStatus()
       .then((status) => {
         if (status.hasVoted) {
-          try {
-            localStorage.setItem(POLL_VOTED_KEY, 'true');
-          } catch {}
+          safeStorage.set(POLL_VOTED_KEY, 'true');
           setHasSubmitted(true);
           if (status.vote?.selected_option) {
             setVotedOption(status.vote.selected_option);
@@ -65,11 +59,9 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
 
   const handleDismiss = () => {
     setDismissBetaBanner(true);
-    try {
-      const expiry = Date.now() + DISMISS_DURATION_MS;
-      localStorage.setItem(DISMISS_KEY, String(expiry));
-      localStorage.removeItem('dismiss_beta_notice');
-    } catch {}
+    const expiry = Date.now() + DISMISS_DURATION_MS;
+    safeStorage.set(DISMISS_KEY, String(expiry));
+    safeStorage.remove('dismiss_beta_notice');
     if (onDismiss) {
       onDismiss();
     }
@@ -89,9 +81,7 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
       const res = await pollService.submitPollVote(optionId);
       if (res.success) {
         trackEvent('poll_voted', { option: optionId, hasCustomText: false });
-        try {
-          localStorage.setItem(POLL_VOTED_KEY, 'true');
-        } catch {}
+        safeStorage.set(POLL_VOTED_KEY, 'true');
         setHasSubmitted(true);
         setVotedOption(optionId);
       }
@@ -109,9 +99,7 @@ export const Hero: React.FC<HeroProps> = ({ onDismiss }) => {
       const res = await pollService.submitPollVote('other', customText.trim());
       if (res.success) {
         trackEvent('poll_voted', { option: 'other', hasCustomText: Boolean(customText.trim()) });
-        try {
-          localStorage.setItem(POLL_VOTED_KEY, 'true');
-        } catch {}
+        safeStorage.set(POLL_VOTED_KEY, 'true');
         setHasSubmitted(true);
         setVotedOption('other');
       }

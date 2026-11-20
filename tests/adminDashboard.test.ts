@@ -1,4 +1,5 @@
 import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { adminService } from '../src/services/adminService';
 import {
   AdminKpiGrid,
@@ -93,8 +94,8 @@ describe('Admin Analytics Dashboard Components', () => {
 
   test('TopThreeMoviesCard instantiates with top 3 movies podium', () => {
     const multiMovies = [
-      { id: 'tt1', name: 'Movie 1', year: 2024, userCount: 20, readyCount: 18 },
-      { id: 'tt2', name: 'Movie 2', year: 2023, userCount: 15, readyCount: 10 },
+      { id: 'tt1', name: 'Movie 1', year: 2024, userCount: 20, readyCount: 18, description: 'Epic space journey' },
+      { id: 'tt2', name: 'Movie 2', year: 2023, userCount: 15, readyCount: 10, description: 'Detective thriller' },
       { id: 'tt3', name: 'Movie 3', year: 2022, userCount: 10, readyCount: 0 },
       { id: 'tt4', name: 'Movie 4', year: 2021, userCount: 5, readyCount: 2 },
     ];
@@ -104,6 +105,37 @@ describe('Admin Analytics Dashboard Components', () => {
 
     const emptyEl = React.createElement(TopThreeMoviesCard, { movies: [] });
     expect(React.isValidElement(emptyEl)).toBe(true);
+  });
+
+  test('TopThreeMoviesCard hides user count for non-admin and displays description instead of imdb id', () => {
+    const movies = [
+      {
+        id: 'tt9876543',
+        name: 'Inception',
+        year: 2010,
+        userCount: 99,
+        readyCount: 80,
+        description: 'A thief who steals corporate secrets through dream-sharing.',
+      },
+    ];
+
+    // Non-admin view (default)
+    const nonAdminHtml = renderToStaticMarkup(
+      React.createElement(TopThreeMoviesCard, { movies, isAdmin: false })
+    );
+    expect(nonAdminHtml).toContain('Inception');
+    expect(nonAdminHtml).toContain('A thief who steals corporate secrets through dream-sharing.');
+    expect(nonAdminHtml).not.toContain('tt9876543');
+    expect(nonAdminHtml).not.toContain('99 users');
+
+    // Admin view
+    const adminHtml = renderToStaticMarkup(
+      React.createElement(TopThreeMoviesCard, { movies, isAdmin: true })
+    );
+    expect(adminHtml).toContain('Inception');
+    expect(adminHtml).toContain('A thief who steals corporate secrets through dream-sharing.');
+    expect(adminHtml).not.toContain('tt9876543');
+    expect(adminHtml).toContain('99 users');
   });
 
   test('PollFeedbackCard renders poll breakdown and feedback', () => {

@@ -40,8 +40,8 @@ export function useCustomListsController({
       if (res.success && Array.isArray(res.lists)) {
         setCustomLists(res.lists);
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn('[CustomLists] Failed to load custom lists:', err);
     } finally {
       setIsListsLoading(false);
     }
@@ -54,8 +54,8 @@ export function useCustomListsController({
       if (res.success && Array.isArray(res.lists)) {
         setCuratedLists(res.lists);
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn('[CustomLists] Failed to load curated lists:', err);
     } finally {
       setIsCuratedListsLoading(false);
     }

@@ -111,6 +111,39 @@ describe('API Client (src/lib/api.ts)', () => {
       expect(getAuthKey()).toBeNull();
       expect(localStorage.getItem('stremioEmail')).toBeNull();
     });
+
+    test('login deve tentar novamente uma vez quando receber 502 transitório com corpo vazio', async () => {
+      const mockResult = { success: true, authKey: 'k_retry', user: { id: 'u1', email: 'a@b.com' } };
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 502,
+          text: async () => '',
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify(mockResult),
+        });
+
+      const res = await api.login({ email: 'a@b.com', password: '123' });
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(res).toEqual(mockResult);
+    });
+
+    test('login deve retornar erro amigável se ambas tentativas retornarem 502 com corpo vazio', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 502,
+        text: async () => '',
+      });
+
+      const res = await api.login({ email: 'a@b.com', password: '123' });
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('Server returned status 502');
+    });
   });
 
   describe('endpoints de watchlist, itens e filmes', () => {

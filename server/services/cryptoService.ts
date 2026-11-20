@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
-// Garante que o .env esteja carregado antes de derivar as chaves
+// Garante que o .env esteja carregado antes de derivar as chaves (ignorado em testes Jest)
+const IS_TEST_ENV = process.env.NODE_ENV === 'test' || Boolean(process.env.JEST_WORKER_ID);
 const currentDir =
   typeof __dirname !== 'undefined' ? __dirname : import.meta.dirname || process.cwd();
 const envCandidates = [
@@ -10,28 +11,30 @@ const envCandidates = [
   path.join(currentDir, '..', '.env'),
   path.join(currentDir, '..', '..', '.env'),
 ];
-for (const ENV_FILE of envCandidates) {
-  if (fs.existsSync(ENV_FILE)) {
-    try {
-      const envLines = fs.readFileSync(ENV_FILE, 'utf-8').split(/\r?\n/);
-      for (const line of envLines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#')) continue;
-        const eqIdx = trimmed.indexOf('=');
-        if (eqIdx > 0) {
-          const key = trimmed.slice(0, eqIdx).trim();
-          const val = trimmed
-            .slice(eqIdx + 1)
-            .trim()
-            .replace(/^['"]|['"]$/g, '');
-          if (!process.env[key]) {
-            process.env[key] = val;
+if (!IS_TEST_ENV) {
+  for (const ENV_FILE of envCandidates) {
+    if (fs.existsSync(ENV_FILE)) {
+      try {
+        const envLines = fs.readFileSync(ENV_FILE, 'utf-8').split(/\r?\n/);
+        for (const line of envLines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('#')) continue;
+          const eqIdx = trimmed.indexOf('=');
+          if (eqIdx > 0) {
+            const key = trimmed.slice(0, eqIdx).trim();
+            const val = trimmed
+              .slice(eqIdx + 1)
+              .trim()
+              .replace(/^['"]|['"]$/g, '');
+            if (!process.env[key]) {
+              process.env[key] = val;
+            }
           }
         }
+        break;
+      } catch (err) {
+        console.warn('[Crypto] Failed to read local .env:', err);
       }
-      break;
-    } catch (e) {
-      // Ignora erro se não conseguir ler .env
     }
   }
 }
@@ -103,13 +106,13 @@ export function decryptText(cipherText: string | null | undefined): string | nul
         let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
         decrypted += decipher.final('utf8');
         return decrypted;
-      } catch (e) {
-        // Tenta próxima chave candidata
+      } catch {
+        continue;
       }
     }
 
     return null;
-  } catch (err) {
+  } catch {
     return null;
   }
 }

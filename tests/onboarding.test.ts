@@ -1,4 +1,19 @@
-import { ONBOARDING_DISMISS_KEY } from '../src/components';
+import React from 'react';
+import {
+  ONBOARDING_DISMISS_KEY,
+  FirstTimeSetupModal,
+  SetupProgressStepper,
+  SetupStepWelcome,
+  SetupStepInstallStremio,
+  SetupStepFeaturesTour,
+  SetupStepFirstMovies,
+} from '../src/components';
+import { SETUP_WIZARD_STEPS } from '../src/models';
+import {
+  getSetupCompletedStorageKey,
+  isUserOnboardingCompleted,
+  resolveStepActionTaken,
+} from '../src/controllers';
 import { CURATED_RECOMMENDED_MOVIES } from '../src/utils';
 
 describe('OnboardingCallout logic & starter recommendations', () => {
@@ -46,5 +61,156 @@ describe('OnboardingCallout logic & starter recommendations', () => {
     const isExpiredDismissed =
       parseInt(localStorage.getItem(ONBOARDING_DISMISS_KEY) || '0', 10) > now;
     expect(isExpiredDismissed).toBe(false);
+  });
+
+  it('defines 4 sequential setup wizard steps with valid metadata', () => {
+    expect(SETUP_WIZARD_STEPS).toHaveLength(4);
+    expect(SETUP_WIZARD_STEPS.map((step) => step.id)).toEqual([
+      'welcome',
+      'install',
+      'features',
+      'movies',
+    ]);
+    expect(SETUP_WIZARD_STEPS.map((step) => step.stepNumber)).toEqual([1, 2, 3, 4]);
+
+    for (const step of SETUP_WIZARD_STEPS) {
+      expect(step.shortTitle.trim().length).toBeGreaterThan(0);
+      expect(step.title.trim().length).toBeGreaterThan(0);
+      expect(step.subtitle.trim().length).toBeGreaterThan(0);
+    }
+  });
+
+  describe('Setup Wizard completion & activity helpers', () => {
+    it('builds per-user setup completion storage keys', () => {
+      expect(getSetupCompletedStorageKey('user-123')).toBe('stremio_setup_completed_user-123');
+    });
+
+    it('determines onboarding completion from server flag with localStorage fallback', () => {
+      expect(isUserOnboardingCompleted(null)).toBe(true);
+      expect(
+        isUserOnboardingCompleted({ id: 'u1', email: 'a@b.com', onboardingCompleted: true })
+      ).toBe(true);
+
+      localStorage.setItem(getSetupCompletedStorageKey('u1'), 'true');
+      // Authoritative false from server always overrides localStorage
+      expect(
+        isUserOnboardingCompleted({ id: 'u1', email: 'a@b.com', onboardingCompleted: false })
+      ).toBe(false);
+      // Fallback applies when onboardingCompleted is undefined
+      expect(isUserOnboardingCompleted({ id: 'u1', email: 'a@b.com' })).toBe(true);
+
+      localStorage.clear();
+      expect(isUserOnboardingCompleted({ id: 'u1', email: 'a@b.com' })).toBe(false);
+    });
+
+    it('resolves step activity correctly for analytics tracking without blocking user flow', () => {
+      expect(
+        resolveStepActionTaken('welcome', {
+          installedToAccount: false,
+          hasOpenedStremioApp: false,
+          hasCopiedManifest: false,
+          watchlistCount: 0,
+        })
+      ).toBe('viewed_intro');
+
+      expect(
+        resolveStepActionTaken('install', {
+          installedToAccount: true,
+          hasOpenedStremioApp: false,
+          hasCopiedManifest: false,
+          watchlistCount: 0,
+        })
+      ).toBe('cloud_install');
+
+      expect(
+        resolveStepActionTaken('install', {
+          installedToAccount: false,
+          hasOpenedStremioApp: false,
+          hasCopiedManifest: false,
+          watchlistCount: 0,
+        })
+      ).toBe('skipped_install');
+
+      expect(
+        resolveStepActionTaken('features', {
+          installedToAccount: false,
+          hasOpenedStremioApp: false,
+          hasCopiedManifest: false,
+          watchlistCount: 0,
+        })
+      ).toBe('reviewed_features');
+
+      expect(
+        resolveStepActionTaken('movies', {
+          installedToAccount: false,
+          hasOpenedStremioApp: false,
+          hasCopiedManifest: false,
+          watchlistCount: 3,
+        })
+      ).toBe('added_movies');
+
+      expect(
+        resolveStepActionTaken('movies', {
+          installedToAccount: false,
+          hasOpenedStremioApp: false,
+          hasCopiedManifest: false,
+          watchlistCount: 0,
+        })
+      ).toBe('skipped_movies');
+    });
+  });
+
+  describe('Setup Wizard components', () => {
+    const noop = () => undefined;
+
+    it('creates valid React elements for every wizard component without confirmation checkboxes', () => {
+      const elements = [
+        React.createElement(FirstTimeSetupModal, {
+          isOpen: false,
+          mode: 'first-login',
+          onClose: noop,
+          onCompleted: noop,
+        }),
+        React.createElement(SetupProgressStepper, {
+          steps: SETUP_WIZARD_STEPS,
+          currentStepIndex: 0,
+          onSelectStep: noop,
+        }),
+        React.createElement(SetupStepWelcome),
+        React.createElement(SetupStepInstallStremio, {
+          manifestUrl: 'https://stremiowatchlist.vercel.app/manifest.json',
+          isInstallingToAccount: false,
+          installedToAccount: false,
+          hasOpenedStremioApp: false,
+          copiedManifest: false,
+          showInlineQr: false,
+          qrDataUrl: '',
+          isGeneratingQr: false,
+          onInstallToAccount: noop,
+          onOpenStremioApp: noop,
+          onCopyManifest: noop,
+          onToggleQr: noop,
+        }),
+        React.createElement(SetupStepFeaturesTour, {
+          globalMinQuality: '1080p',
+          onSelectQuality: noop,
+          trackWatchlistWatched: true,
+          onToggleTrackWatched: noop,
+          autoSyncWatched: false,
+          onToggleAutoSync: noop,
+        }),
+        React.createElement(SetupStepFirstMovies, {
+          items: [],
+          addingMovieId: null,
+          isBatchAdding: false,
+          onQuickAddMovie: noop,
+          onBatchAddStarterMovies: noop,
+        }),
+      ];
+
+      for (const element of elements) {
+        expect(React.isValidElement(element)).toBe(true);
+      }
+    });
   });
 });

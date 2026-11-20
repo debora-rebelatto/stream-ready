@@ -80,8 +80,8 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({
               imdbRating: meta.imdbRating || item.imdbRating,
             };
           }
-        } catch {
-          // ignore lookup errors
+        } catch (err) {
+          console.warn('[RecommendedBanner] Metadata enrichment skipped:', err);
         }
       }
 

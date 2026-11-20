@@ -20,11 +20,6 @@ export const LandingHeroSection: React.FC<LandingHeroSectionProps> = ({
     <section className="relative text-center max-w-4xl mx-auto pt-4 sm:pt-10 px-4">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-87.5 bg-linear-to-tr from-purple-600/25 via-indigo-600/15 to-transparent blur-[140px] rounded-full pointer-events-none -z-10" />
 
-      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/25 text-purple-300 text-xs font-semibold mb-6 shadow-sm">
-        <Sparkles size={14} className="text-purple-400 animate-pulse" />
-        <span>Automated Release Intelligence for Stremio</span>
-      </div>
-
       <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.08] mb-6">
         Never watch a blurry <br className="hidden sm:inline" />
         <span className="text-transparent bg-clip-text bg-linear-to-r from-red-400 via-rose-300 to-amber-300 line-through decoration-red-500/80 mr-3">

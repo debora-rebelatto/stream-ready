@@ -4,6 +4,7 @@ export interface AppSettings {
   autoSyncWatched?: boolean;
   trackWatchlistWatched?: boolean;
   syncPreviouslyWatched?: boolean;
+  onboardingCompleted?: boolean;
 }
 
 export interface ServerInfo {

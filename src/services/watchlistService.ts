@@ -13,8 +13,8 @@ export const watchlistService = {
       if (results && results.length > 0) {
         return results;
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn('[WatchlistService] Cinemeta search failed, falling back to API:', err);
     }
     return api.searchMovies(query);
   },

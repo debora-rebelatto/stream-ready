@@ -22,6 +22,9 @@ export * from './auth';
 // Addon Installation & Setup
 export * from './install';
 
+// First-Login Setup Wizard
+export * from './onboarding';
+
 // Feedback & Feature Voting
 export * from './feedback';
 
