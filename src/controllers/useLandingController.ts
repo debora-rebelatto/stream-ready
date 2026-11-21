@@ -73,17 +73,21 @@ export function useLandingController({
 
     if (source === 'stremio_tv_qr' || source === 'stremio_configure') {
       setIsLoginOpen(true);
-      trackEvent('qr_code_scanned', {
-        source,
-        context,
-      });
 
       if (source === 'stremio_tv_qr') {
+        trackEvent('qr_landing_viewed', {
+          source,
+          context,
+        });
         showToast(
           '📱 Welcome from Stremio TV! Connect your Stremio account to sync movies to your TV.',
           'info'
         );
       } else {
+        trackEvent('stremio_configure_opened', {
+          source,
+          context,
+        });
         showToast(
           '👋 Welcome from Stremio! Connect your Stremio account to configure the addon.',
           'info'

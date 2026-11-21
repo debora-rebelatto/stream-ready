@@ -139,7 +139,7 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({
     try {
       const res = await pollService.submitPollVote(optionId);
       if (res.success) {
-        trackEvent('poll_voted', { option: optionId, hasCustomText: false });
+        // Note: 'poll_voted' is logged authoritatively by the server in submitPollVote
         safeStorage.set(POLL_VOTED_KEY, 'true');
         setHasSubmitted(true);
         setTimeout(() => {
@@ -159,7 +159,7 @@ export const FeaturePollCard: React.FC<FeaturePollCardProps> = ({
     try {
       const res = await pollService.submitPollVote('other', customText.trim());
       if (res.success) {
-        trackEvent('poll_voted', { option: 'other', hasCustomText: Boolean(customText.trim()) });
+        // Note: 'poll_voted' is logged authoritatively by the server in submitPollVote
         safeStorage.set(POLL_VOTED_KEY, 'true');
         setHasSubmitted(true);
         setTimeout(() => {

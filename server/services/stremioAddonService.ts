@@ -197,13 +197,13 @@ export async function handleCatalog(
           {
             id: 'guide_configure',
             type: 'movie',
-            name: '👉 Account Setup Required: Visit stremiowatchlist.vercel.app',
+            name: 'Scan QR Code',
             poster: 'https://stremiowatchlist.vercel.app/api/qr/poster',
             posterShape: 'regular',
             banner: 'https://stremiowatchlist.vercel.app/background.jpg',
-            genres: ['⚠️ Setup Required', 'Connect Stremio Account', 'Scan QR Code'],
+            genres: ['Setup Required', 'Connect Stremio Account', 'Scan QR Code'],
             description:
-              '⚠️ ACCOUNT SETUP REQUIRED\n\nTo use this addon and track movie releases in 1080p FHD & 4K UHD, you must connect your Stremio account on our website:\n\n🌐 https://stremiowatchlist.vercel.app/\n\n📱 SCAN QR CODE:\nPoint your phone camera at the QR code on this poster to open the website directly!\n\n📌 WHY IS AN ACCOUNT REQUIRED?\n1. Stremio addons are read-only: You cannot add or manage movies from inside the Stremio player interface.\n2. Automatic Cloud Sync: Connecting your account allows our background engine to monitor releases 24/7 and sync good quality movies directly to your TV and devices.\n\n🚀 3 SIMPLE STEPS TO GET STARTED:\n1. Scan the QR code or open https://stremiowatchlist.vercel.app in your browser\n2. Click "Connect Stremio & Start Tracking" and sign in with your Stremio account\n3. Search and add any movies you want to track — that\'s it! As soon as 1080p FHD or 4K UHD drops, they will appear right here in your Stremio library!',
+              'ACCOUNT SETUP REQUIRED\n\nSCAN QR CODE:\nPoint your phone camera at the QR code on this poster to connect your account and start tracking movie releases.',
           },
         ],
       };
@@ -228,13 +228,13 @@ export async function handleCatalog(
         {
           id: 'guide_empty_watchlist',
           type: 'movie',
-          name: '👉 Empty Watchlist: Add movies via stremiowatchlist.vercel.app',
+          name: 'Scan QR Code',
           poster: 'https://stremiowatchlist.vercel.app/api/qr/poster',
           posterShape: 'regular',
           banner: 'https://stremiowatchlist.vercel.app/background.jpg',
-          genres: ['ℹ️ Tip', 'Add on Website', 'Scan QR Code'],
+          genres: ['Add Movies', 'Scan QR Code'],
           description:
-            'Your watchlist is empty! Movies must be added through the website:\n\n🌐 https://stremiowatchlist.vercel.app/\n\n📱 SCAN QR CODE:\nScan the QR code on this poster with your phone camera to open the dashboard and start tracking movies right from the couch!\n\nSearch and add any movie on the website. The addon will monitor releases 24/7 and notify you in Stremio when good quality (1080p / 4K) arrives!',
+            'SCAN QR CODE\n\nScan the QR code on this poster with your phone camera to open the dashboard and add movies to your watchlist.',
         },
       ],
     };
@@ -282,12 +282,12 @@ export async function handleMeta(
       meta: {
         id: 'guide_configure',
         type: 'movie',
-        name: '👉 Account Setup Required: Visit stremiowatchlist.vercel.app',
+        name: 'Scan QR Code',
         poster: 'https://stremiowatchlist.vercel.app/api/qr/poster',
         banner: 'https://stremiowatchlist.vercel.app/background.jpg',
-        genres: ['⚠️ Setup Required', 'Connect Stremio Account', 'Scan QR Code'],
+        genres: ['Setup Required', 'Connect Stremio Account', 'Scan QR Code'],
         description:
-          '⚠️ ACCOUNT SETUP REQUIRED\n\nTo use this addon and track movie releases in 1080p FHD & 4K UHD, you must connect your Stremio account on our website:\n\n🌐 https://stremiowatchlist.vercel.app/\n\n📱 SCAN QR CODE:\nPoint your phone camera at the QR code on this poster to open the website directly!\n\n📌 WHY IS AN ACCOUNT REQUIRED?\n1. Stremio addons are read-only: You cannot add or manage movies from inside the Stremio player interface.\n2. Automatic Cloud Sync: Connecting your account allows our background engine to monitor releases 24/7 and sync good quality movies directly to your TV and devices.\n\n🚀 3 SIMPLE STEPS TO GET STARTED:\n1. Scan the QR code or open https://stremiowatchlist.vercel.app in your browser\n2. Click "Connect Stremio & Start Tracking" and sign in with your Stremio account\n3. Search and add any movies you want to track — that\'s it! As soon as 1080p FHD or 4K UHD drops, they will appear right here in your Stremio library!',
+          'ACCOUNT SETUP REQUIRED\n\nSCAN QR CODE:\nPoint your phone camera at the QR code on this poster to connect your account and start tracking movie releases.',
       },
     };
   }
@@ -297,12 +297,12 @@ export async function handleMeta(
       meta: {
         id: 'guide_empty_watchlist',
         type: 'movie',
-        name: '👉 Empty Watchlist: Add movies via stremiowatchlist.vercel.app',
+        name: 'Scan QR Code',
         poster: 'https://stremiowatchlist.vercel.app/api/qr/poster',
         banner: 'https://stremiowatchlist.vercel.app/background.jpg',
-        genres: ['ℹ️ Tip', 'Add on Website', 'Scan QR Code'],
+        genres: ['Add Movies', 'Scan QR Code'],
         description:
-          'Your watchlist currently has no movies added.\n\n📱 SCAN QR CODE:\nScan the QR code on this poster with your phone camera to open the dashboard and start adding movies right from the couch!\n\n⚠️ Movies must be added directly through the website:\n🌐 https://stremiowatchlist.vercel.app/\n\nOpen the website, search for any movie and click "+ Add to Watchlist". The addon will monitor quality automatically and notify you once it releases in 1080p or 4K!',
+          'SCAN QR CODE\n\nScan the QR code on this poster with your phone camera to open the dashboard and add movies to your watchlist.',
       },
     };
   }

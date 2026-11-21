@@ -142,6 +142,35 @@ export function calculateWatchlistItemMetrics(
 }
 
 /**
+ * Checks whether an event is a duplicate or misattributed QR scan event.
+ */
+function isIgnoredOrDuplicateQrEvent(
+  ev: any,
+  serverScanTimestamps: number[]
+): boolean {
+  if (ev?.event_name !== 'qr_code_scanned') return false;
+
+  // 1. Mislabeled configure clicks from desktop/web Stremio
+  if (ev?.metadata?.source === 'stremio_configure') {
+    return true;
+  }
+
+  // 2. Client-side mirror event when a server event exists within 60s
+  const hasIp = Boolean(ev?.metadata?.ip);
+  if (!hasIp && ev?.metadata?.source === 'stremio_tv_qr' && ev?.created_at) {
+    const evTime = new Date(ev.created_at).getTime();
+    if (!isNaN(evTime)) {
+      const isDuplicate = serverScanTimestamps.some(
+        (serverTime) => Math.abs(serverTime - evTime) <= 60000
+      );
+      if (isDuplicate) return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * Counts addon funnel actions and builds sorted event frequency breakdown.
  */
 export function calculateEventFunnelMetrics(rawEvents: any[] = []) {
@@ -151,15 +180,33 @@ export function calculateEventFunnelMetrics(rawEvents: any[] = []) {
   let curatedListAddedEvents = 0;
   const eventCounts: Record<string, number> = {};
 
+  // Collect genuine server QR scan timestamps for client deduplication
+  const serverScanTimestamps: number[] = [];
+  for (const ev of rawEvents) {
+    if (ev?.event_name === 'qr_code_scanned' && ev?.metadata?.ip && ev?.created_at) {
+      const t = new Date(ev.created_at).getTime();
+      if (!isNaN(t)) serverScanTimestamps.push(t);
+    }
+  }
+
   for (const ev of rawEvents) {
     const name = ev?.event_name;
     if (!name) continue;
-    eventCounts[name] = (eventCounts[name] || 0) + 1;
 
-    if (name === 'addon_manifest_copied') manifestCopiedCount++;
-    if (name === 'addon_install_clicked') installClickedCount++;
-    if (name === 'qr_code_scanned') qrScannedCount++;
-    if (name === 'curated_list_added') curatedListAddedEvents++;
+    if (name === 'qr_code_scanned') {
+      if (isIgnoredOrDuplicateQrEvent(ev, serverScanTimestamps)) {
+        continue;
+      }
+      qrScannedCount++;
+    } else if (name === 'addon_manifest_copied') {
+      manifestCopiedCount++;
+    } else if (name === 'addon_install_clicked') {
+      installClickedCount++;
+    } else if (name === 'curated_list_added') {
+      curatedListAddedEvents++;
+    }
+
+    eventCounts[name] = (eventCounts[name] || 0) + 1;
   }
 
   const eventsBreakdown = Object.entries(eventCounts)

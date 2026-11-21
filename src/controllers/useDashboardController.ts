@@ -187,9 +187,10 @@ export function useDashboardController() {
     const context = searchParams.get('context') || 'stremio_tv';
 
     if (source === 'stremio_tv_qr') {
-      trackEvent('qr_code_scanned', {
+      trackEvent('qr_landing_viewed', {
         source: 'stremio_tv_qr',
         context,
+        alreadyLoggedIn: true,
       });
       showToast(
         '📱 Connected from Stremio TV! Search or add movies below to watch on your TV.',
