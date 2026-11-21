@@ -253,5 +253,50 @@ describe('Admin Analytics & Access Control', () => {
       const recent = formatRecentEvents(rawEvents, 2);
       expect(recent).toHaveLength(2);
     });
+
+    it('deduplicates client mirror QR scans and ignores misattributed configure clicks', () => {
+      const rawEvents = [
+        // Genuine server scan
+        {
+          event_name: 'qr_code_scanned',
+          created_at: '2026-11-20T10:00:00.000Z',
+          metadata: { source: 'stremio_tv_qr', context: 'stremio_tv', ip: '192.168.1.5' },
+        },
+        // Client-side mirror fired 2 seconds later (duplicate)
+        {
+          event_name: 'qr_code_scanned',
+          created_at: '2026-11-20T10:00:02.000Z',
+          metadata: { source: 'stremio_tv_qr', context: 'stremio_tv' },
+        },
+        // Mislabeled configure event
+        {
+          event_name: 'qr_code_scanned',
+          created_at: '2026-11-20T10:05:00.000Z',
+          metadata: { source: 'stremio_configure', context: 'stremio_tv' },
+        },
+        // Separate server scan from another user
+        {
+          event_name: 'qr_code_scanned',
+          created_at: '2026-11-20T10:10:00.000Z',
+          metadata: { source: 'stremio_tv_qr', context: 'stremio_tv', ip: '10.0.0.1' },
+        },
+        // Landing viewed event
+        {
+          event_name: 'qr_landing_viewed',
+          created_at: '2026-11-20T10:10:03.000Z',
+          metadata: { source: 'stremio_tv_qr', context: 'stremio_tv' },
+        },
+      ];
+
+      const funnel = calculateEventFunnelMetrics(rawEvents);
+      // Only the 2 genuine server scans should be counted as qrScannedCount
+      expect(funnel.qrScannedCount).toBe(2);
+
+      const qrBreakdown = funnel.eventsBreakdown.find((b) => b.eventName === 'qr_code_scanned');
+      expect(qrBreakdown?.count).toBe(2);
+
+      const landingBreakdown = funnel.eventsBreakdown.find((b) => b.eventName === 'qr_landing_viewed');
+      expect(landingBreakdown?.count).toBe(1);
+    });
   });
 });

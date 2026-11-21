@@ -75,6 +75,19 @@ describe('addonOperationService Unit Tests', () => {
       ip: '127.0.0.1',
       userAgent: 'TestAgent/1.0',
     });
+
+    // An immediate repeated call (camera pre-fetch + click) should debounce the event recording
+    recordSpy.mockClear();
+    const secondRedirectUrl = addonOperationService.recordQrScanAndGetRedirectUrl({
+      baseUrl: 'https://stremiowatchlist.vercel.app',
+      context: 'stremio_tv',
+      userAgent: 'TestAgent/1.0',
+      ip: '127.0.0.1',
+    });
+    expect(secondRedirectUrl).toBe(
+      'https://stremiowatchlist.vercel.app/?source=stremio_tv_qr&context=stremio_tv'
+    );
+    expect(recordSpy).not.toHaveBeenCalled();
     logSpy.mockRestore();
   });
 

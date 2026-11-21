@@ -148,21 +148,47 @@ async function generateQrCode({ text, format = 'png', size = 320 }) {
   };
 }
 
-function recordQrScanAndGetRedirectUrl({ baseUrl, context = 'stremio_tv', userAgent = 'unknown', ip = 'unknown' }) {
-  console.log(
-    `[QR Code Scan] User scanned QR code from Stremio TV - Context: ${context}, IP: ${ip}, User-Agent: ${userAgent}`
-  );
+// In-memory cache to debounce camera pre-fetch vs actual user navigation
+const recentQrScans = new Map();
+const QR_SCAN_DEBOUNCE_MS = 10000; // 10 seconds
 
-  analyticsRepository
-    .recordAnalyticsEvent('qr_code_scanned', {
-      source: 'stremio_tv_qr',
-      context,
-      ip,
-      userAgent,
-    })
-    .catch((err) => {
-      console.warn('[QR Analytics Warning] Failed to log QR event:', err.message);
-    });
+function recordQrScanAndGetRedirectUrl({ baseUrl, context = 'stremio_tv', userAgent = 'unknown', ip = 'unknown' }) {
+  const scanKey = `${ip}_${userAgent}_${context}`;
+  const now = Date.now();
+  const lastScanTime = recentQrScans.get(scanKey) || 0;
+
+  // Prune old entries to prevent memory growth
+  if (recentQrScans.size > 200) {
+    for (const [key, timestamp] of recentQrScans.entries()) {
+      if (now - timestamp > 60000) {
+        recentQrScans.delete(key);
+      }
+    }
+  }
+
+  const isDuplicatePreFetch = now - lastScanTime < QR_SCAN_DEBOUNCE_MS;
+  recentQrScans.set(scanKey, now);
+
+  if (!isDuplicatePreFetch) {
+    console.log(
+      `[QR Code Scan] User scanned QR code from Stremio TV - Context: ${context}, IP: ${ip}, User-Agent: ${userAgent}`
+    );
+
+    analyticsRepository
+      .recordAnalyticsEvent('qr_code_scanned', {
+        source: 'stremio_tv_qr',
+        context,
+        ip,
+        userAgent,
+      })
+      .catch((err) => {
+        console.warn('[QR Analytics Warning] Failed to log QR event:', err.message);
+      });
+  } else {
+    console.log(
+      `[QR Code Scan] Debounced duplicate/prefetch scan for Context: ${context}, IP: ${ip}`
+    );
+  }
 
   return `${baseUrl}/?source=stremio_tv_qr&context=${encodeURIComponent(context)}`;
 }
