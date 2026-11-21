@@ -175,14 +175,22 @@ export function useCustomListsController({
       const res = await customListService.addCuratedList(id);
       if (res.success && res.list) {
         const addedList = res.list;
+        const addedCount = res.addedMoviesCount ?? 0;
         trackEvent('curated_list_added', {
           listName: addedList.name || id,
-          addedMoviesCount: res.addedMoviesCount ?? 0,
+          addedMoviesCount: addedCount,
         });
-        showToast(
-          `Added "${addedList.name || 'Standard List'}" (${res.addedMoviesCount ?? 0} new movies)!`,
-          'success'
-        );
+        if (addedCount > 0) {
+          showToast(
+            `Added "${addedList.name || 'Standard List'}" (${addedCount} new movies)!`,
+            'success'
+          );
+        } else {
+          showToast(
+            `"${addedList.name || 'Standard List'}" is already in your account (all movies are up to date).`,
+            'info'
+          );
+        }
 
         setCustomLists((prev) => {
           if (

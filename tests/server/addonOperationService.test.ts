@@ -78,15 +78,17 @@ describe('addonOperationService Unit Tests', () => {
     logSpy.mockRestore();
   });
 
-  test('generateQrPosterSvg embeds QR code data URL and clean display host into SVG poster', async () => {
+  test('generateQrPosterSvg embeds QR code data URL into clean scannable SVG poster', async () => {
     const svg = await addonOperationService.generateQrPosterSvg({
       baseUrl: 'https://stremiowatchlist.vercel.app',
       context: 'stremio_tv',
     });
 
     expect(svg).toContain('<svg width="500" height="750"');
-    expect(svg).toContain('STREMIO WATCHLIST');
-    expect(svg).toContain('stremiowatchlist.vercel.app');
+    expect(svg).toContain('SCAN QR CODE');
     expect(svg).toContain('data:image/png;base64,');
+    expect(svg).not.toContain('stremiowatchlist.vercel.app');
+    expect(svg).not.toContain('Good Quality Tracker');
+    expect(svg).not.toContain('Empty Watchlist');
   });
 });
