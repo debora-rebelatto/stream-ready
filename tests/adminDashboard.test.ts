@@ -85,11 +85,24 @@ describe('Admin Analytics Dashboard Components', () => {
     expect(el.props.adoption.watchedSync.trackWatchlistPercent).toBe(83);
   });
 
-  test('TopMoviesTable renders community movie list', () => {
+  test('TopMoviesTable renders community movie list with QualityStatusBadge', () => {
     const el = React.createElement(TopMoviesTable, { movies: mockAnalyticsData.topMovies });
     expect(React.isValidElement(el)).toBe(true);
     expect(el.props.movies).toHaveLength(1);
     expect(el.props.movies[0].name).toBe('The Shawshank Redemption');
+
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain('Ready');
+    expect(html).not.toContain('%');
+    expect(html).not.toContain('15/15');
+
+    // Also test waiting for release status
+    const waitingHtml = renderToStaticMarkup(
+      React.createElement(TopMoviesTable, {
+        movies: [{ ...mockAnalyticsData.topMovies[0], readyCount: 0 }],
+      })
+    );
+    expect(waitingHtml).toContain('Waiting for Release');
   });
 
   test('TopThreeMoviesCard instantiates with top 3 movies podium', () => {
