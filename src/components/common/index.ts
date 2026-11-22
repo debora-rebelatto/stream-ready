@@ -43,3 +43,11 @@ export type { StatCardProps, StatCardTheme } from './StatCard';
 export { Avatar } from './Avatar';
 export type { AvatarProps, AvatarSize, AvatarStatus } from './Avatar';
 
+export { QualityStatusBadge, QUALITY_STATUS_CONFIG } from './QualityStatusBadge';
+export type {
+  QualityStatusBadgeProps,
+  QualityStatusState,
+  QualityStatusFormat,
+  QualityStatusConfig,
+} from './QualityStatusBadge';
+
