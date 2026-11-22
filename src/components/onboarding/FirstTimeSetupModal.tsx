@@ -113,7 +113,14 @@ export const FirstTimeSetupModal: React.FC<FirstTimeSetupModalProps> = (props) =
               Close Guide
             </Button>
           ) : (
-            <span className="hidden md:block w-24" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={wizard.handleFinishSetup}
+              className="text-gray-400 hover:text-white text-xs"
+            >
+              Skip Setup
+            </Button>
           )}
         </div>
         <div className="md:hidden">{stepper}</div>

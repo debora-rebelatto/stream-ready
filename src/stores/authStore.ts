@@ -5,9 +5,7 @@ import {
   trackEvent,
   identifyUser as identifyAnalyticsUser,
   resetUser as resetAnalyticsUser,
-  safeStorage,
 } from '../utils';
-import { getSetupCompletedStorageKey } from '../controllers/useSetupWizardController';
 import { useToastStore } from './toastStore';
 import { useSettingsStore } from './settingsStore';
 import { useWatchlistStore } from './watchlistStore';
@@ -31,7 +29,7 @@ export interface AuthStoreState {
   logout: () => Promise<void>;
   deleteAccount: () => Promise<{ success: boolean; error?: string }>;
   installToAccount: () => Promise<{ success: boolean; message?: string; error?: string }>;
-  markOnboardingCompleted: (hasMovies: boolean) => Promise<boolean>;
+  markOnboardingCompleted: (_hasMovies?: boolean) => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthStoreState>((set, get) => ({
@@ -213,16 +211,21 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
     }
   },
 
-  markOnboardingCompleted: async (hasMovies: boolean): Promise<boolean> => {
+  markOnboardingCompleted: async (_hasMovies?: boolean): Promise<boolean> => {
     const user = get().user;
-    if (!user || !hasMovies) return false;
-    const userKey = user.id || user.email;
-    safeStorage.set(getSetupCompletedStorageKey(userKey), 'true');
+    if (!user) return false;
     set((state) => ({
       user: state.user ? { ...state.user, onboardingCompleted: true } : null,
     }));
     try {
-      await systemService.saveSettings({ onboardingCompleted: true });
+      const res = await systemService.saveSettings({ onboardingCompleted: true });
+      if (res?.settings) {
+        set((state) => ({
+          user: state.user
+            ? { ...state.user, onboardingCompleted: Boolean(res.settings.onboardingCompleted) }
+            : null,
+        }));
+      }
     } catch (err) {
       console.warn('[Onboarding] Failed to persist completion state:', err);
     }

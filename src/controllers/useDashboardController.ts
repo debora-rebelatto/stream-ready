@@ -145,19 +145,14 @@ export function useDashboardController() {
       return;
     }
     const userKey = user.id || user.email;
-    if (!isUserOnboardingCompleted(user) && completedInSessionUserId !== userKey) {
+    if (
+      !isUserOnboardingCompleted(user) &&
+      completedInSessionUserId !== userKey
+    ) {
       setSetupWizardMode('first-login');
       setIsSetupWizardOpen(true);
     }
   }, [user, completedInSessionUserId]);
-
-  useEffect(() => {
-    if (!user) return;
-    const userKey = user.id || user.email;
-    if (completedInSessionUserId === userKey && !user.onboardingCompleted && items.length > 0) {
-      void markOnboardingCompleted(true);
-    }
-  }, [user, completedInSessionUserId, items.length, markOnboardingCompleted]);
 
   const handleOpenSetupWizardReview = () => {
     setSetupWizardMode('review');
@@ -167,17 +162,17 @@ export function useDashboardController() {
   const handleCloseSetupWizard = () => {
     if (setupWizardMode === 'review') {
       setIsSetupWizardOpen(false);
+    } else {
+      void handleSetupWizardComplete();
     }
   };
 
-  const handleSetupWizardComplete = async (hasMovies: boolean) => {
+  const handleSetupWizardComplete = async (_hasMovies?: boolean) => {
     const userKey = user?.id || user?.email || null;
-    if (setupWizardMode === 'first-login') {
+    if (setupWizardMode === 'first-login' && userKey) {
       setCompletedInSessionUserId(userKey);
     }
-    if (hasMovies && !user?.onboardingCompleted) {
-      await markOnboardingCompleted(true);
-    }
+    await markOnboardingCompleted(true);
     setIsSetupWizardOpen(false);
   };
 
