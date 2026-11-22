@@ -27,7 +27,7 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   deleteAccount: () => Promise<{ success: boolean; error?: string }>;
   installToAccount: () => Promise<{ success: boolean; message?: string; error?: string }>;
-  markOnboardingCompleted: (hasMovies: boolean) => Promise<boolean>;
+  markOnboardingCompleted: (hasMovies?: boolean) => Promise<boolean>;
 }
 
 export interface WatchlistContextType {

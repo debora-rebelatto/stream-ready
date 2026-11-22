@@ -5,9 +5,7 @@ import {
   trackEvent,
   identifyUser as identifyAnalyticsUser,
   resetUser as resetAnalyticsUser,
-  safeStorage,
 } from '../utils';
-import { getSetupCompletedStorageKey } from './useSetupWizardController';
 
 function identifyUser(user: StremioUser) {
   identifyAnalyticsUser(user.id || user.email, { email: user.email });
@@ -170,10 +168,8 @@ export function useAuthController({
   };
 
   const markOnboardingCompleted = useCallback(
-    async (hasMovies: boolean): Promise<boolean> => {
-      if (!user || !hasMovies) return false;
-      const userKey = user.id || user.email;
-      safeStorage.set(getSetupCompletedStorageKey(userKey), 'true');
+    async (_hasMovies?: boolean): Promise<boolean> => {
+      if (!user) return false;
       setUser((prev) => (prev ? { ...prev, onboardingCompleted: true } : prev));
       try {
         await systemService.saveSettings({ onboardingCompleted: true });

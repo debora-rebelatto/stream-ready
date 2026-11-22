@@ -1,7 +1,7 @@
 import React from 'react';
-import { Film, CheckCircle, Users, Clock } from 'lucide-react';
+import { Film, Users } from 'lucide-react';
 import type { TopMovieMetric } from '../../models';
-import { Badge } from '../common';
+import { QualityStatusBadge } from '../common';
 
 interface TopMoviesTableProps {
   movies: TopMovieMetric[];
@@ -46,11 +46,6 @@ export const TopMoviesTable: React.FC<TopMoviesTableProps> = ({ movies }) => {
           </thead>
           <tbody className="divide-y divide-white/5">
             {movies.map((movie, index) => {
-              const readyPercentage =
-                movie.userCount > 0
-                  ? Math.round((movie.readyCount / movie.userCount) * 100)
-                  : 0;
-
               return (
                 <tr key={movie.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="py-3 px-3 font-mono text-gray-400 font-bold">{index + 1}</td>
@@ -85,23 +80,7 @@ export const TopMoviesTable: React.FC<TopMoviesTableProps> = ({ movies }) => {
                     </span>
                   </td>
                   <td className="py-3 px-3 text-center whitespace-nowrap">
-                    {movie.readyCount > 0 ? (
-                      <Badge
-                        variant="emerald"
-                        size="xs"
-                        icon={<CheckCircle size={11} className="shrink-0" />}
-                      >
-                        {readyPercentage}% Ready ({movie.readyCount}/{movie.userCount})
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="amber"
-                        size="xs"
-                        icon={<Clock size={11} className="shrink-0" />}
-                      >
-                        Waiting for Release
-                      </Badge>
-                    )}
+                    <QualityStatusBadge isReady={movie.readyCount > 0} />
                   </td>
                 </tr>
               );

@@ -7,21 +7,11 @@ import {
   type StremioUser,
 } from '../models';
 import { useAuth, useWatchlist, useToast } from '../context/useAppContext';
-import { trackEvent, safeStorage } from '../utils';
-
-export const SETUP_COMPLETED_STORAGE_PREFIX = 'stremio_setup_completed_';
-
-export function getSetupCompletedStorageKey(userIdentifier: string): string {
-  return `${SETUP_COMPLETED_STORAGE_PREFIX}${userIdentifier}`;
-}
+import { trackEvent } from '../utils';
 
 export function isUserOnboardingCompleted(user: StremioUser | null): boolean {
   if (!user) return true;
-  if (user.onboardingCompleted === true) return true;
-  if (user.onboardingCompleted === false) return false;
-
-  const userKey = user.id || user.email;
-  return safeStorage.get(getSetupCompletedStorageKey(userKey)) === 'true';
+  return Boolean(user.onboardingCompleted);
 }
 
 export interface SetupStepActivity {
@@ -150,22 +140,6 @@ export function useSetupWizardController({
       document.body.style.overflow = prevOverflow;
     };
   }, [isOpen]);
-
-  // Block Escape in first-login mode; allow closing in review mode
-  useEffect(() => {
-    if (!isOpen || typeof window === 'undefined') return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      if (mode === 'first-login') {
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
-      onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [isOpen, mode, onClose]);
 
   // Track step views
   useEffect(() => {
@@ -338,6 +312,21 @@ export function useSetupWizardController({
       setIsCompleting(false);
     }
   };
+
+  // Allow closing in review mode or finishing setup on Escape in first-login mode
+  useEffect(() => {
+    if (!isOpen || typeof window === 'undefined') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (mode === 'first-login') {
+        void handleFinishSetup();
+        return;
+      }
+      onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [isOpen, mode, onClose, handleFinishSetup]);
 
   return {
     steps: SETUP_WIZARD_STEPS,

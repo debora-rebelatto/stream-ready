@@ -10,7 +10,6 @@ import {
 } from '../src/components';
 import { SETUP_WIZARD_STEPS } from '../src/models';
 import {
-  getSetupCompletedStorageKey,
   isUserOnboardingCompleted,
   resolveStepActionTaken,
 } from '../src/controllers';
@@ -81,25 +80,14 @@ describe('OnboardingCallout logic & starter recommendations', () => {
   });
 
   describe('Setup Wizard completion & activity helpers', () => {
-    it('builds per-user setup completion storage keys', () => {
-      expect(getSetupCompletedStorageKey('user-123')).toBe('stremio_setup_completed_user-123');
-    });
-
-    it('determines onboarding completion from server flag with localStorage fallback', () => {
+    it('determines onboarding completion strictly from the user model (database source of truth)', () => {
       expect(isUserOnboardingCompleted(null)).toBe(true);
       expect(
         isUserOnboardingCompleted({ id: 'u1', email: 'a@b.com', onboardingCompleted: true })
       ).toBe(true);
-
-      localStorage.setItem(getSetupCompletedStorageKey('u1'), 'true');
-      // Authoritative false from server always overrides localStorage
       expect(
         isUserOnboardingCompleted({ id: 'u1', email: 'a@b.com', onboardingCompleted: false })
       ).toBe(false);
-      // Fallback applies when onboardingCompleted is undefined
-      expect(isUserOnboardingCompleted({ id: 'u1', email: 'a@b.com' })).toBe(true);
-
-      localStorage.clear();
       expect(isUserOnboardingCompleted({ id: 'u1', email: 'a@b.com' })).toBe(false);
     });
 
