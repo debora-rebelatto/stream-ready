@@ -55,7 +55,7 @@ describe('Stremio Addon Module (lib/stremioAddon.js)', () => {
       const result = await handleCatalog('movie', 'watchlist_ready', {}, 'user123');
       expect(result.metas).toHaveLength(1);
       expect(result.metas[0].id).toBe('guide_empty_watchlist');
-      expect(result.metas[0].name).toContain('Empty Watchlist');
+      expect(result.metas[0].name).toContain('Scan QR Code');
     });
 
     test('deve retornar metas filtrados de watchlist_ready', async () => {

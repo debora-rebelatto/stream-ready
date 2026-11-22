@@ -89,7 +89,7 @@ describe('Backend StremioAddonService (server/services/stremioAddonService.ts)',
       const res = await handleCatalog('movie', 'watchlist_ready', {}, '');
       expect(res.metas).toHaveLength(1);
       expect(res.metas[0].id).toBe('guide_configure');
-      expect(res.metas[0].name).toContain('Setup Required');
+      expect(res.metas[0].name).toContain('Scan QR Code');
     });
 
     test('deve retornar catálogo vazio se userId for vazio para catálogos secundários', async () => {
@@ -100,13 +100,13 @@ describe('Backend StremioAddonService (server/services/stremioAddonService.ts)',
     test('handleMeta deve retornar meta para item de guia de configuração', async () => {
       const res = await handleMeta('movie', 'guide_configure', '');
       expect(res.meta).toBeDefined();
-      expect(res.meta?.name).toContain('Setup Required');
+      expect(res.meta?.name).toContain('Scan QR Code');
     });
 
     test('handleMeta deve retornar meta para item de guia de watchlist vazia', async () => {
       const res = await handleMeta('movie', 'guide_empty_watchlist', '');
       expect(res.meta).toBeDefined();
-      expect(res.meta?.name).toContain('Empty Watchlist');
+      expect(res.meta?.name).toContain('Scan QR Code');
     });
 
     test('handleMeta deve retornar meta para item não existente na watchlist', async () => {

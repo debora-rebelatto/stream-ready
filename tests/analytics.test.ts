@@ -78,6 +78,44 @@ describe('analytics.trackEvent (PostHog & Supabase)', () => {
     );
   });
 
+  it('tracks qr landing viewed and stremio configure opened events', () => {
+    trackEvent('qr_landing_viewed', {
+      source: 'stremio_tv_qr',
+      context: 'stremio_tv',
+    });
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/events',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          event: 'qr_landing_viewed',
+          data: {
+            source: 'stremio_tv_qr',
+            context: 'stremio_tv',
+          },
+        }),
+      })
+    );
+
+    trackEvent('stremio_configure_opened', {
+      source: 'stremio_configure',
+      context: 'stremio_tv',
+    });
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/events',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          event: 'stremio_configure_opened',
+          data: {
+            source: 'stremio_configure',
+            context: 'stremio_tv',
+          },
+        }),
+      })
+    );
+  });
+
   it('tracks onboarding events (viewed, quick add, and dismissed)', () => {
     trackEvent('onboarding_viewed', { watchlistCount: 0 });
     expect(global.fetch).toHaveBeenCalledWith(

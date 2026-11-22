@@ -147,12 +147,21 @@ export function useDashboardController() {
     const userKey = user.id || user.email;
     if (
       !isUserOnboardingCompleted(user) &&
-      completedInSessionUserId !== userKey
+      completedInSessionUserId !== userKey &&
+      items.length === 0 &&
+      !isWatchlistLoading
     ) {
       setSetupWizardMode('first-login');
       setIsSetupWizardOpen(true);
     }
-  }, [user, completedInSessionUserId]);
+  }, [user, completedInSessionUserId, items.length, isWatchlistLoading]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (!user.onboardingCompleted && items.length > 0) {
+      void markOnboardingCompleted(true);
+    }
+  }, [user, items.length, markOnboardingCompleted]);
 
   const handleOpenSetupWizardReview = () => {
     setSetupWizardMode('review');
@@ -163,7 +172,7 @@ export function useDashboardController() {
     if (setupWizardMode === 'review') {
       setIsSetupWizardOpen(false);
     } else {
-      void handleSetupWizardComplete();
+      void handleSetupWizardComplete(items.length > 0);
     }
   };
 
@@ -172,7 +181,9 @@ export function useDashboardController() {
     if (setupWizardMode === 'first-login' && userKey) {
       setCompletedInSessionUserId(userKey);
     }
-    await markOnboardingCompleted(true);
+    if (!user?.onboardingCompleted) {
+      await markOnboardingCompleted(true);
+    }
     setIsSetupWizardOpen(false);
   };
 
@@ -182,9 +193,10 @@ export function useDashboardController() {
     const context = searchParams.get('context') || 'stremio_tv';
 
     if (source === 'stremio_tv_qr') {
-      trackEvent('qr_code_scanned', {
+      trackEvent('qr_landing_viewed', {
         source: 'stremio_tv_qr',
         context,
+        alreadyLoggedIn: true,
       });
       showToast(
         '📱 Connected from Stremio TV! Search or add movies below to watch on your TV.',

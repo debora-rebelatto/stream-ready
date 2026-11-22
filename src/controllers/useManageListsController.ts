@@ -67,7 +67,7 @@ export function useManageListsController(initialTab: 'standard' | 'custom' = 'st
   };
 
   const handleAddCurated = async (list: CuratedList) => {
-    if (addingListId) return;
+    if (addingListId || isListAlreadyAdded(list)) return;
     setAddingListId(list.id);
     try {
       await addCuratedList(list.id);

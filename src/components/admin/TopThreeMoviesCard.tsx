@@ -1,7 +1,7 @@
 import React from 'react';
-import { Trophy, Users, CheckCircle, Clock, Plus, Check, RefreshCw } from 'lucide-react';
+import { Trophy, Users, Plus, Check, RefreshCw } from 'lucide-react';
 import type { TopMovieMetric } from '../../models';
-import { Badge } from '../common/Badge';
+import { Badge, QualityStatusBadge } from '../common';
 
 export interface TopThreeMoviesCardProps {
   movies: TopMovieMetric[];
@@ -74,8 +74,6 @@ export const TopThreeMoviesCard: React.FC<TopThreeMoviesCardProps> = ({
           const config = PODIUM_CONFIG[index] || PODIUM_CONFIG[2];
           const isAdded = Boolean(userMovieIds && userMovieIds.has(movie.id));
           const isAdding = isAddingId === movie.id;
-          const readyPercentage =
-            movie.userCount > 0 ? Math.round((movie.readyCount / movie.userCount) * 100) : 0;
           const genresLabel = Array.isArray(movie.genres) ? movie.genres.slice(0, 2).join(', ') : '';
 
           return (
@@ -146,25 +144,10 @@ export const TopThreeMoviesCard: React.FC<TopThreeMoviesCardProps> = ({
               {/* Status Footer & Action */}
               <div className="pt-2 border-t border-white/5 flex items-center justify-between gap-2 text-[11px]">
                 <div className="whitespace-nowrap shrink-0">
-                  {movie.readyCount > 0 ? (
-                    <Badge
-                      variant="emerald"
-                      size="xs"
-                      icon={<CheckCircle size={10} className="shrink-0" />}
-                    >
-                      {movie.bestQuality && movie.bestQuality !== 'Pending' && movie.bestQuality !== 'Watched'
-                        ? `${movie.bestQuality} Ready`
-                        : `${readyPercentage}% Ready`}
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="amber"
-                      size="xs"
-                      icon={<Clock size={10} className="shrink-0" />}
-                    >
-                      Waiting
-                    </Badge>
-                  )}
+                  <QualityStatusBadge
+                    isReady={movie.readyCount > 0}
+                    format="short"
+                  />
                 </div>
 
                 {onAddMovie && (

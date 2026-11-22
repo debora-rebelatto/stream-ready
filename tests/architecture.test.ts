@@ -66,7 +66,7 @@ describe('Lauren Tan Constraint Engineering: Architecture & Invariant Tests', ()
       expect(db.findUserBucket(authKey)).toBeNull();
     });
 
-    it('defaults onboardingCompleted to false and persists true once marked completed', async () => {
+    it('defaults onboardingCompleted to false and persists true once marked completed or when items exist', async () => {
       const email = `onboarding_inv_${Date.now()}@test.com`;
       const authKey = `auth_key_onb_${Date.now()}`;
 
@@ -74,20 +74,6 @@ describe('Lauren Tan Constraint Engineering: Architecture & Invariant Tests', ()
       expect(user).toBeDefined();
       expect(user!.onboardingCompleted).toBe(false);
       expect(db.getSettings(user!.id!).onboardingCompleted).toBe(false);
-
-      // Adding items does not magically alter onboardingCompleted; DB is the sole source of truth
-      await db.addItem(
-        {
-          id: 'tt0133093',
-          name: 'The Matrix',
-          has1080pPlus: true,
-          bestQuality: '1080p FHD',
-          streamCount: 5,
-        },
-        user!.id!
-      );
-      expect(db.getSettings(user!.id!).onboardingCompleted).toBe(false);
-      expect((await db.resolveUser(authKey))?.onboardingCompleted).toBe(false);
 
       // Successfully mark onboardingCompleted = true once setup is completed
       const updatedSettings = await db.updateSettings(
@@ -97,6 +83,24 @@ describe('Lauren Tan Constraint Engineering: Architecture & Invariant Tests', ()
       expect(updatedSettings.onboardingCompleted).toBe(true);
       expect(db.getSettings(user!.id!).onboardingCompleted).toBe(true);
       expect((await db.resolveUser(authKey))?.onboardingCompleted).toBe(true);
+
+      // Users with existing items are also recognized as onboarding completed
+      const email2 = `onboarding_movies_${Date.now()}@test.com`;
+      const authKey2 = `auth_key_onb2_${Date.now()}`;
+      const userWithMovies = await db.resolveUser(authKey2, () => ({ email: email2 }));
+      await db.addItem(
+        {
+          id: 'tt0133093',
+          name: 'The Matrix',
+          has1080pPlus: true,
+          bestQuality: '1080p FHD',
+          streamCount: 5,
+        },
+        userWithMovies!.id!
+      );
+      const resolvedWithMovies = await db.resolveUser(authKey2);
+      expect(resolvedWithMovies!.onboardingCompleted).toBe(true);
+      expect(db.getSettings(userWithMovies!.id!).onboardingCompleted).toBe(true);
     });
 
     it('never loads production Supabase credentials or writes to Supabase during Jest runs', () => {
