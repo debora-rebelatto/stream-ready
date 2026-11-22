@@ -3,8 +3,8 @@ import {
   ArrowLeft,
   RefreshCw,
   Palette,
-  AlertCircle,
 } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import { useAdminController, type AdminTimeRange } from '../controllers/useAdminController';
 import { Button } from '../components';
 import {
@@ -21,10 +21,10 @@ export interface AdminDashboardViewProps {
 }
 
 export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }) => {
+  const navigate = useNavigate();
   const {
     data,
     isLoading,
-    error,
     timeRange,
     setTimeRange,
     handleRefresh,
@@ -83,7 +83,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
               variant="outline"
               size="sm"
               onClick={() => {
-                window.location.hash = '#design-system';
+                navigate({ to: '/design-system' });
               }}
               icon={<Palette size={14} className="text-purple-400" />}
               title="Open Design System"
@@ -110,29 +110,6 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
           <div className="py-20 text-center space-y-3">
             <RefreshCw size={28} className="animate-spin text-purple-400 mx-auto" />
             <p className="text-xs text-gray-400">Loading platform analytics and telemetry...</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="p-6 rounded-2xl bg-red-950/40 border border-red-500/30 text-center space-y-4">
-            <AlertCircle size={32} className="text-red-400 mx-auto" />
-            <div>
-              <h3 className="text-base font-bold text-red-200">Admin Authorization Required</h3>
-              <p className="text-xs text-gray-300 mt-1">{error}</p>
-            </div>
-            <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 text-left text-xs font-mono text-gray-300 space-y-2">
-              <span className="text-[11px] text-purple-300 block font-sans font-semibold">
-                To grant admin access, run this command in your Supabase SQL Editor:
-              </span>
-              <code className="block select-all text-emerald-400 bg-white/5 p-2 rounded-lg break-all">
-                ALTER TABLE watchlist_users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
-                <br />
-                UPDATE watchlist_users SET is_admin = TRUE WHERE email = 'your-stremio-email';
-              </code>
-            </div>
-            <Button variant="outline" size="sm" onClick={handleRefresh}>
-              Retry Verification
-            </Button>
           </div>
         )}
 

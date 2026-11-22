@@ -218,7 +218,14 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
       user: state.user ? { ...state.user, onboardingCompleted: true } : null,
     }));
     try {
-      await systemService.saveSettings({ onboardingCompleted: true });
+      const res = await systemService.saveSettings({ onboardingCompleted: true });
+      if (res?.settings) {
+        set((state) => ({
+          user: state.user
+            ? { ...state.user, onboardingCompleted: Boolean(res.settings.onboardingCompleted) }
+            : null,
+        }));
+      }
     } catch (err) {
       console.warn('[Onboarding] Failed to persist completion state:', err);
     }

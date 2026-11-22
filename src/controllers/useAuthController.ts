@@ -172,7 +172,14 @@ export function useAuthController({
       if (!user) return false;
       setUser((prev) => (prev ? { ...prev, onboardingCompleted: true } : prev));
       try {
-        await systemService.saveSettings({ onboardingCompleted: true });
+        const res = await systemService.saveSettings({ onboardingCompleted: true });
+        if (res?.settings) {
+          setUser((prev) =>
+            prev
+              ? { ...prev, onboardingCompleted: Boolean(res.settings.onboardingCompleted) }
+              : prev
+          );
+        }
       } catch (err) {
         console.warn('[Onboarding] Failed to persist completion state:', err);
       }

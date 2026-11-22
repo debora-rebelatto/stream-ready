@@ -1,5 +1,6 @@
 import React from 'react';
 import { Shield, Palette } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import { useDashboardController } from '../controllers/useDashboardController';
 import {
   Button,
@@ -26,6 +27,7 @@ import { SettingsPageView } from './SettingsPageView';
 import { AdminDashboardView } from './AdminDashboardView';
 
 export const UserDashboardView: React.FC = () => {
+  const navigate = useNavigate();
   const {
     user,
     items,
@@ -180,7 +182,7 @@ export const UserDashboardView: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    window.location.hash = '#design-system';
+                    navigate({ to: '/design-system' });
                   }}
                   icon={<Palette size={14} className="text-purple-300" />}
                   className="w-full sm:w-auto font-semibold border-purple-500/30 text-purple-200 hover:text-white"
