@@ -145,19 +145,23 @@ export function useDashboardController() {
       return;
     }
     const userKey = user.id || user.email;
-    if (!isUserOnboardingCompleted(user) && completedInSessionUserId !== userKey) {
+    if (
+      !isUserOnboardingCompleted(user) &&
+      completedInSessionUserId !== userKey &&
+      items.length === 0 &&
+      !isWatchlistLoading
+    ) {
       setSetupWizardMode('first-login');
       setIsSetupWizardOpen(true);
     }
-  }, [user, completedInSessionUserId]);
+  }, [user, completedInSessionUserId, items.length, isWatchlistLoading]);
 
   useEffect(() => {
     if (!user) return;
-    const userKey = user.id || user.email;
-    if (completedInSessionUserId === userKey && !user.onboardingCompleted && items.length > 0) {
+    if (!user.onboardingCompleted && items.length > 0) {
       void markOnboardingCompleted(true);
     }
-  }, [user, completedInSessionUserId, items.length, markOnboardingCompleted]);
+  }, [user, items.length, markOnboardingCompleted]);
 
   const handleOpenSetupWizardReview = () => {
     setSetupWizardMode('review');
@@ -167,15 +171,17 @@ export function useDashboardController() {
   const handleCloseSetupWizard = () => {
     if (setupWizardMode === 'review') {
       setIsSetupWizardOpen(false);
+    } else {
+      void handleSetupWizardComplete(items.length > 0);
     }
   };
 
-  const handleSetupWizardComplete = async (hasMovies: boolean) => {
+  const handleSetupWizardComplete = async (_hasMovies?: boolean) => {
     const userKey = user?.id || user?.email || null;
-    if (setupWizardMode === 'first-login') {
+    if (setupWizardMode === 'first-login' && userKey) {
       setCompletedInSessionUserId(userKey);
     }
-    if (hasMovies && !user?.onboardingCompleted) {
+    if (!user?.onboardingCompleted) {
       await markOnboardingCompleted(true);
     }
     setIsSetupWizardOpen(false);

@@ -66,7 +66,7 @@ describe('Lauren Tan Constraint Engineering: Architecture & Invariant Tests', ()
       expect(db.findUserBucket(authKey)).toBeNull();
     });
 
-    it('defaults onboardingCompleted to false and requires at least one movie to mark true', async () => {
+    it('defaults onboardingCompleted to false and persists true once marked completed or when items exist', async () => {
       const email = `onboarding_inv_${Date.now()}@test.com`;
       const authKey = `auth_key_onb_${Date.now()}`;
 
@@ -75,16 +75,19 @@ describe('Lauren Tan Constraint Engineering: Architecture & Invariant Tests', ()
       expect(user!.onboardingCompleted).toBe(false);
       expect(db.getSettings(user!.id!).onboardingCompleted).toBe(false);
 
-      // Cannot mark onboardingCompleted = true while user has 0 movies
-      const settingsWithZeroMovies = await db.updateSettings(
+      // Successfully mark onboardingCompleted = true once setup is completed
+      const updatedSettings = await db.updateSettings(
         { onboardingCompleted: true },
         user!.id!
       );
-      expect(settingsWithZeroMovies.onboardingCompleted).toBe(false);
-      expect(db.getSettings(user!.id!).onboardingCompleted).toBe(false);
-      expect((await db.resolveUser(authKey))?.onboardingCompleted).toBe(false);
+      expect(updatedSettings.onboardingCompleted).toBe(true);
+      expect(db.getSettings(user!.id!).onboardingCompleted).toBe(true);
+      expect((await db.resolveUser(authKey))?.onboardingCompleted).toBe(true);
 
-      // Once user has at least 1 movie, onboardingCompleted persists as true
+      // Users with existing items are also recognized as onboarding completed
+      const email2 = `onboarding_movies_${Date.now()}@test.com`;
+      const authKey2 = `auth_key_onb2_${Date.now()}`;
+      const userWithMovies = await db.resolveUser(authKey2, () => ({ email: email2 }));
       await db.addItem(
         {
           id: 'tt0133093',
@@ -93,16 +96,11 @@ describe('Lauren Tan Constraint Engineering: Architecture & Invariant Tests', ()
           bestQuality: '1080p FHD',
           streamCount: 5,
         },
-        user!.id!
+        userWithMovies!.id!
       );
-
-      const updatedSettings = await db.updateSettings({ onboardingCompleted: true }, user!.id!);
-      expect(updatedSettings.onboardingCompleted).toBe(true);
-      expect(db.getSettings(user!.id!).onboardingCompleted).toBe(true);
-
-      const resolvedAgain = await db.resolveUser(authKey);
-      expect(resolvedAgain).toBeDefined();
-      expect(resolvedAgain!.onboardingCompleted).toBe(true);
+      const resolvedWithMovies = await db.resolveUser(authKey2);
+      expect(resolvedWithMovies!.onboardingCompleted).toBe(true);
+      expect(db.getSettings(userWithMovies!.id!).onboardingCompleted).toBe(true);
     });
 
     it('never loads production Supabase credentials or writes to Supabase during Jest runs', () => {
