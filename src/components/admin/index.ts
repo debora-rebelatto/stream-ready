@@ -1,4 +1,6 @@
 export { AdminKpiGrid } from './AdminKpiGrid';
+export { DailySignupsChart } from './DailySignupsChart';
+export { DailyMoviesAddedChart } from './DailyMoviesAddedChart';
 export { ServiceAdoptionCard } from './ServiceAdoptionCard';
 export { NotificationAnalyticsCard } from './NotificationAnalyticsCard';
 export { TopMoviesTable } from './TopMoviesTable';

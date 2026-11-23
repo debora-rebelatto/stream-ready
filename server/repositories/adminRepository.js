@@ -6,7 +6,7 @@ const { watchlistRepository } = require('./watchlistRepository');
  * Retrieves raw user/item/event data from the persistence layer and delegates
  * report aggregation to adminAnalyticsService (lib/adminAnalytics).
  */
-async function getAdminAnalytics() {
+async function getAdminAnalytics(timeRange = 'all') {
   await db.ensureLoaded();
 
   const users = db.getAllUsers() || [];
@@ -25,6 +25,7 @@ async function getAdminAnalytics() {
     rawEvents,
     pollResults,
     topMovies,
+    timeRange,
     isItemReady: db.isItemReady ? (item, minQ) => db.isItemReady(item, minQ) : undefined,
   });
 }

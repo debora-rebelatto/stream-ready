@@ -3,6 +3,8 @@ const { registerAdminRoutes } = require('../../server/controllers/adminControlle
 const {
   calculatePercentage,
   calculateActiveUsers,
+  calculateDailySignups,
+  calculateDailyMoviesAdded,
   calculateUserPreferenceMetrics,
   calculateWatchlistItemMetrics,
   calculateEventFunnelMetrics,
@@ -63,6 +65,8 @@ describe('Admin Analytics & Access Control', () => {
       expect(Array.isArray(analytics.topMovies)).toBe(true);
       expect(analytics.pollResults).toBeDefined();
       expect(Array.isArray(analytics.eventsBreakdown)).toBe(true);
+      expect(Array.isArray(analytics.dailySignups)).toBe(true);
+      expect(Array.isArray(analytics.dailyMoviesAdded)).toBe(true);
     });
 
     it('correctly calculates ready, waiting, and watched movie KPIs and top movie stats', async () => {
@@ -223,6 +227,75 @@ describe('Admin Analytics & Access Control', () => {
       expect(active.activeUsers24h).toBe(1);
       expect(active.activeUsers7d).toBe(2);
       expect(active.activeUsers30d).toBe(3);
+    });
+
+    it('calculateDailySignups aggregates newly registered accounts per day with cumulative totals', () => {
+      const now = Date.UTC(2026, 10, 23, 15, 0, 0); // 2026-11-23T15:00:00Z
+      const users = [
+        // Created before the 7d window -> counted in cumulative baseline
+        { id: 'u0', createdAt: '2026-11-01T10:00:00.000Z' },
+        // Two users created on 2026-11-23
+        { id: 'u1', createdAt: '2026-11-23T10:00:00.000Z' },
+        { id: 'u2', created_at: '2026-11-23T12:00:00.000Z' },
+        // One user created on 2026-11-21
+        { id: 'u3', createdAt: '2026-11-21T08:00:00.000Z' },
+      ];
+
+      const series7d = calculateDailySignups(users, '7d', now);
+      expect(series7d).toHaveLength(7);
+      expect(series7d[0].date).toBe('2026-11-17');
+      expect(series7d[0].newUsers).toBe(0);
+      expect(series7d[0].cumulativeUsers).toBe(1);
+
+      const nov21 = series7d.find((d) => d.date === '2026-11-21');
+      expect(nov21?.newUsers).toBe(1);
+      expect(nov21?.cumulativeUsers).toBe(2);
+
+      const nov22 = series7d.find((d) => d.date === '2026-11-22');
+      expect(nov22?.newUsers).toBe(0);
+      expect(nov22?.cumulativeUsers).toBe(2);
+
+      expect(series7d[6].date).toBe('2026-11-23');
+      expect(series7d[6].newUsers).toBe(2);
+      expect(series7d[6].cumulativeUsers).toBe(4);
+
+      const series30d = calculateDailySignups(users, '30d', now);
+      expect(series30d).toHaveLength(30);
+
+      const seriesAll = calculateDailySignups(users, 'all', now);
+      expect(seriesAll.length).toBeGreaterThanOrEqual(23);
+    });
+
+    it('calculateDailyMoviesAdded breaks down movies by exact analytics EventSource values', () => {
+      const now = Date.UTC(2026, 10, 23, 15, 0, 0); // 2026-11-23T15:00:00Z
+      const rawEvents = [
+        { event_name: 'movie_added', metadata: { source: 'search' }, created_at: '2026-11-23T10:00:00.000Z' },
+        { event_name: 'movie_added', metadata: { source: 'search' }, created_at: '2026-11-23T11:00:00.000Z' },
+        { event_name: 'movie_added', metadata: { source: 'recommendations' }, created_at: '2026-11-23T12:00:00.000Z' },
+        { event_name: 'movie_added', metadata: { source: 'manual' }, created_at: '2026-11-23T12:30:00.000Z' },
+        { event_name: 'curated_list_added', metadata: { listName: 'Oscar 2026', addedMoviesCount: 5 }, created_at: '2026-11-23T13:00:00.000Z' },
+        { event_name: 'movie_added', metadata: { source: 'curated_list' }, created_at: '2026-11-21T09:00:00.000Z' },
+        // Non-movie event should be ignored
+        { event_name: 'auth_login_success', metadata: {}, created_at: '2026-11-23T14:00:00.000Z' },
+      ];
+
+      const series7d = calculateDailyMoviesAdded(rawEvents, '7d', now);
+      expect(series7d).toHaveLength(7);
+
+      const today = series7d[6];
+      expect(today.date).toBe('2026-11-23');
+      expect(today.search).toBe(2);
+      expect(today.recommendations).toBe(1);
+      expect(today.manual).toBe(1);
+      expect(today.curated_list).toBe(5);
+      expect(today.total).toBe(9);
+
+      const nov21 = series7d.find((d) => d.date === '2026-11-21');
+      expect(nov21?.curated_list).toBe(1);
+      expect(nov21?.total).toBe(1);
+
+      const nov22 = series7d.find((d) => d.date === '2026-11-22');
+      expect(nov22?.total).toBe(0);
     });
 
     it('calculateUserPreferenceMetrics aggregates quality, sync, and custom list counts', () => {

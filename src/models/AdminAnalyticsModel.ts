@@ -87,6 +87,21 @@ export interface RecentEventMetric {
   metadata?: Record<string, any>;
 }
 
+export interface DailySignupsPoint {
+  date: string;
+  newUsers: number;
+  cumulativeUsers: number;
+}
+
+export interface DailyMoviesAddedPoint {
+  date: string;
+  total: number;
+  search: number;
+  recommendations: number;
+  curated_list: number;
+  manual: number;
+}
+
 export interface AdminAnalyticsData {
   kpis: KpiMetrics;
   serviceAdoption: ServiceAdoptionMetrics;
@@ -98,5 +113,7 @@ export interface AdminAnalyticsData {
   };
   eventsBreakdown: EventBreakdownMetric[];
   recentEvents: RecentEventMetric[];
+  dailySignups?: DailySignupsPoint[];
+  dailyMoviesAdded?: DailyMoviesAddedPoint[];
   generatedAt: string;
 }
