@@ -153,5 +153,5 @@ The next major chapter: extending the tracker from movies to full television ser
 Have an idea that isn't on the roadmap? We'd love to hear from you:
 
 - **Feedback Form:** [Share your feedback on Tally](https://tally.so/r/dbazxA)
-- **GitHub Issues:** [Open a Feature Request on GitHub](https://github.com/debora-rebelatto/stremiowatchlist/issues)
+- **GitHub Issues:** [Open a Feature Request on GitHub](https://github.com/streamreadyapp/stream-ready/issues)
 - **Support the Project:** [Become a Sponsor on GitHub](https://github.com/sponsors/debora-rebelatto)

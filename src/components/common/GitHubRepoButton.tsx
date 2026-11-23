@@ -11,7 +11,7 @@ export const GitHubRepoButton: React.FC<GitHubRepoButtonProps> = ({
 }) => {
   return (
     <a
-      href="https://github.com/debora-rebelatto/stremiowatchlist"
+      href="https://github.com/streamreadyapp/stream-ready"
       target="_blank"
       rel="noopener noreferrer"
       className={`inline-flex items-center justify-center gap-1.5 rounded-md font-semibold transition-all select-none border cursor-pointer shrink-0 whitespace-nowrap leading-none ${

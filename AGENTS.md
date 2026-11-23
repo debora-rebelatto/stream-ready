@@ -10,7 +10,7 @@ Welcome to **Stremio Watchlist (Good Quality Tracker)**. This document serves as
 
 - **Web Dashboard:** [https://stremiowatchlist.vercel.app/](https://stremiowatchlist.vercel.app/)
 - **Addon Manifest:** `https://stremiowatchlist.vercel.app/manifest.json`
-- **GitHub Repository:** [https://github.com/debora-rebelatto/stremiowatchlist](https://github.com/debora-rebelatto/stremiowatchlist)
+- **GitHub Repository:** [https://github.com/streamreadyapp/stream-ready](https://github.com/streamreadyapp/stream-ready)
 
 ---
 

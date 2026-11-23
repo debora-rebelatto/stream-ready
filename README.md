@@ -85,7 +85,7 @@ When browsing upcoming or recently released films in Stremio, movies often only 
 
 ```bash
 # Clone the repository
-git clone https://github.com/debora-rebelatto/stremiolist.git
+git clone https://github.com/streamreadyapp/stream-ready.git
 cd stremiolist
 
 # Install dependencies
