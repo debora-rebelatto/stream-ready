@@ -3,6 +3,7 @@ export { PreferenceSelectorCard } from './PreferenceSelectorCard';
 export { VideoQualitySettingsCard } from './VideoQualitySettingsCard';
 export { AudioSettingsCard } from './AudioSettingsCard';
 export { SyncSettingsCard } from './SyncSettingsCard';
+export { NotificationsSettingsCard } from './NotificationsSettingsCard';
 export { BackupSettingsCard } from './BackupSettingsCard';
 export { AccountDangerCard } from './AccountDangerCard';
 export { SettingsModal } from './SettingsModal';

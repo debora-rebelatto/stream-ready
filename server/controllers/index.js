@@ -4,6 +4,7 @@ const { registerWatchlistRoutes } = require('./watchlistController');
 const { registerCustomListRoutes } = require('./customListController');
 const { registerSystemRoutes } = require('./systemController');
 const { registerAdminRoutes } = require('./adminController');
+const { registerNotificationRoutes } = require('./notificationController');
 
 function registerControllers(app, port) {
   registerSystemRoutes(app, port);
@@ -12,6 +13,7 @@ function registerControllers(app, port) {
   registerWatchlistRoutes(app);
   registerCustomListRoutes(app);
   registerAdminRoutes(app);
+  registerNotificationRoutes(app);
 }
 
 module.exports = {
@@ -22,4 +24,5 @@ module.exports = {
   registerCustomListRoutes,
   registerSystemRoutes,
   registerAdminRoutes,
+  registerNotificationRoutes,
 };

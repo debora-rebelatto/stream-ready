@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useWatchlist, useToast, useAuth } from '../context/useAppContext';
 import { watchlistService } from '../services';
 
-export type SettingsTab = 'quality' | 'sync' | 'backup' | 'account';
+export type SettingsTab = 'quality' | 'notifications' | 'sync' | 'backup' | 'account';
 
 export interface UseSettingsControllerProps {
   manifestUrl?: string;

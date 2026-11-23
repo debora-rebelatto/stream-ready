@@ -3,6 +3,7 @@ const { watchlistOperationService } = require('./watchlistOperationService');
 const { authOperationService } = require('./authOperationService');
 const { customListOperationService } = require('./customListOperationService');
 const { systemOperationService } = require('./systemOperationService');
+const { notificationOperationService } = require('./notificationOperationService');
 
 module.exports = {
   addonOperationService,
@@ -10,4 +11,5 @@ module.exports = {
   authOperationService,
   customListOperationService,
   systemOperationService,
+  notificationOperationService,
 };

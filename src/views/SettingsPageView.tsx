@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ArrowLeft,
   Sliders,
+  Bell,
   Tv,
   Download,
   AlertTriangle,
@@ -13,6 +14,7 @@ import {
   Button,
   GitHubSponsorButton,
   QualitySettingsCard,
+  NotificationsSettingsCard,
   SyncSettingsCard,
   BackupSettingsCard,
   AccountDangerCard,
@@ -59,6 +61,7 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
 
   const navItems: Array<{ id: SettingsTab; label: string; icon: React.ReactNode }> = [
     { id: 'quality', label: 'Quality & Detection', icon: <Sliders size={16} /> },
+    { id: 'notifications', label: 'Notifications & Alerts', icon: <Bell size={16} /> },
     { id: 'sync', label: 'Stremio Sync', icon: <Tv size={16} /> },
     { id: 'backup', label: 'Backup & Restore', icon: <Download size={16} /> },
     { id: 'account', label: 'Account & Danger Zone', icon: <AlertTriangle size={16} /> },
@@ -145,6 +148,8 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
 
           <section className="flex-1 min-w-0">
             {activeTab === 'quality' && <QualitySettingsCard />}
+
+            {activeTab === 'notifications' && <NotificationsSettingsCard />}
 
             {activeTab === 'sync' && (
               <SyncSettingsCard
