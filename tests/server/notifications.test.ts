@@ -3,6 +3,7 @@ import db from '../../lib/db';
 import notifications from '../../lib/notifications';
 import { maskDiscordWebhookUrl } from '../../lib/db/notificationSettingsHelper';
 import { notificationOperationService } from '../../server/services/notificationOperationService';
+import { registerNotificationRoutes } from '../../server/controllers/notificationController';
 import { runBackgroundCheck } from '../../server/utils/requestContext';
 
 describe('Automated Notifications (Telegram, Discord, Email)', () => {
@@ -255,6 +256,55 @@ describe('Automated Notifications (Telegram, Discord, Email)', () => {
         String(u).includes('discord.com/api/webhooks')
       ).length;
       expect(discordCallsAfterSecond).toBe(1);
+    });
+
+    it('rejects POST /api/notifications/test with 403 for non-admin users', async () => {
+      const email = `regular_user_${Date.now()}@example.com`;
+      const authKey = `auth_regular_${Date.now()}`;
+      const bucket = db.ensureUserBucket(email);
+      bucket.isAdmin = false;
+      bucket.settings.stremioAuthKey = authKey;
+      await db.resolveUser(authKey, () => ({ email }));
+
+      const routes: Record<string, Function> = {};
+      const mockApp = {
+        get: (p: string, h: Function) => {
+          routes[`GET ${p}`] = h;
+        },
+        post: (p: string, h: Function) => {
+          routes[`POST ${p}`] = h;
+        },
+      };
+      registerNotificationRoutes(mockApp);
+
+      const handler = routes['POST /api/notifications/test'];
+      expect(typeof handler).toBe('function');
+
+      let statusCode = 200;
+      let jsonBody: any = null;
+      const mockRes = {
+        status(code: number) {
+          statusCode = code;
+          return this;
+        },
+        json(body: any) {
+          jsonBody = body;
+          return this;
+        },
+      };
+
+      await handler(
+        {
+          headers: { 'x-stremio-auth': authKey },
+          body: { channel: 'email' },
+          get: () => 'localhost:7000',
+          protocol: 'http',
+        },
+        mockRes
+      );
+
+      expect(statusCode).toBe(403);
+      expect(jsonBody?.success).toBe(false);
     });
   });
 });

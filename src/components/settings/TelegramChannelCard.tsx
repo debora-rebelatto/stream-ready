@@ -14,6 +14,7 @@ export interface TelegramChannelCardProps {
   awaitingLink: boolean;
   isSaving: boolean;
   isTesting: boolean;
+  canTest?: boolean;
   onToggle: (enabled: boolean) => void;
   onConnect: () => void;
   onSaveChatId: () => void;
@@ -34,6 +35,7 @@ export const TelegramChannelCard: React.FC<TelegramChannelCardProps> = ({
   awaitingLink,
   isSaving,
   isTesting,
+  canTest = false,
   onToggle,
   onConnect,
   onSaveChatId,
@@ -83,16 +85,18 @@ export const TelegramChannelCard: React.FC<TelegramChannelCardProps> = ({
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onTest}
-              isLoading={isTesting}
-              disabled={disabled || !botConfigured}
-              icon={<Send size={12} />}
-            >
-              Send Test
-            </Button>
+            {canTest && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onTest}
+                isLoading={isTesting}
+                disabled={disabled || !botConfigured}
+                icon={<Send size={12} />}
+              >
+                Send Test
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"

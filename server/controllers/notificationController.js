@@ -27,8 +27,11 @@ async function updateNotificationSettingsHandler(req, res) {
 
 async function postTestNotificationHandler(req, res) {
   try {
-    const { userId } = await getRequestUser(req);
+    const { userId, user } = await getRequestUser(req);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!user?.isAdmin) {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin access required.' });
+    }
     const { channel } = req.body || {};
     const result = await notificationOperationService.sendTestNotification({
       userId,

@@ -38,6 +38,7 @@ export const NotificationsSettingsCard: React.FC = () => {
   } = useNotificationsController();
 
   const isDisabled = !user || isLoading;
+  const isAdmin = Boolean(user?.isAdmin);
 
   return (
     <div className="space-y-5 animate-in fade-in duration-150">
@@ -91,6 +92,7 @@ export const NotificationsSettingsCard: React.FC = () => {
         awaitingLink={awaitingTelegramLink}
         isSaving={isSaving}
         isTesting={testingChannel === 'telegram'}
+        canTest={isAdmin}
         onToggle={handleToggleTelegram}
         onConnect={handleConnectTelegram}
         onSaveChatId={handleSaveTelegramChatId}
@@ -108,6 +110,7 @@ export const NotificationsSettingsCard: React.FC = () => {
         setWebhookInput={setDiscordInput}
         isSaving={isSaving}
         isTesting={testingChannel === 'discord'}
+        canTest={isAdmin}
         onToggle={handleToggleDiscord}
         onSaveWebhook={handleSaveDiscordWebhook}
         onClearWebhook={handleClearDiscordWebhook}
@@ -123,6 +126,7 @@ export const NotificationsSettingsCard: React.FC = () => {
         setEmailInput={setEmailInput}
         isSaving={isSaving}
         isTesting={testingChannel === 'email'}
+        canTest={isAdmin}
         onToggle={handleToggleEmail}
         onSaveEmail={handleSaveEmail}
         onTest={() => handleSendTest('email')}

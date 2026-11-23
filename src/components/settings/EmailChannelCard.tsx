@@ -11,6 +11,7 @@ export interface EmailChannelCardProps {
   setEmailInput: (val: string) => void;
   isSaving: boolean;
   isTesting: boolean;
+  canTest?: boolean;
   onToggle: (enabled: boolean) => void;
   onSaveEmail: () => void;
   onTest: () => void;
@@ -25,6 +26,7 @@ export const EmailChannelCard: React.FC<EmailChannelCardProps> = ({
   setEmailInput,
   isSaving,
   isTesting,
+  canTest = false,
   onToggle,
   onSaveEmail,
   onTest,
@@ -74,16 +76,18 @@ export const EmailChannelCard: React.FC<EmailChannelCardProps> = ({
         >
           Save Email
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onTest}
-          isLoading={isTesting}
-          disabled={disabled || !smtpConfigured || !effectiveEmail}
-          icon={<Send size={12} />}
-        >
-          Send Test
-        </Button>
+        {canTest && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onTest}
+            isLoading={isTesting}
+            disabled={disabled || !smtpConfigured || !effectiveEmail}
+            icon={<Send size={12} />}
+          >
+            Send Test
+          </Button>
+        )}
       </div>
 
       {!smtpConfigured && (

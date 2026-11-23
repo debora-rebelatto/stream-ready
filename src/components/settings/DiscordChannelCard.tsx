@@ -11,6 +11,7 @@ export interface DiscordChannelCardProps {
   setWebhookInput: (val: string) => void;
   isSaving: boolean;
   isTesting: boolean;
+  canTest?: boolean;
   onToggle: (enabled: boolean) => void;
   onSaveWebhook: () => void;
   onClearWebhook: () => void;
@@ -26,6 +27,7 @@ export const DiscordChannelCard: React.FC<DiscordChannelCardProps> = ({
   setWebhookInput,
   isSaving,
   isTesting,
+  canTest = false,
   onToggle,
   onSaveWebhook,
   onClearWebhook,
@@ -63,16 +65,18 @@ export const DiscordChannelCard: React.FC<DiscordChannelCardProps> = ({
             <span className="font-mono truncate">{maskedWebhook}</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onTest}
-              isLoading={isTesting}
-              disabled={disabled}
-              icon={<Send size={12} />}
-            >
-              Send Test
-            </Button>
+            {canTest && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onTest}
+                isLoading={isTesting}
+                disabled={disabled}
+                icon={<Send size={12} />}
+              >
+                Send Test
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
