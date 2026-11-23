@@ -4,6 +4,7 @@ import notifications from '../../lib/notifications';
 import { maskDiscordWebhookUrl } from '../../lib/db/notificationSettingsHelper';
 import { notificationOperationService } from '../../server/services/notificationOperationService';
 import { registerNotificationRoutes } from '../../server/controllers/notificationController';
+import { calculateNotificationMetrics } from '../../server/services/adminAnalyticsService';
 import { runBackgroundCheck } from '../../server/utils/requestContext';
 
 describe('Automated Notifications (Telegram, Discord, Email)', () => {
@@ -305,6 +306,54 @@ describe('Automated Notifications (Telegram, Discord, Email)', () => {
 
       expect(statusCode).toBe(403);
       expect(jsonBody?.success).toBe(false);
+    });
+
+    it('aggregates notification adoption, sends, and link clicks per channel for Admin Analytics', () => {
+      const users = [
+        {
+          id: 'u1',
+          settings: {
+            notificationsEnabled: true,
+            emailNotificationsEnabled: true,
+            telegramNotificationsEnabled: true,
+            telegramChatId: '123456',
+          },
+        },
+        {
+          id: 'u2',
+          settings: {
+            notificationsEnabled: true,
+            discordNotificationsEnabled: true,
+            discordWebhookUrl: 'https://discord.com/api/webhooks/1/abc',
+          },
+        },
+        {
+          id: 'u3',
+          settings: { notificationsEnabled: false, emailNotificationsEnabled: true },
+        },
+      ];
+      const events = [
+        { event_name: 'notification_sent', metadata: { channels: ['email', 'telegram'] } },
+        { event_name: 'notification_sent', metadata: { channels: ['discord'] } },
+        { event_name: 'notification_link_clicked', metadata: { channel: 'email' } },
+      ];
+
+      const metrics = calculateNotificationMetrics(users, events);
+      expect(metrics).toEqual({
+        enabledUsers: 2,
+        enabledPercent: 67,
+        emailUsers: 1,
+        telegramUsers: 1,
+        discordUsers: 1,
+        sentTotal: 3,
+        sentEmail: 1,
+        sentTelegram: 1,
+        sentDiscord: 1,
+        clickedTotal: 1,
+        clickedEmail: 1,
+        clickedTelegram: 0,
+        clickedDiscord: 0,
+      });
     });
   });
 });

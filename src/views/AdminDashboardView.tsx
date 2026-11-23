@@ -11,6 +11,7 @@ import { Button, LoadingState } from '../components';
 import {
   AdminKpiGrid,
   ServiceAdoptionCard,
+  NotificationAnalyticsCard,
   TopMoviesTable,
   TopThreeMoviesCard,
   PollFeedbackCard,
@@ -116,6 +117,9 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
             <AdminKpiGrid kpis={data.kpis} />
             <TopThreeMoviesCard movies={data.topMovies} />
             <ServiceAdoptionCard adoption={data.serviceAdoption} />
+            {data.serviceAdoption.notifications && (
+              <NotificationAnalyticsCard notifications={data.serviceAdoption.notifications} />
+            )}
             <TopMoviesTable movies={data.topMovies} />
             <EventActivityFeed
               eventsBreakdown={data.eventsBreakdown}

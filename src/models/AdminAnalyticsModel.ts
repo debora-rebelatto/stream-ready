@@ -36,6 +36,21 @@ export interface ServiceAdoptionMetrics {
     usersWithCustomLists: number;
     curatedListAddedEvents: number;
   };
+  notifications?: {
+    enabledUsers: number;
+    enabledPercent: number;
+    emailUsers: number;
+    telegramUsers: number;
+    discordUsers: number;
+    sentTotal: number;
+    sentEmail: number;
+    sentTelegram: number;
+    sentDiscord: number;
+    clickedTotal: number;
+    clickedEmail: number;
+    clickedTelegram: number;
+    clickedDiscord: number;
+  };
 }
 
 export interface TopMovieMetric {

@@ -7,6 +7,7 @@ import { SetupProgressStepper } from './SetupProgressStepper';
 import { SetupStepWelcome } from './SetupStepWelcome';
 import { SetupStepInstallStremio } from './SetupStepInstallStremio';
 import { SetupStepFeaturesTour } from './SetupStepFeaturesTour';
+import { SetupStepNotifications } from './SetupStepNotifications';
 import { SetupStepFirstMovies } from './SetupStepFirstMovies';
 
 export interface FirstTimeSetupModalProps {
@@ -72,6 +73,8 @@ export const FirstTimeSetupModal: React.FC<FirstTimeSetupModalProps> = (props) =
             onToggleAutoSync={wizard.setAutoSyncWatched}
           />
         );
+      case 'notifications':
+        return <SetupStepNotifications />;
       case 'movies':
         return (
           <SetupStepFirstMovies
@@ -103,9 +106,6 @@ export const FirstTimeSetupModal: React.FC<FirstTimeSetupModalProps> = (props) =
               <Sparkles size={16} />
             </span>
             <span className="text-sm font-black text-white whitespace-nowrap">Quick Start Setup</span>
-            <Badge variant={mode === 'first-login' ? 'amber' : 'neutral'} size="xs" uppercase>
-              {mode === 'first-login' ? 'Required Setup' : 'Review Mode'}
-            </Badge>
           </div>
           <div className="hidden md:block">{stepper}</div>
           {mode === 'review' ? (

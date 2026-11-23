@@ -23,9 +23,9 @@ describe('Feature Roadmap Poll Client API', () => {
   });
 
   it('exports FEATURE_OPTIONS with expected IDs for both poll components', () => {
-    expect(FEATURE_OPTIONS).toHaveLength(6);
+    expect(FEATURE_OPTIONS).toHaveLength(5);
     const ids = FEATURE_OPTIONS.map((o) => o.id);
-    expect(ids).toContain('notifications');
+    expect(ids).not.toContain('notifications');
     expect(ids).toContain('tv_shows');
     expect(ids).toContain('import_lists');
     expect(ids).toContain('debrid_filters');
@@ -51,12 +51,12 @@ describe('Feature Roadmap Poll Client API', () => {
   });
 
   it('submits a poll vote without custom text', async () => {
-    const res = await api.submitPollVote('notifications');
+    const res = await api.submitPollVote('tv_shows');
     expect(global.fetch).toHaveBeenCalledWith(
       '/api/poll/vote',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ option: 'notifications', customText: undefined }),
+        body: JSON.stringify({ option: 'tv_shows', customText: undefined }),
       })
     );
     expect(res.success).toBe(true);

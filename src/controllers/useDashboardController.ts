@@ -242,6 +242,13 @@ export function useDashboardController() {
         'Connected from Stremio TV! Search or add movies below to watch on your TV.',
         'info'
       );
+    } else if (
+      source === 'notification_email' ||
+      source === 'notification_telegram' ||
+      source === 'notification_discord'
+    ) {
+      const channel = source.replace('notification_', '');
+      trackEvent('notification_link_clicked', { channel, source });
     }
   }, [showToast]);
 

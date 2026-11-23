@@ -170,8 +170,13 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
-function buildMovieLinks(movie: NotificationMoviePayload, appUrl?: string) {
-  const baseUrl = getAppUrl(appUrl);
+function buildMovieLinks(
+  movie: NotificationMoviePayload,
+  appUrl?: string,
+  channel?: NotificationChannel
+) {
+  const baseRoot = getAppUrl(appUrl);
+  const baseUrl = channel ? `${baseRoot}/?source=notification_${channel}` : baseRoot;
   const stremioWebUrl = `https://web.stremio.com/#/detail/movie/${encodeURIComponent(movie.id)}`;
   return { baseUrl, stremioWebUrl };
 }
@@ -225,7 +230,7 @@ export async function sendTelegramNotification({
   appUrl?: string;
   isTest?: boolean;
 }): Promise<ChannelDispatchResult> {
-  const { baseUrl, stremioWebUrl } = buildMovieLinks(movie, appUrl);
+  const { baseUrl, stremioWebUrl } = buildMovieLinks(movie, appUrl, 'telegram');
   const yearLabel = movie.year ? ` (${escapeHtml(movie.year)})` : '';
   const quality = escapeHtml(movie.bestQuality || '1080p FHD');
   const audio = movie.audioFormat ? ` • ${escapeHtml(movie.audioFormat)}` : '';
@@ -258,7 +263,7 @@ export async function sendDiscordNotification({
     return { success: false, channel: 'discord', error: 'Invalid Discord webhook URL.' };
   }
 
-  const { baseUrl, stremioWebUrl } = buildMovieLinks(movie, appUrl);
+  const { baseUrl, stremioWebUrl } = buildMovieLinks(movie, appUrl, 'discord');
   const titleSuffix = movie.year ? ` (${movie.year})` : '';
   const fields = [
     { name: 'Quality', value: movie.bestQuality || '1080p FHD', inline: true },
@@ -337,7 +342,7 @@ export async function sendEmailNotification({
   const port = parseInt(process.env.SMTP_PORT || '587', 10) || 587;
   const secure = process.env.SMTP_SECURE === 'true' || port === 465;
   const from = (process.env.SMTP_FROM || '').trim() || `Stremio Watchlist <${user}>`;
-  const { baseUrl, stremioWebUrl } = buildMovieLinks(movie, appUrl);
+  const { baseUrl, stremioWebUrl } = buildMovieLinks(movie, appUrl, 'email');
   const yearLabel = movie.year ? ` (${movie.year})` : '';
   const quality = movie.bestQuality || '1080p FHD';
   const audio = movie.audioFormat ? ` • ${movie.audioFormat}` : '';

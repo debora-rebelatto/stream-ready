@@ -27,11 +27,6 @@ export interface FeatureOption {
 
 export const FEATURE_OPTIONS: FeatureOption[] = [
   {
-    id: 'notifications',
-    title: 'Automated notifications',
-    description: 'Telegram, Discord, or Email when a movie is available in 1080p/4K',
-  },
-  {
     id: 'tv_shows',
     title: 'TV Shows and Series support',
     description: 'Track episodes and upcoming seasons in good quality',
