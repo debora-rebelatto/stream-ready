@@ -7,6 +7,7 @@ const {
   syncAddonUrlWithAccount,
   triggerUserOnDemandSync,
 } = require('../utils/requestContext');
+const { buildQualityPatch } = require('../utils/qualityPatch');
 
 async function restoreCloudWatchlistIfEmpty(authKey, userId, logPrefix = 'watchlist') {
   if (!authKey || !userId) return;
@@ -43,7 +44,10 @@ async function listUserItems({ authKey, userId, filter, tab, listId }) {
   const effectiveFilter = tab || filter;
   let items = watchlistRepository.getItems(userId);
   const userSettings = userRepository.getSettings(userId);
-  const globalMinQuality = userSettings.minQuality || '1080p';
+  const qualityCriteria = {
+    minQuality: userSettings.minQuality || '1080p',
+    minAudio: userSettings.minAudio || 'any',
+  };
 
   if (listId) {
     items = items.filter((i) => Array.isArray(i.customLists) && i.customLists.includes(listId));
@@ -52,14 +56,12 @@ async function listUserItems({ authKey, userId, filter, tab, listId }) {
   if (effectiveFilter === 'watched') {
     items = items.filter((i) => Boolean(i.isWatched));
   } else if (effectiveFilter === 'ready') {
-    items = items.filter(
-      (i) => !i.isWatched && watchlistRepository.isItemReady(i, globalMinQuality)
-    );
+    items = items.filter((i) => !i.isWatched && watchlistRepository.isItemReady(i, qualityCriteria));
   } else if (effectiveFilter === 'pending') {
     items = items.filter(
       (i) =>
         !i.isWatched &&
-        !watchlistRepository.isItemReady(i, globalMinQuality) &&
+        !watchlistRepository.isItemReady(i, qualityCriteria) &&
         !watchlistRepository.isItemUnreleased(i)
     );
   } else if (effectiveFilter === 'unreleased') {
@@ -160,10 +162,7 @@ async function addMovieToWatchlist({ authKey, userId, id, type = 'movie', baseUr
       year: meta.year,
       poster: meta.poster,
       imdbRating: meta.imdbRating ? String(meta.imdbRating) : '',
-      has1080pPlus: quality.has1080pPlus,
-      bestQuality: quality.bestQuality,
-      streamCount: quality.streamCount,
-      lastChecked: quality.checkedAt,
+      ...buildQualityPatch(quality),
     },
     userId
   );
@@ -186,16 +185,7 @@ async function recheckSingleMovie({ userId, id }) {
   const quality = await checkMovieQuality(id, item.type || 'movie', item.name, item.year);
   const wasReady = item.has1080pPlus;
 
-  const updated = await watchlistRepository.updateItem(
-    id,
-    {
-      has1080pPlus: quality.has1080pPlus,
-      bestQuality: quality.bestQuality,
-      streamCount: quality.streamCount,
-      lastChecked: quality.checkedAt,
-    },
-    userId
-  );
+  const updated = await watchlistRepository.updateItem(id, buildQualityPatch(quality), userId);
 
   return {
     success: true,
@@ -223,14 +213,7 @@ async function recheckAllMovies({ userId, forceAll = true }) {
 
     await watchlistRepository.updateItem(
       item.id,
-      {
-        has1080pPlus: quality.has1080pPlus,
-        bestQuality: quality.bestQuality,
-        streamCount: quality.streamCount,
-        count1080pPlus: quality.count1080pPlus,
-        lastChecked: quality.checkedAt,
-        checkError: quality.error || null,
-      },
+      buildQualityPatch(quality, { includeExtended: true }),
       userId
     );
 
@@ -322,11 +305,7 @@ async function syncClientBatch({ authKey, userId, clientItems, baseUrl }) {
             if (q) {
               watchlistRepository.updateItem(
                 item.id,
-                {
-                  has1080pPlus: q.has1080pPlus,
-                  bestQuality: q.bestQuality,
-                  streamCount: q.streamCount,
-                },
+                buildQualityPatch(q, { includeLastChecked: false }),
                 userId
               );
             }

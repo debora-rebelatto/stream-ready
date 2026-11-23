@@ -1,7 +1,7 @@
 import React from 'react';
 import { RotateCw, Eye, Search, X } from 'lucide-react';
 import type { WatchlistStats } from '../../models';
-import type { WatchlistTab, WatchlistSortOption } from '../../utils';
+import type { DashboardFilterState, WatchlistTab, WatchlistSortOption } from '../../utils';
 import { Button, Badge, Input, Select } from '../common';
 
 interface DashboardFilterToolbarProps {
@@ -11,14 +11,11 @@ interface DashboardFilterToolbarProps {
   onTabChange: (tab: WatchlistTab) => void;
   isCheckingAll: boolean;
   onRecheckAll: () => void;
-  searchQuery: string;
-  setSearchQuery: (q: string) => void;
-  selectedQuality: string;
-  setSelectedQuality: (q: string) => void;
-  includeWatchedInAll: boolean;
-  setIncludeWatchedInAll: (v: boolean) => void;
-  sortBy: WatchlistSortOption;
-  onSortChange: (sort: WatchlistSortOption) => void;
+  filters: DashboardFilterState;
+  onFilterChange: <K extends keyof DashboardFilterState>(
+    key: K,
+    value: DashboardFilterState[K]
+  ) => void;
   hasActiveFilters: boolean;
   onClearFilters: () => void;
   totalCount: number;
@@ -31,18 +28,13 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
   onTabChange,
   isCheckingAll,
   onRecheckAll,
-  searchQuery,
-  setSearchQuery,
-  selectedQuality,
-  setSelectedQuality,
-  includeWatchedInAll,
-  setIncludeWatchedInAll,
-  sortBy,
-  onSortChange,
+  filters,
+  onFilterChange,
   hasActiveFilters,
   onClearFilters,
   totalCount,
 }) => {
+  const { searchQuery, selectedQuality, selectedAudio, includeWatchedInAll, sortBy } = filters;
   return (
     <>
       <div
@@ -111,8 +103,8 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
           <Input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onClear={() => setSearchQuery('')}
+            onChange={(e) => onFilterChange('searchQuery', e.target.value)}
+            onClear={() => onFilterChange('searchQuery', '')}
             leftIcon={<Search size={14} />}
             placeholder="Filter by title or year in your list..."
             containerClassName="flex-1 min-w-50"
@@ -123,13 +115,26 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
             {currentTab !== 'watched' && (
               <Select
                 value={selectedQuality}
-                onChange={(e) => setSelectedQuality(e.target.value)}
+                onChange={(e) => onFilterChange('selectedQuality', e.target.value)}
                 options={[
                   { value: 'all', label: '🎯 All Qualities' },
                   { value: '4k', label: '✨ 4K / 2160p' },
                   { value: '1080p', label: '💎 1080p Full HD' },
                   { value: '720p', label: '📺 720p HD' },
                   { value: 'pending', label: '⏳ Waiting / Pending' },
+                ]}
+              />
+            )}
+
+            {currentTab !== 'watched' && (
+              <Select
+                value={selectedAudio}
+                onChange={(e) => onFilterChange('selectedAudio', e.target.value)}
+                options={[
+                  { value: 'all', label: '🔊 All Audio' },
+                  { value: 'atmos', label: '🌊 Dolby Atmos' },
+                  { value: 'lossless', label: '💎 Lossless (TrueHD / DTS-HD)' },
+                  { value: 'surround', label: '🔈 Surround 5.1+' },
                 ]}
               />
             )}
@@ -143,7 +148,7 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
                     ? 'bg-purple-600/20 text-purple-300 border-purple-500/40 hover:bg-purple-600/30'
                     : 'bg-[#1e2235] text-gray-400 border-white/10 hover:text-gray-200'
                 }`}
-                onClick={() => setIncludeWatchedInAll(!includeWatchedInAll)}
+                onClick={() => onFilterChange('includeWatchedInAll', !includeWatchedInAll)}
                 icon={
                   <Eye
                     size={13}
@@ -162,7 +167,7 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
 
             <Select
               value={sortBy}
-              onChange={(e) => onSortChange(e.target.value as WatchlistSortOption)}
+              onChange={(e) => onFilterChange('sortBy', e.target.value as WatchlistSortOption)}
               className="text-purple-300 font-medium"
               options={[
                 { value: 'added_desc', label: '↕️ Added: Newest First' },

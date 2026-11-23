@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { WatchlistItem, WatchlistStats } from '../models';
+import type { AudioPreference, WatchlistItem, WatchlistStats } from '../models';
 import { watchlistService, cinemetaService, authService } from '../services';
 import {
   enrichWatchlistItem,
@@ -51,7 +51,7 @@ export interface WatchlistStoreState {
     itemsOrFn: WatchlistItem[] | ((prev: WatchlistItem[]) => WatchlistItem[])
   ) => void;
   clearWatchlistState: () => void;
-  recomputeItemsEnrichment: (quality: '1080p' | '4k') => void;
+  recomputeItemsEnrichment: (quality: '1080p' | '4k', audio?: AudioPreference) => void;
   updateItemsAfterListDeletion: (deletedListId: string, deletedSet: Set<string>) => void;
   updateItemLists: (itemId: string, listIds: string[]) => void;
   refreshWatchlist: () => Promise<void>;
@@ -78,13 +78,13 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
       },
 
       setItems: (itemsOrFn) => {
-        const quality = useSettingsStore.getState().globalMinQuality;
+        const { globalMinQuality: quality, globalMinAudio: audio } = useSettingsStore.getState();
         set((state) => {
           const nextItems =
             typeof itemsOrFn === 'function' ? itemsOrFn(state.items) : itemsOrFn;
           return {
             items: nextItems,
-            stats: computeWatchlistStats(nextItems, quality),
+            stats: computeWatchlistStats(nextItems, quality, audio),
           };
         });
       },
@@ -93,18 +93,21 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
         set({ items: [], stats: EMPTY_STATS });
       },
 
-      recomputeItemsEnrichment: (quality: '1080p' | '4k') => {
+      recomputeItemsEnrichment: (quality: '1080p' | '4k', audio?: AudioPreference) => {
+        const minAudio = audio ?? useSettingsStore.getState().globalMinAudio;
         set((state) => {
-          const enriched = state.items.map((item) => enrichWatchlistItem(item, quality));
+          const enriched = state.items.map((item) =>
+            enrichWatchlistItem(item, quality, minAudio)
+          );
           return {
             items: enriched,
-            stats: computeWatchlistStats(enriched, quality),
+            stats: computeWatchlistStats(enriched, quality, minAudio),
           };
         });
       },
 
       updateItemsAfterListDeletion: (deletedListId: string, deletedSet: Set<string>) => {
-        const quality = useSettingsStore.getState().globalMinQuality;
+        const { globalMinQuality: quality, globalMinAudio: audio } = useSettingsStore.getState();
         set((state) => {
           const updated = state.items
             .filter((item) => {
@@ -127,7 +130,7 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
 
           return {
             items: updated,
-            stats: computeWatchlistStats(updated, quality),
+            stats: computeWatchlistStats(updated, quality, audio),
           };
         });
       },
@@ -142,7 +145,7 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
 
       refreshWatchlist: async () => {
         const user = useAuthStore.getState().user;
-        const quality = useSettingsStore.getState().globalMinQuality;
+        const { globalMinQuality: quality, globalMinAudio: audio } = useSettingsStore.getState();
         const showToast = useToastStore.getState().showToast;
 
         if (!user) {
@@ -174,7 +177,7 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
               updatedRatings = true;
             }
             const withRating = rating ? { ...item, imdbRating: rating } : item;
-            return enrichWatchlistItem(withRating, quality);
+            return enrichWatchlistItem(withRating, quality, audio);
           });
 
           if (updatedRatings) {
@@ -183,7 +186,7 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
 
           set({
             items: itemsWithRatings,
-            stats: computeWatchlistStats(itemsWithRatings, quality),
+            stats: computeWatchlistStats(itemsWithRatings, quality, audio),
           });
 
           // Background fill missing ratings
@@ -224,7 +227,7 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
 
       addItem: async (id: string, source: EventSource = 'manual'): Promise<boolean> => {
         const showToast = useToastStore.getState().showToast;
-        const quality = useSettingsStore.getState().globalMinQuality;
+        const { globalMinQuality: quality, globalMinAudio: audio } = useSettingsStore.getState();
 
         showToast('Adding movie and checking quality...', 'info');
         try {
@@ -244,7 +247,7 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
             saveStoredRatings(storedRatings);
           }
           const withRating = rating ? { ...item, imdbRating: rating } : item;
-          const enriched = enrichWatchlistItem(withRating, quality);
+          const enriched = enrichWatchlistItem(withRating, quality, audio);
 
           get().setItems((prev) => [enriched, ...prev.filter((i) => i.id !== enriched.id)]);
 
@@ -341,7 +344,7 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
 
       markWatched: async (id: string, watched: boolean) => {
         const showToast = useToastStore.getState().showToast;
-        const quality = useSettingsStore.getState().globalMinQuality;
+        const { globalMinQuality: quality, globalMinAudio: audio } = useSettingsStore.getState();
         try {
           const res = await watchlistService.setWatched(id, watched);
           if (res.success) {
@@ -355,7 +358,8 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
                         isWatched: watched,
                         watchedAt: watched ? new Date().toISOString() : null,
                       },
-                      quality
+                      quality,
+                      audio
                     )
                   : i
               )
@@ -374,14 +378,14 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
 
       syncWatchedFromStremio: async () => {
         const showToast = useToastStore.getState().showToast;
-        const quality = useSettingsStore.getState().globalMinQuality;
+        const { globalMinQuality: quality, globalMinAudio: audio } = useSettingsStore.getState();
         set({ isSyncingWatched: true });
         showToast('Syncing watched history from Stremio...', 'info');
         try {
           const res = await watchlistService.syncWatchedFromStremio();
           if (res.success) {
             if (res.items) {
-              get().setItems(res.items.map((item) => enrichWatchlistItem(item, quality)));
+              get().setItems(res.items.map((item) => enrichWatchlistItem(item, quality, audio)));
             }
             const { newlyAdded, newlyMarked, totalWatched } = res.result || {};
             const count = (newlyAdded || 0) + (newlyMarked || 0);

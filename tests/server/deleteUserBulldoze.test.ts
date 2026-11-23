@@ -123,11 +123,15 @@ describe('Database User Bulldoze / Account Deletion (lib/db.js)', () => {
       const deletedEvents = supabaseDeletedUrls.some(
         (u) => u.includes('analytics_events') && u.includes(testUserId)
       );
+      const deletedVotes = supabaseDeletedUrls.some(
+        (u) => u.includes('poll_votes') && u.includes(testUserId)
+      );
       const deletedUser = supabaseDeletedUrls.some((u) => u.includes('watchlist_users'));
 
       expect(deletedItems).toBe(true);
       expect(deletedLists).toBe(true);
       expect(deletedEvents).toBe(true);
+      expect(deletedVotes).toBe(true);
       expect(deletedUser).toBe(true);
     }
   });

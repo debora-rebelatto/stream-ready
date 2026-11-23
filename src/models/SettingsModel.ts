@@ -1,6 +1,12 @@
-export interface AppSettings {
-  stremioAuthKey?: string | null;
+export type AudioPreference = 'any' | 'surround' | 'atmos';
+
+export interface QualityCriteria {
   minQuality?: '1080p' | '4k';
+  minAudio?: AudioPreference;
+}
+
+export interface AppSettings extends QualityCriteria {
+  stremioAuthKey?: string | null;
   autoSyncWatched?: boolean;
   trackWatchlistWatched?: boolean;
   syncPreviouslyWatched?: boolean;

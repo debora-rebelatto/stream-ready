@@ -1,6 +1,7 @@
 import React, { createContext } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import type {
+  AudioPreference,
   WatchlistItem,
   WatchlistStats,
   StremioUser,
@@ -50,6 +51,8 @@ export interface WatchlistContextType {
   isCuratedListsLoading: boolean;
   globalMinQuality: '1080p' | '4k';
   setGlobalMinQuality: (quality: '1080p' | '4k') => Promise<void>;
+  globalMinAudio: AudioPreference;
+  setGlobalMinAudio: (audio: AudioPreference) => Promise<void>;
   autoSyncWatched: boolean;
   setAutoSyncWatched: (enabled: boolean) => Promise<void>;
   trackWatchlistWatched: boolean;
@@ -230,6 +233,8 @@ export const useWatchlist = (): WatchlistContextType => {
         useShallow((s) => ({
           globalMinQuality: s.globalMinQuality,
           setGlobalMinQuality: s.setGlobalMinQuality,
+          globalMinAudio: s.globalMinAudio,
+          setGlobalMinAudio: s.setGlobalMinAudio,
           autoSyncWatched: s.autoSyncWatched,
           setAutoSyncWatched: s.setAutoSyncWatched,
           trackWatchlistWatched: s.trackWatchlistWatched,
@@ -241,6 +246,8 @@ export const useWatchlist = (): WatchlistContextType => {
     : {
         globalMinQuality: useSettingsStore.getState().globalMinQuality,
         setGlobalMinQuality: useSettingsStore.getState().setGlobalMinQuality,
+        globalMinAudio: useSettingsStore.getState().globalMinAudio,
+        setGlobalMinAudio: useSettingsStore.getState().setGlobalMinAudio,
         autoSyncWatched: useSettingsStore.getState().autoSyncWatched,
         setAutoSyncWatched: useSettingsStore.getState().setAutoSyncWatched,
         trackWatchlistWatched: useSettingsStore.getState().trackWatchlistWatched,

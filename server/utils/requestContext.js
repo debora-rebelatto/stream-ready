@@ -3,6 +3,7 @@ const { checkMovieQuality } = require('../../lib/qualityChecker');
 const { getManifest } = require('../../lib/stremioAddon');
 const { getUserInfo, saveAccountWatchlist } = require('../../lib/stremioAuth');
 const { decodeUserData } = require('../../lib/userData');
+const { buildQualityPatch } = require('./qualityPatch');
 
 const PORT = process.env.PORT || 7000;
 const userSyncThrottle = new Map();
@@ -72,16 +73,7 @@ function triggerUserOnDemandSync(authKey, userId) {
       for (const item of pendingItems.slice(0, 5)) {
         const q = await checkMovieQuality(item.id, item.type || 'movie', item.name, item.year);
         if (q && q.has1080pPlus) {
-          await db.updateItem(
-            item.id,
-            {
-              has1080pPlus: q.has1080pPlus,
-              bestQuality: q.bestQuality,
-              streamCount: q.streamCount,
-              lastChecked: q.checkedAt,
-            },
-            userId
-          );
+          await db.updateItem(item.id, buildQualityPatch(q), userId);
         }
         await new Promise((r) => setTimeout(r, 600));
       }
@@ -175,21 +167,9 @@ async function runBackgroundCheck() {
         }
 
         for (const { userId, item } of entries) {
-          if (quality.has1080pPlus) {
-            console.log(
-              `🎉 [NEW:${userId}] "${item.name}" is now available in ${quality.bestQuality}!`
-            );
-          }
           await db.updateItem(
             item.id,
-            {
-              has1080pPlus: quality.has1080pPlus,
-              bestQuality: quality.bestQuality,
-              streamCount: quality.streamCount,
-              count1080pPlus: quality.count1080pPlus,
-              lastChecked: quality.checkedAt,
-              checkError: quality.error || null,
-            },
+            buildQualityPatch(quality, { includeExtended: true }),
             userId
           );
         }

@@ -135,8 +135,13 @@ export function getManifest(hostUrl: string = '', userId: string = ''): AddonMan
   };
 }
 
-export function formatCatalogItem(item: any, minQuality: string = '1080p') {
-  const ready = db.isItemReady(item, minQuality);
+// todo: check later
+export function formatCatalogItem(
+  item: any,
+  minQuality: string = '1080p',
+  minAudio: string = 'any'
+) {
+  const ready = db.isItemReady(item, minQuality, minAudio);
   const unreleased = db.isItemUnreleased(item);
   const isNew = isItemNewRelease(item);
 
@@ -156,16 +161,23 @@ export function formatCatalogItem(item: any, minQuality: string = '1080p') {
   }
 
   const displayQuality = unreleased ? 'Unreleased' : formatQualityLabel(item.bestQuality);
+  const audioLabel = item.hasAtmos ? 'Dolby Atmos' : item.audioFormat || '';
+  const qualityWithAudio = audioLabel ? `${displayQuality} • ${audioLabel}` : displayQuality;
 
   let statusDescription: string;
   if (ready && isNew) {
-    statusDescription = `🔥 NEW RELEASE! Available in good quality within the last 3 months!\nDetected quality: ${displayQuality} (${item.streamCount} sources found).`;
+    statusDescription = `🔥 NEW RELEASE! Available in good quality within the last 3 months!\nDetected quality: ${qualityWithAudio} (${item.streamCount} sources found).`;
   } else if (ready) {
-    statusDescription = `✅ AVAILABLE IN GOOD QUALITY! Detected quality: ${displayQuality} (${item.streamCount} sources found).`;
+    statusDescription = `✅ AVAILABLE IN GOOD QUALITY! Detected quality: ${qualityWithAudio} (${item.streamCount} sources found).`;
   } else if (unreleased) {
     statusDescription = `📅 NOT RELEASED YET. No sources found at the moment.`;
   } else {
-    statusDescription = `⏳ WAITING FOR GOOD QUALITY RELEASE. Current quality: ${displayQuality} (${item.streamCount} sources).`;
+    statusDescription = `⏳ WAITING FOR GOOD QUALITY RELEASE. Current quality: ${qualityWithAudio} (${item.streamCount} sources).`;
+  }
+
+  const genres = [statusBadge, displayQuality];
+  if (audioLabel && ready) {
+    genres.push(`🔊 ${audioLabel}`);
   }
 
   return {
@@ -175,7 +187,7 @@ export function formatCatalogItem(item: any, minQuality: string = '1080p') {
     poster: item.poster || '',
     posterShape: 'regular',
     banner: item.banner || '',
-    genres: [statusBadge, displayQuality],
+    genres,
     releaseInfo: item.year ? String(item.year) : undefined,
     description: statusDescription,
   };
@@ -219,6 +231,7 @@ export async function handleCatalog(
 
   const settings = db.getSettings(userId);
   const minQuality = settings?.minQuality || '1080p';
+  const minAudio = settings?.minAudio || 'any';
   const allItems = db.getItems(userId);
 
   // If user has no movies added yet, show a friendly guide item
@@ -256,9 +269,9 @@ export async function handleCatalog(
     filtered = filtered.filter((i: any) => !i.isWatched);
 
     if (catalogId === 'watchlist_ready') {
-      filtered = filtered.filter((i: any) => db.isItemReady(i, minQuality));
+      filtered = filtered.filter((i: any) => db.isItemReady(i, minQuality, minAudio));
     } else if (catalogId === 'watchlist_pending') {
-      filtered = filtered.filter((i: any) => !db.isItemReady(i, minQuality));
+      filtered = filtered.filter((i: any) => !db.isItemReady(i, minQuality, minAudio));
     } else if (catalogId === 'watchlist_all') {
       // Todos os não assistidos
     }
@@ -268,7 +281,7 @@ export async function handleCatalog(
   const pageItems = filtered.slice(skip, skip + 100);
 
   return {
-    metas: pageItems.map((item: any) => formatCatalogItem(item, minQuality)),
+    metas: pageItems.map((item: any) => formatCatalogItem(item, minQuality, minAudio)),
   };
 }
 
@@ -315,11 +328,12 @@ export async function handleMeta(
     return cinemetaMeta ? { meta: cinemetaMeta } : { meta: null };
   }
 
-  const settings = userId ? db.getSettings(userId) : { minQuality: '1080p' };
+  const settings = userId ? db.getSettings(userId) : { minQuality: '1080p', minAudio: 'any' };
   const minQuality = settings?.minQuality || '1080p';
+  const minAudio = settings?.minAudio || 'any';
 
   const base = cinemetaMeta || watchlistItem;
-  const ready = db.isItemReady(watchlistItem, minQuality);
+  const ready = db.isItemReady(watchlistItem, minQuality, minAudio);
   const unreleased = db.isItemUnreleased(watchlistItem);
   const isNew = isItemNewRelease(watchlistItem);
 
@@ -339,16 +353,18 @@ export async function handleMeta(
   }
 
   const displayQuality = unreleased ? 'Unreleased' : formatQualityLabel(watchlistItem.bestQuality);
+  const audioLabel = watchlistItem.hasAtmos ? 'Dolby Atmos' : watchlistItem.audioFormat || '';
+  const qualityWithAudio = audioLabel ? `${displayQuality} • ${audioLabel}` : displayQuality;
 
   let statusDescription: string;
   if (ready && isNew) {
-    statusDescription = `🔥 NEW RELEASE! Available in good quality within the last 3 months!\nDetected quality: ${displayQuality} (${watchlistItem.streamCount} sources found).`;
+    statusDescription = `🔥 NEW RELEASE! Available in good quality within the last 3 months!\nDetected quality: ${qualityWithAudio} (${watchlistItem.streamCount} sources found).`;
   } else if (ready) {
-    statusDescription = `🟢 STATUS: AVAILABLE IN GOOD QUALITY! (${displayQuality} - ${watchlistItem.streamCount} sources)`;
+    statusDescription = `🟢 STATUS: AVAILABLE IN GOOD QUALITY! (${qualityWithAudio} - ${watchlistItem.streamCount} sources)`;
   } else if (unreleased) {
     statusDescription = `📅 STATUS: NOT RELEASED YET (No sources available at the moment)`;
   } else {
-    statusDescription = `⏳ STATUS: WAITING FOR GOOD QUALITY (Current quality: ${displayQuality})`;
+    statusDescription = `⏳ STATUS: WAITING FOR GOOD QUALITY (Current quality: ${qualityWithAudio})`;
   }
 
   const enrichedMeta = {

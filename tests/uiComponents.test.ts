@@ -77,6 +77,7 @@ describe('UI Reusable Components (Button & Badge)', () => {
         'amber',
         'rose',
         'blue',
+        'cyan',
         'neutral',
         'gradient',
       ] as const;

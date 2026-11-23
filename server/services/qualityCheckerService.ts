@@ -1,5 +1,95 @@
-import type { StreamItem, ParsedStreams, QualityCheckResult } from '../types';
+import type { AudioFormatInfo, StreamItem, ParsedStreams, QualityCheckResult } from '../types';
 import { getMeta } from './cinemetaService.ts';
+
+/**
+ * Extracts spatial, lossless, and multi-channel surround audio format metadata from a stream string.
+ * Higher `tier` indicates a higher-fidelity audio track (Atmos > TrueHD > DTS:X / DTS-HD MA > FLAC > DDP 5.1 > DTS 5.1 > 5.1 Surround).
+ */
+export function extractAudioInfo(text: string): AudioFormatInfo {
+  if (!text) {
+    return { hasAtmos: false, hasSurround: false, audioFormat: '', tier: 0 };
+  }
+
+  const hasAtmos = /\b(atmos|ddp5\.1\.atmos|truehd\.atmos|ddp\.atmos|dolby[-._ ]?atmos)\b/i.test(
+    text
+  );
+  const is71 = /\b7\.1\b/i.test(text);
+  const is51 = /\b(5\.1|ddp5|dd5|eac3|e-ac-3|ac3)\b/i.test(text);
+
+  if (hasAtmos) {
+    return {
+      hasAtmos: true,
+      hasSurround: true,
+      audioFormat: 'Dolby Atmos',
+      tier: 7,
+    };
+  }
+
+  if (/\btruehd\b/i.test(text)) {
+    return {
+      hasAtmos: false,
+      hasSurround: true,
+      audioFormat: is71 ? 'TrueHD 7.1' : 'Dolby TrueHD',
+      tier: 6,
+    };
+  }
+
+  if (/\bdts[-._: ]?x\b/i.test(text)) {
+    return {
+      hasAtmos: false,
+      hasSurround: true,
+      audioFormat: 'DTS:X',
+      tier: 5,
+    };
+  }
+
+  if (/\bdts[-._ ]?hd(\s*ma)?\b/i.test(text)) {
+    return {
+      hasAtmos: false,
+      hasSurround: true,
+      audioFormat: 'DTS-HD MA',
+      tier: 5,
+    };
+  }
+
+  if (/\bflac\b/i.test(text)) {
+    return {
+      hasAtmos: false,
+      hasSurround: is71 || is51,
+      audioFormat: is71 ? 'FLAC 7.1' : is51 ? 'FLAC 5.1' : 'FLAC',
+      tier: 4,
+    };
+  }
+
+  if (/\b(ddp5\.1|ddp5|ddp|e-?ac-?3|dd\+)\b/i.test(text)) {
+    return {
+      hasAtmos: false,
+      hasSurround: true,
+      audioFormat: is71 ? 'DDP 7.1' : 'DDP 5.1',
+      tier: 3,
+    };
+  }
+
+  if (/\bdts\b/i.test(text)) {
+    return {
+      hasAtmos: false,
+      hasSurround: true,
+      audioFormat: 'DTS 5.1',
+      tier: 2,
+    };
+  }
+
+  if (/\b(dd5\.1|dd5|ac3|5\.1|7\.1)\b/i.test(text)) {
+    return {
+      hasAtmos: false,
+      hasSurround: true,
+      audioFormat: is71 ? '7.1 Surround' : '5.1 Surround',
+      tier: 1,
+    };
+  }
+
+  return { hasAtmos: false, hasSurround: false, audioFormat: '', tier: 0 };
+}
 
 /**
  * 1. Theater rip / camcorder video and audio patterns (CAM / TS / Screener)
@@ -166,6 +256,9 @@ export function parseStreams(
       isCamOnly: false,
       isUnreleased: true,
       bestQuality: 'Unreleased',
+      hasAtmos: false,
+      hasSurround: false,
+      audioFormat: '',
       streamCount: 0,
       cleanStreamCount: 0,
       count1080pPlus: 0,
@@ -178,6 +271,10 @@ export function parseStreams(
   let has720 = false;
   let hasCleanOther = false;
   let hasCam = false;
+  let hasAtmos = false;
+  let hasSurround = false;
+  let bestAudioFormat = '';
+  let bestAudioTier = 0;
   let camStreamCount = 0;
   let cleanStreamCount = 0;
   let maxCleanSeeds: number | null = null;
@@ -240,6 +337,14 @@ export function parseStreams(
       } else {
         hasCleanOther = true;
       }
+
+      const audioInfo = extractAudioInfo(fullText);
+      if (audioInfo.hasAtmos) hasAtmos = true;
+      if (audioInfo.hasSurround) hasSurround = true;
+      if (audioInfo.tier > bestAudioTier) {
+        bestAudioTier = audioInfo.tier;
+        bestAudioFormat = audioInfo.audioFormat;
+      }
     } else {
       hasCam = true;
       camStreamCount++;
@@ -261,6 +366,9 @@ export function parseStreams(
     has1080 = false;
     has720 = false;
     hasCleanOther = false;
+    hasAtmos = false;
+    hasSurround = false;
+    bestAudioFormat = '';
   }
 
   // Movie is READY when it has at least one confirmed good quality source
@@ -284,6 +392,9 @@ export function parseStreams(
     isReady,
     isCamOnly: !isReady && hasCam,
     bestQuality,
+    hasAtmos,
+    hasSurround,
+    audioFormat: bestAudioFormat,
     streamCount: streams.length,
     cleanStreamCount,
     count1080pPlus: cleanStreamCount,
@@ -345,6 +456,9 @@ export async function checkMovieQuality(
           isCamOnly: false,
           isUnreleased: true,
           bestQuality: 'Unreleased',
+          hasAtmos: false,
+          hasSurround: false,
+          audioFormat: '',
           streamCount: 0,
           cleanStreamCount: 0,
           count1080pPlus: 0,
@@ -364,6 +478,9 @@ export async function checkMovieQuality(
       isReady: false,
       isCamOnly: false,
       bestQuality: 'Check Error',
+      hasAtmos: false,
+      hasSurround: false,
+      audioFormat: '',
       streamCount: 0,
       cleanStreamCount: 0,
       count1080pPlus: 0,
@@ -377,6 +494,7 @@ export async function checkMovieQuality(
 export const qualityCheckerService = {
   isCamStream,
   hasCleanSource,
+  extractAudioInfo,
   isStreamMatchingTitle,
   isStreamMatchingYear,
   extractStreamYears,

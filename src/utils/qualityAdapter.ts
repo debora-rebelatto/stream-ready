@@ -1,9 +1,11 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type {
+  AudioPreference,
   MovieCardStatus,
   MovieComputedStatus,
   MovieReleaseMetadata,
+  QualityCriteria,
   WatchlistItem,
   WatchlistStats,
 } from '../models';
@@ -50,19 +52,46 @@ export function formatQualityLabel(raw?: string): string {
   return q;
 }
 
+// todo: check this later
 export function isItemReady(
-  item: { has1080pPlus?: boolean; bestQuality?: string; minQuality?: string | null },
-  globalMinQuality: string = '1080p'
+  item: {
+    has1080pPlus?: boolean;
+    bestQuality?: string;
+    minQuality?: string | null;
+    hasAtmos?: boolean;
+    hasSurround?: boolean;
+    audioFormat?: string;
+  },
+  criteriaOrMinQuality: QualityCriteria | string = '1080p',
+  legacyMinAudio: AudioPreference = 'any'
 ): boolean {
   if (!item) return false;
-  const target = item.minQuality || globalMinQuality || '1080p';
+  const criteria: QualityCriteria =
+    typeof criteriaOrMinQuality === 'object' && criteriaOrMinQuality !== null
+      ? criteriaOrMinQuality
+      : {
+          minQuality: (criteriaOrMinQuality as '1080p' | '4k') || '1080p',
+          minAudio: legacyMinAudio,
+        };
+
+  const target = item.minQuality || criteria.minQuality || '1080p';
   const rawQuality = String(item.bestQuality || '').toLowerCase();
 
-  if (target === '4k') {
-    return rawQuality.includes('4k') || rawQuality.includes('2160p') || rawQuality.includes('uhd');
-  }
+  const videoReady =
+    target === '4k'
+      ? rawQuality.includes('4k') || rawQuality.includes('2160p') || rawQuality.includes('uhd')
+      : Boolean(item.has1080pPlus);
 
-  return Boolean(item.has1080pPlus);
+  if (!videoReady) return false;
+
+  const audioTarget = criteria.minAudio || 'any';
+  if (audioTarget === 'atmos') {
+    return Boolean(item.hasAtmos);
+  }
+  if (audioTarget === 'surround') {
+    return Boolean(item.hasSurround || item.hasAtmos);
+  }
+  return true;
 }
 
 export const THREE_MONTHS_MS = 90 * 24 * 60 * 60 * 1000;
@@ -159,10 +188,11 @@ export function isItemUnreleased(item: {
 
 export function computeMovieStatus(
   item: WatchlistItem,
-  globalMinQuality: '1080p' | '4k' = '1080p'
+  globalMinQuality: '1080p' | '4k' = '1080p',
+  globalMinAudio: AudioPreference = 'any'
 ): MovieComputedStatus {
   const isWatched = Boolean(item.isWatched);
-  const isReady = isItemReady(item, globalMinQuality);
+  const isReady = isItemReady(item, globalMinQuality, globalMinAudio);
   const isNewRelease = isItemNewRelease(item) && !isWatched;
   const isUnreleased = isItemUnreleased(item);
   const status = resolveMovieStatus({
@@ -175,6 +205,10 @@ export function computeMovieStatus(
   const qualityLabel = isUnreleased ? 'Unreleased' : rawQuality;
   const streamsLabel = item.streamCount > 0 ? `${item.streamCount} sources` : '0 sources';
   const activeTargetQuality: '1080p' | '4k' = item.minQuality || globalMinQuality || '1080p';
+  const hasAtmos = Boolean(item.hasAtmos);
+  const hasSurround = Boolean(item.hasSurround || hasAtmos);
+  const isLosslessAudio = Boolean(item.isLosslessAudio);
+  const audioFormat = item.audioFormat || (hasAtmos ? 'Dolby Atmos' : '');
 
   return {
     status,
@@ -184,23 +218,30 @@ export function computeMovieStatus(
     isUnreleased,
     qualityLabel,
     streamsLabel,
+    hasAtmos,
+    hasSurround,
+    isLosslessAudio,
+    audioFormat,
     activeTargetQuality,
+    activeTargetAudio: globalMinAudio,
   };
 }
 
 export function enrichWatchlistItem(
   item: WatchlistItem,
-  globalMinQuality: '1080p' | '4k' = '1080p'
+  globalMinQuality: '1080p' | '4k' = '1080p',
+  globalMinAudio: AudioPreference = 'any'
 ): WatchlistItem {
   return {
     ...item,
-    computed: computeMovieStatus(item, globalMinQuality),
+    computed: computeMovieStatus(item, globalMinQuality, globalMinAudio),
   };
 }
 
 export function computeWatchlistStats(
   items: WatchlistItem[],
-  globalMinQuality: '1080p' | '4k' = '1080p'
+  globalMinQuality: '1080p' | '4k' = '1080p',
+  globalMinAudio: AudioPreference = 'any'
 ): WatchlistStats {
   let ready = 0;
   let pending = 0;
@@ -209,9 +250,11 @@ export function computeWatchlistStats(
 
   for (const item of items) {
     const computed =
-      item.computed && item.computed.activeTargetQuality === globalMinQuality
+      item.computed &&
+      item.computed.activeTargetQuality === globalMinQuality &&
+      item.computed.activeTargetAudio === globalMinAudio
         ? item.computed
-        : computeMovieStatus(item, globalMinQuality);
+        : computeMovieStatus(item, globalMinQuality, globalMinAudio);
     if (computed.isWatched) {
       watched++;
     } else if (computed.isReady) {
