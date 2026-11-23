@@ -32,7 +32,11 @@ export const LANDING_FAQS = [
   },
   {
     q: 'Can I set it to only notify me when 4K UHD is available?',
-    a: 'Yes! You can choose your global preference (1080p Full HD vs 4K Ultra HD) in settings, and you can also override the quality threshold per movie. If you only want to watch a big visual spectacle in 4K UHD on your OLED screen, just set that specific movie to 4K.',
+    a: 'Yes! You can choose your global preference (1080p Full HD vs 4K Ultra HD) and audio target (Any, 5.1+ Surround, or Dolby Atmos) in Settings. Automated alerts only fire once a release meets your exact criteria.',
+  },
+  {
+    q: 'How do automated release notifications work?',
+    a: 'Under Settings → Notifications & Alerts, you can enable Telegram Bot (2-click connect), Email alerts, or a custom Discord Webhook. Whenever our background tracker detects a verified release for a movie on your watchlist, you receive a single notification with a direct link to open it in Stremio.',
   },
   {
     q: 'What happens when I finish watching a movie?',
