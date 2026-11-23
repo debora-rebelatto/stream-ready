@@ -6,11 +6,13 @@ export type SettingsTab = 'quality' | 'notifications' | 'sync' | 'backup' | 'acc
 
 export interface UseSettingsControllerProps {
   manifestUrl?: string;
+  initialTab?: SettingsTab;
   onBack?: () => void;
 }
 
 export function useSettingsController({
   manifestUrl = 'https://stremiowatchlist.vercel.app/manifest.json',
+  initialTab = 'quality',
   onBack,
 }: UseSettingsControllerProps = {}) {
   const {
@@ -33,7 +35,7 @@ export function useSettingsController({
   const { user, logout } = useAuth();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<SettingsTab>('quality');
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const [isExporting, setIsExporting] = useState(false);
   const [copiedManifest, setCopiedManifest] = useState(false);
 

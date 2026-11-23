@@ -21,6 +21,7 @@ import {
   InstallGuideModal,
   QrCodeModal,
   FirstTimeSetupModal,
+  NotificationsAnnouncementModal,
   AdminKpiGrid,
 } from '../components';
 import { SettingsPageView } from './SettingsPageView';
@@ -88,6 +89,10 @@ export const UserDashboardView: React.FC = () => {
     handleOpenSetupWizardReview,
     handleCloseSetupWizard,
     handleSetupWizardComplete,
+    isNotificationsAnnouncementOpen,
+    handleDismissNotificationsAnnouncement,
+    handleOpenNotificationsSettings,
+    settingsInitialTab,
   } = useDashboardController();
 
   const setupWizard = (
@@ -114,6 +119,7 @@ export const UserDashboardView: React.FC = () => {
           onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
           onOpenQrModal={() => setIsQrModalOpen(true)}
           onOpenSetupWizard={handleOpenSetupWizardReview}
+          initialTab={settingsInitialTab}
           manifestUrl={manifestInfo.manifestUrl}
           installUrl={manifestInfo.stremioInstallUrl}
         />
@@ -306,6 +312,12 @@ export const UserDashboardView: React.FC = () => {
       />
 
       {setupWizard}
+
+      <NotificationsAnnouncementModal
+        isOpen={isNotificationsAnnouncementOpen}
+        onClose={handleDismissNotificationsAnnouncement}
+        onConfigureNow={handleOpenNotificationsSettings}
+      />
 
       <Footer />
     </div>

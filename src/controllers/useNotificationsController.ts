@@ -198,7 +198,10 @@ export function useNotificationsController() {
 
   const handleToggleEmail = (enabled: boolean) =>
     savePatch(
-      { emailNotificationsEnabled: enabled },
+      {
+        emailNotificationsEnabled: enabled,
+        ...(enabled ? { notificationsEnabled: true } : {}),
+      },
       enabled ? 'Email alerts enabled.' : 'Email alerts disabled.'
     );
 

@@ -26,6 +26,7 @@ export interface SettingsPageProps {
   onOpenInstallGuide?: () => void;
   onOpenQrModal?: () => void;
   onOpenSetupWizard?: () => void;
+  initialTab?: SettingsTab;
   manifestUrl?: string;
   installUrl?: string;
 }
@@ -36,6 +37,7 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
   onOpenInstallGuide,
   onOpenQrModal,
   onOpenSetupWizard,
+  initialTab = 'quality',
   manifestUrl = 'https://stremiowatchlist.vercel.app/manifest.json',
   installUrl,
 }) => {
@@ -57,7 +59,7 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
     handleExport,
     handleImport,
     handleLogout,
-  } = useSettingsController({ manifestUrl, onBack });
+  } = useSettingsController({ manifestUrl, initialTab, onBack });
 
   const navItems: Array<{ id: SettingsTab; label: string; icon: React.ReactNode }> = [
     { id: 'quality', label: 'Quality & Detection', icon: <Sliders size={16} /> },
