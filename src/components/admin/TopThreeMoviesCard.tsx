@@ -1,7 +1,7 @@
 import React from 'react';
-import { Trophy, Users, Plus, Check, RefreshCw } from 'lucide-react';
+import { Trophy, Users, Plus, Check, Medal, Film } from 'lucide-react';
 import type { TopMovieMetric } from '../../models';
-import { Badge, QualityStatusBadge } from '../common';
+import { Badge, QualityStatusBadge, Spinner } from '../common';
 
 export interface TopThreeMoviesCardProps {
   movies: TopMovieMetric[];
@@ -16,7 +16,7 @@ const PODIUM_CONFIG = [
   {
     rank: 1,
     label: '#1 Most Added',
-    medal: '🥇',
+    medalColor: 'text-amber-400',
     borderColor: 'border-amber-500/40 hover:border-amber-400/60',
     bgGradient: 'from-amber-500/10 via-[#151824] to-[#151824]',
     badgeVariant: 'amber' as const,
@@ -24,7 +24,7 @@ const PODIUM_CONFIG = [
   {
     rank: 2,
     label: '#2 Runner-up',
-    medal: '🥈',
+    medalColor: 'text-slate-300',
     borderColor: 'border-slate-400/30 hover:border-slate-300/50',
     bgGradient: 'from-slate-400/10 via-[#151824] to-[#151824]',
     badgeVariant: 'neutral' as const,
@@ -32,7 +32,7 @@ const PODIUM_CONFIG = [
   {
     rank: 3,
     label: '#3 Third Place',
-    medal: '🥉',
+    medalColor: 'text-amber-600',
     borderColor: 'border-amber-700/30 hover:border-amber-600/50',
     bgGradient: 'from-amber-800/10 via-[#151824] to-[#151824]',
     badgeVariant: 'rose' as const,
@@ -83,8 +83,8 @@ export const TopThreeMoviesCard: React.FC<TopThreeMoviesCardProps> = ({
             >
               {/* Card Header: Rank & Medal */}
               <div className="flex items-center justify-between gap-2">
-                <span className="text-sm select-none" title={config.label}>
-                  {config.medal}
+                <span className={`inline-flex items-center ${config.medalColor}`} title={config.label}>
+                  <Medal size={16} />
                 </span>
                 <Badge variant={config.badgeVariant} size="xs" uppercase>
                   {config.label}
@@ -101,8 +101,8 @@ export const TopThreeMoviesCard: React.FC<TopThreeMoviesCardProps> = ({
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-14 h-20 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center text-xl shrink-0">
-                    🎬
+                  <div className="w-14 h-20 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center text-gray-500 shrink-0">
+                    <Film size={20} />
                   </div>
                 )}
 
@@ -165,7 +165,7 @@ export const TopThreeMoviesCard: React.FC<TopThreeMoviesCardProps> = ({
                         title="Add to your watchlist"
                       >
                         {isAdding ? (
-                          <RefreshCw size={10} className="animate-spin text-purple-300" />
+                          <Spinner size="xs" variant="brand" decorative />
                         ) : (
                           <Plus size={11} className="text-purple-300" />
                         )}

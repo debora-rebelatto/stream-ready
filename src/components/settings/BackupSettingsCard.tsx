@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, Upload } from 'lucide-react';
+import { Download, Upload, Lightbulb } from 'lucide-react';
 import { Button } from '../common';
 
 export interface BackupSettingsCardProps {
@@ -75,7 +75,10 @@ export const BackupSettingsCard: React.FC<BackupSettingsCardProps> = ({
         </div>
 
         <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 text-xs text-gray-400 leading-relaxed space-y-1">
-          <strong className="text-gray-200 block">💡 Portable &amp; Safe</strong>
+          <strong className="text-gray-200 flex items-center gap-1.5">
+            <Lightbulb size={14} className="text-amber-400 shrink-0" />
+            <span>Portable &amp; Safe</span>
+          </strong>
           <p>
             Backups use a clean, standardized JSON format that preserves IMDb IDs, movie names,
             release years, quality overrides, and custom list assignments.

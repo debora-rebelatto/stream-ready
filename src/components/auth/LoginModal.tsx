@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/useAppContext';
 import { X, Lock, Key, Mail } from 'lucide-react';
+import { Spinner } from '../common';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -157,7 +158,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               >
                 {isLoading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <Spinner size="sm" variant="white" decorative />
                     <span>Signing in...</span>
                   </>
                 ) : (
@@ -214,7 +215,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               >
                 {isLoading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <Spinner size="sm" variant="white" decorative />
                     <span>Validating...</span>
                   </>
                 ) : (
@@ -239,7 +240,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
           {/* Notice */}
           <div className="mt-3 p-3 rounded-xl bg-black/30 border border-white/5 text-[11px] text-gray-400 leading-relaxed flex items-start gap-2">
-            <span className="text-sm shrink-0">🔒</span>
+            <Lock className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />
             <span className="min-w-0">
               <strong>Security:</strong> Authentication connects directly with the official Stremio
               API (<code>api.strem.io</code>) over encrypted TLS.

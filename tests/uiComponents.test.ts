@@ -1,7 +1,11 @@
 import React from 'react';
+import { renderToString } from 'react-dom/server';
 import {
   Button,
   Badge,
+  Spinner,
+  LoadingState,
+  RecommendedBanner,
   WatchInStremioButton,
   WatchlistActionButton,
   MovieCardActionButton,
@@ -240,6 +244,65 @@ describe('UI Reusable Components (Button & Badge)', () => {
       });
       expect(React.isValidElement(el)).toBe(true);
       expect(el.props.isOpen).toBe(true);
+    });
+  });
+
+  describe('Spinner & LoadingState Components', () => {
+    test('Spinner renders accessible status role by default and hides when decorative', () => {
+      const standaloneHtml = renderToString(
+        React.createElement(Spinner, { size: 'lg', variant: 'brand', label: 'Syncing...' })
+      );
+      expect(standaloneHtml).toContain('role="status"');
+      expect(standaloneHtml).toContain('aria-label="Syncing..."');
+      expect(standaloneHtml).toContain('animate-spin');
+      expect(standaloneHtml).toContain('w-8 h-8');
+
+      const decorativeHtml = renderToString(
+        React.createElement(Spinner, { size: 'sm', variant: 'white', decorative: true })
+      );
+      expect(decorativeHtml).not.toContain('role="status"');
+      expect(decorativeHtml).toContain('aria-hidden="true"');
+      expect(decorativeHtml).toContain('border-t-white');
+    });
+
+    test('LoadingState renders fullscreen, section, compact, and inline variants', () => {
+      const fullscreenHtml = renderToString(
+        React.createElement(LoadingState, {
+          variant: 'fullscreen',
+          title: 'Checking Stremio session...',
+          description: 'Loading your profile and quality tracker',
+        })
+      );
+      expect(fullscreenHtml).toContain('role="status"');
+      expect(fullscreenHtml).toContain('min-h-screen');
+      expect(fullscreenHtml).toContain('Checking Stremio session...');
+      expect(fullscreenHtml).toContain('Loading your profile and quality tracker');
+
+      const inlineHtml = renderToString(
+        React.createElement(LoadingState, {
+          variant: 'inline',
+          title: 'Searching movies...',
+        })
+      );
+      expect(inlineHtml).toContain('inline-flex');
+      expect(inlineHtml).toContain('Searching movies...');
+    });
+
+    test('Button renders standardized Spinner when isLoading is true', () => {
+      const primaryHtml = renderToString(
+        React.createElement(Button, { variant: 'primary', isLoading: true }, 'Saving...')
+      );
+      expect(primaryHtml).toContain('animate-spin');
+      expect(primaryHtml).toContain('border-t-white');
+      expect(primaryHtml).toContain('disabled=""');
+    });
+  });
+
+  describe('RecommendedBanner Description Clamp', () => {
+    test('uses sm:line-clamp-2 without sm:block override so long descriptions stay clamped', () => {
+      const html = renderToString(React.createElement(RecommendedBanner));
+      expect(html).toContain('hidden sm:line-clamp-2');
+      expect(html).not.toContain('hidden sm:block');
     });
   });
 });

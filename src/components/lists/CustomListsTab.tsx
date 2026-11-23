@@ -9,6 +9,8 @@ import {
   Info,
 } from 'lucide-react';
 import type { CustomList } from '../../models';
+import { ListIcon } from '../common';
+import { ListIconPicker } from './ListIconPicker';
 
 interface CustomListsTabProps {
   customLists: CustomList[];
@@ -23,7 +25,7 @@ interface CustomListsTabProps {
   editingEmoji: string;
   setEditingEmoji: (v: string) => void;
   isSubmitting: boolean;
-  emojiOptions: string[];
+  emojiOptions?: string[];
   onCreate: (e: React.FormEvent) => void;
   onStartEdit: (id: string, currentName: string, currentEmoji?: string) => void;
   onSaveEdit: (id: string) => void;
@@ -43,7 +45,6 @@ export const CustomListsTab: React.FC<CustomListsTabProps> = ({
   editingEmoji,
   setEditingEmoji,
   isSubmitting,
-  emojiOptions,
   onCreate,
   onStartEdit,
   onSaveEdit,
@@ -59,19 +60,7 @@ export const CustomListsTab: React.FC<CustomListsTabProps> = ({
           Create New List
         </label>
         <div className="flex gap-2 mb-3">
-          <div className="relative">
-            <select
-              value={selectedEmoji}
-              onChange={(e) => setSelectedEmoji(e.target.value)}
-              className="w-14 h-10 text-xl text-center bg-[#1a1b2b] border border-white/10 rounded-xl cursor-pointer hover:border-purple-500/50 transition-colors focus:outline-none focus:border-purple-500"
-            >
-              {emojiOptions.map((em) => (
-                <option key={em} value={em}>
-                  {em}
-                </option>
-              ))}
-            </select>
-          </div>
+          <ListIconPicker value={selectedEmoji} onChange={setSelectedEmoji} size="md" />
 
           <input
             type="text"
@@ -120,17 +109,7 @@ export const CustomListsTab: React.FC<CustomListsTabProps> = ({
                 >
                   {isEditing ? (
                     <div className="flex items-center gap-2 flex-1 mr-2">
-                      <select
-                        value={editingEmoji}
-                        onChange={(e) => setEditingEmoji(e.target.value)}
-                        className="w-12 h-8 text-lg text-center bg-[#1a1b2b] border border-white/10 rounded-lg cursor-pointer"
-                      >
-                        {emojiOptions.map((em) => (
-                          <option key={em} value={em}>
-                            {em}
-                          </option>
-                        ))}
-                      </select>
+                      <ListIconPicker value={editingEmoji} onChange={setEditingEmoji} size="sm" />
                       <input
                         type="text"
                         value={editingName}
@@ -155,7 +134,9 @@ export const CustomListsTab: React.FC<CustomListsTabProps> = ({
                   ) : (
                     <>
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="text-xl shrink-0">{list.emoji || '🎬'}</span>
+                        <span className="p-2 rounded-lg bg-white/5 border border-white/10 text-purple-300 shrink-0">
+                          <ListIcon icon={list.emoji} className="w-4 h-4" />
+                        </span>
                         <div className="min-w-0">
                           <h4 className="text-sm font-medium text-white truncate">
                             {list.name}

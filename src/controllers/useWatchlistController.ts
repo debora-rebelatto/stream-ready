@@ -193,11 +193,11 @@ export function useWatchlistController({
       });
       if (item.has1080pPlus) {
         showToast(
-          `🎉 "${item.name}" added! Already READY in good quality (${item.bestQuality})!`,
+          `"${item.name}" added! Already READY in good quality (${item.bestQuality})!`,
           'success'
         );
       } else {
-        showToast(`⏳ "${item.name}" added! Waiting for good quality release.`, 'info');
+        showToast(`"${item.name}" added! Waiting for good quality release.`, 'info');
       }
       return true;
     } catch {
@@ -229,7 +229,7 @@ export function useWatchlistController({
       if (res.success && res.item) {
         if (res.becameReady) {
           showToast(
-            `🎉 "${res.item.name}" is now available in good quality (${res.item.bestQuality})!`,
+            `"${res.item.name}" is now available in good quality (${res.item.bestQuality})!`,
             'success'
           );
         } else {
@@ -257,7 +257,7 @@ export function useWatchlistController({
           newlyReady: res.newlyReady || 0,
         });
         if (res.newlyReady > 0) {
-          showToast(`🎉 ${res.newlyReady} movie(s) are now ready in good quality!`, 'success');
+          showToast(`${res.newlyReady} movie(s) are now ready in good quality!`, 'success');
         } else {
           showToast('Check completed. Watchlist status updated.', 'info');
         }
@@ -283,7 +283,7 @@ export function useWatchlistController({
       } else {
         await refreshWatchlist();
       }
-      showToast(`🎯 Quality preference set to ${quality.toUpperCase()}!`, 'success');
+      showToast(`Quality preference set to ${quality.toUpperCase()}!`, 'success');
     } catch {
       showToast('Failed to save quality preference.', 'error');
     }
@@ -359,7 +359,7 @@ export function useWatchlistController({
           setStats(res.stats);
         }
         showToast(
-          watched ? '👁️ Movie moved to Watched History.' : '↩️ Movie restored to active watchlist.',
+          watched ? 'Movie moved to Watched History.' : 'Movie restored to active watchlist.',
           'success'
         );
       }
@@ -383,7 +383,7 @@ export function useWatchlistController({
         const { newlyAdded, newlyMarked, totalWatched } = res.result || {};
         const count = (newlyAdded || 0) + (newlyMarked || 0);
         if (count > 0) {
-          showToast(`🎉 Synced ${count} watched movies from your Stremio account!`, 'success');
+          showToast(`Synced ${count} watched movies from your Stremio account!`, 'success');
         } else {
           showToast(`Watched history is already up to date (${totalWatched || 0} movies).`, 'info');
         }

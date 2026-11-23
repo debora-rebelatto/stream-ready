@@ -72,7 +72,7 @@ export function useSettingsController({
       URL.revokeObjectURL(url);
 
       showToast(
-        `🎉 Exported ${items.length} movie${items.length === 1 ? '' : 's'} successfully!`,
+        `Exported ${items.length} movie${items.length === 1 ? '' : 's'} successfully!`,
         'success'
       );
     } catch (err: any) {
@@ -100,7 +100,7 @@ export function useSettingsController({
         const res = await watchlistService.importBackup(items);
         if (res.success) {
           showToast(
-            `🎉 Imported ${res.addedCount ?? items.length} movies into your watchlist!`,
+            `Imported ${res.addedCount ?? items.length} movies into your watchlist!`,
             'success'
           );
           await refreshWatchlist();

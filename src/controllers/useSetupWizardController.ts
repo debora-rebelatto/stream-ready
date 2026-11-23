@@ -288,7 +288,7 @@ export function useSetupWizardController({
           movieIds: pendingMovies.map((m) => m.id),
           source: 'setup_wizard_batch',
         });
-        showToast(`🎉 ${addedCount} starter movies added to your watchlist!`, 'success');
+        showToast(`${addedCount} starter movies added to your watchlist!`, 'success');
       }
     } finally {
       setIsBatchAdding(false);

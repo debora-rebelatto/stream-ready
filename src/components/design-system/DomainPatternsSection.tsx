@@ -15,6 +15,8 @@ import {
   Volume2,
   Users,
   Film,
+  Zap,
+  Popcorn,
 } from 'lucide-react';
 import {
   Card,
@@ -295,8 +297,8 @@ export const DomainPatternsSection: React.FC = () => {
               <Badge variant="blue" size="xs" uppercase>
                 HDR10+
               </Badge>
-              <Badge variant="emerald" size="xs" uppercase>
-                ⚡ Real-Debrid Cached
+              <Badge variant="emerald" size="xs" uppercase icon={<Zap size={10} />}>
+                Real-Debrid Cached
               </Badge>
               <Badge variant="amber" size="xs" uppercase icon={<Volume2 size={10} />}>
                 Dolby Atmos 7.1
@@ -412,7 +414,7 @@ export const DomainPatternsSection: React.FC = () => {
         <div className="space-y-6">
           <EmptyState
             compact
-            icon="🍿"
+            icon={<Popcorn className="w-8 h-8" />}
             title="No 4K UHD releases in this custom list yet"
             description="Add upcoming cinema titles or lower your quality threshold to 1080p Full HD to see available streams."
             actions={

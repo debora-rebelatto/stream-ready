@@ -1,6 +1,6 @@
 import React from 'react';
 import { Cloud, Check, Copy, Play, QrCode, CheckCircle2 } from 'lucide-react';
-import { Badge, Button } from '../common';
+import { Badge, Button, Spinner } from '../common';
 
 export interface SetupStepInstallStremioProps {
   manifestUrl: string;
@@ -55,7 +55,10 @@ export const SetupStepInstallStremio: React.FC<SetupStepInstallStremioProps> = (
         </p>
         {installedToAccount && (
           <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-200">
-            <strong>Installed on your Stremio Cloud Account ✓</strong>
+            <strong className="inline-flex items-center gap-1.5">
+              <span>Installed on your Stremio Cloud Account</span>
+              <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+            </strong>
             <span className="block text-emerald-300/80 mt-0.5">
               If Stremio is currently open, restart it to see your new catalogs.
             </span>
@@ -122,7 +125,7 @@ export const SetupStepInstallStremio: React.FC<SetupStepInstallStremioProps> = (
           <div className="flex justify-center">
             <div className="p-3 rounded-2xl bg-white w-50 h-50 flex items-center justify-center">
               {isGeneratingQr && (
-                <div className="w-8 h-8 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin" />
+                <Spinner size="lg" variant="dark" label="Generating QR code..." />
               )}
               {!isGeneratingQr && qrDataUrl && (
                 <img src={qrDataUrl} alt="Stremio addon install QR code" className="w-44 h-44" />

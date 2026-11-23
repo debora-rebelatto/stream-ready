@@ -15,7 +15,15 @@ import {
   AdminDashboardView,
   DesignSystemView,
 } from './views';
-import { ToastContainer } from './components';
+import { ToastContainer, LoadingState } from './components';
+
+const SessionLoadingFallback: React.FC = () => (
+  <LoadingState
+    variant="fullscreen"
+    title="Checking Stremio session..."
+    description="Loading your profile and quality tracker"
+  />
+);
 
 // Root Layout Component
 const RootLayout: React.FC = () => {
@@ -37,13 +45,7 @@ const HomeRouteComponent: React.FC = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0c0d14] text-center px-4">
-        <div className="w-10 h-10 border-3 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mb-4" />
-        <p className="text-sm font-medium text-gray-300">Checking Stremio session...</p>
-        <p className="text-xs text-gray-500 mt-1">Loading your profile and quality tracker</p>
-      </div>
-    );
+    return <SessionLoadingFallback />;
   }
 
   return user ? <UserDashboardView /> : <LandingPageView />;
@@ -61,7 +63,7 @@ const SettingsRouteComponent: React.FC = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return null;
+    return <SessionLoadingFallback />;
   }
 
   if (!user) {
@@ -84,7 +86,7 @@ const AdminRouteComponent: React.FC = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return null;
+    return <SessionLoadingFallback />;
   }
 
   if (!user || !user.isAdmin) {
@@ -107,7 +109,7 @@ const DesignSystemRouteComponent: React.FC = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return null;
+    return <SessionLoadingFallback />;
   }
 
   if (!user || !user.isAdmin) {

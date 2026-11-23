@@ -1,5 +1,5 @@
 import React from 'react';
-import { RotateCw, Eye, Search, X } from 'lucide-react';
+import { RotateCw, Eye, Search, X, List, CheckCircle2, Clock, Calendar } from 'lucide-react';
 import type { WatchlistStats } from '../../models';
 import type { DashboardFilterState, WatchlistTab, WatchlistSortOption } from '../../utils';
 import { Button, Badge, Input, Select } from '../common';
@@ -47,40 +47,45 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
             tabTheme="blue"
             active={currentTab === 'all'}
             onClick={() => onTabChange('all')}
+            icon={<List size={13} />}
           >
-            📋 All ({stats.total})
+            All ({stats.total})
           </Button>
           <Button
             variant="tab"
             tabTheme="emerald"
             active={currentTab === 'ready'}
             onClick={() => onTabChange('ready')}
+            icon={<CheckCircle2 size={13} />}
           >
-            🟢 Ready ({stats.ready})
+            Ready ({stats.ready})
           </Button>
           <Button
             variant="tab"
             tabTheme="amber"
             active={currentTab === 'pending'}
             onClick={() => onTabChange('pending')}
+            icon={<Clock size={13} />}
           >
-            ⏳ Waiting ({stats.pending})
+            Waiting ({stats.pending})
           </Button>
           <Button
             variant="tab"
             tabTheme="rose"
             active={currentTab === 'unreleased'}
             onClick={() => onTabChange('unreleased')}
+            icon={<Calendar size={13} />}
           >
-            📅 Unreleased ({stats.unreleased})
+            Unreleased ({stats.unreleased})
           </Button>
           <Button
             variant="tab"
             tabTheme="purple"
             active={currentTab === 'watched'}
             onClick={() => onTabChange('watched')}
+            icon={<Eye size={13} />}
           >
-            👁️ Watched ({stats.watched})
+            Watched ({stats.watched})
           </Button>
         </div>
 
@@ -172,15 +177,15 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
               onChange={(e) => onFilterChange('sortBy', e.target.value as WatchlistSortOption)}
               className="text-purple-300 font-medium max-w-[190px] truncate"
               options={[
-                { value: 'added_desc', label: '↕️ Added: Newest First' },
-                { value: 'added_asc', label: '↕️ Added: Oldest First' },
-                { value: 'rating_desc', label: '⭐ Rating: Highest First' },
-                { value: 'rating_asc', label: '⭐ Rating: Lowest First' },
-                { value: 'year_desc', label: '📅 Year: Newest First' },
-                { value: 'year_asc', label: '📅 Year: Oldest First' },
-                { value: 'title_asc', label: '🔤 Title: A → Z' },
-                { value: 'title_desc', label: '🔤 Title: Z → A' },
-                { value: 'streams_desc', label: '📡 Most Sources Available' },
+                { value: 'added_desc', label: 'Added: Newest First' },
+                { value: 'added_asc', label: 'Added: Oldest First' },
+                { value: 'rating_desc', label: 'Rating: Highest First' },
+                { value: 'rating_asc', label: 'Rating: Lowest First' },
+                { value: 'year_desc', label: 'Year: Newest First' },
+                { value: 'year_asc', label: 'Year: Oldest First' },
+                { value: 'title_asc', label: 'Title: A to Z' },
+                { value: 'title_desc', label: 'Title: Z to A' },
+                { value: 'streams_desc', label: 'Most Sources Available' },
               ]}
             />
 

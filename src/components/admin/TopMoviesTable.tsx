@@ -60,7 +60,7 @@ export const TopMoviesTable: React.FC<TopMoviesTableProps> = ({ movies }) => {
                         />
                       ) : (
                         <div className="w-8 h-12 bg-white/5 rounded-md flex items-center justify-center text-gray-500 shrink-0">
-                          🎬
+                          <Film size={14} />
                         </div>
                       )}
                       <div>

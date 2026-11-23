@@ -75,14 +75,14 @@ export const useCustomListStore = create<CustomListStoreState>()(
         }
       },
 
-      createCustomList: async (name: string, emoji = '🎬'): Promise<boolean> => {
+      createCustomList: async (name: string, emoji = 'film'): Promise<boolean> => {
         const showToast = useToastStore.getState().showToast;
         try {
           const res = await customListService.createCustomList(name, emoji);
           if (res.success && res.list) {
             trackEvent('custom_list_created', { listName: res.list.name });
             set((state) => ({ customLists: [...state.customLists, res.list] }));
-            showToast(`📁 List "${res.list.name}" created successfully!`, 'success');
+            showToast(`List "${res.list.name}" created successfully!`, 'success');
             return true;
           } else {
             showToast(res.error || 'Failed to create list.', 'error');

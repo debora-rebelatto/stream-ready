@@ -11,6 +11,9 @@ import {
   AlertTriangle,
   QrCode,
   BookOpen,
+  CheckCircle2,
+  List,
+  Hourglass,
 } from 'lucide-react';
 import { trackEvent } from '../../utils';
 import { useAuth } from '../../context/useAppContext';
@@ -149,20 +152,23 @@ export const InstallGuideModal: React.FC<InstallGuideModalProps> = ({
                   </li>
                   <li>
                     Done! Your custom rows will appear on your Stremio Home Screen / Discover:
-                    <ul className="list-disc list-inside ml-3 mt-1.5 space-y-1 text-gray-400">
-                      <li>
+                    <ul className="ml-3 mt-1.5 space-y-1 text-gray-400">
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
                         <span className="text-emerald-400 font-semibold">
-                          🟢 Watchlist: Ready (Good Quality)
+                          Watchlist: Ready (Good Quality)
                         </span>
                       </li>
-                      <li>
+                      <li className="flex items-center gap-1.5">
+                        <List size={12} className="text-gray-300 shrink-0" />
                         <span className="text-gray-200 font-semibold">
-                          📋 Watchlist: All Movies
+                          Watchlist: All Movies
                         </span>
                       </li>
-                      <li>
+                      <li className="flex items-center gap-1.5">
+                        <Hourglass size={12} className="text-amber-400 shrink-0" />
                         <span className="text-amber-400 font-semibold">
-                          ⏳ Watchlist: Waiting for Quality
+                          Watchlist: Waiting for Quality
                         </span>
                       </li>
                     </ul>
@@ -207,7 +213,8 @@ export const InstallGuideModal: React.FC<InstallGuideModalProps> = ({
               {/* Important Notice Callout */}
               <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200 space-y-2">
                 <div className="flex items-center gap-2 font-bold text-amber-300">
-                  <span>⚠️ Why is an account required?</span>
+                  <AlertTriangle size={15} className="shrink-0" />
+                  <span>Why is an account required?</span>
                 </div>
                 <p className="text-xs leading-relaxed text-amber-200/90">
                   Stremio addons are strictly{' '}

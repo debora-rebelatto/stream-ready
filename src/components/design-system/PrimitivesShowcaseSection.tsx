@@ -12,8 +12,21 @@ import {
   Flame,
   Star,
   Settings,
+  List,
+  Rocket,
+  Trophy,
 } from 'lucide-react';
-import { Button, Badge, Input, Select, Switch, Card, Avatar } from '../common';
+import {
+  Button,
+  Badge,
+  Input,
+  Select,
+  Switch,
+  Card,
+  Avatar,
+  Spinner,
+  LoadingState,
+} from '../common';
 
 export const PrimitivesShowcaseSection: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'ready' | 'pending' | 'unreleased' | 'watched'>(
@@ -109,40 +122,45 @@ export const PrimitivesShowcaseSection: React.FC = () => {
                   tabTheme="blue"
                   active={activeTab === 'all'}
                   onClick={() => setActiveTab('all')}
+                  icon={<List size={13} />}
                 >
-                  📋 All (42)
+                  All (42)
                 </Button>
                 <Button
                   variant="tab"
                   tabTheme="emerald"
                   active={activeTab === 'ready'}
                   onClick={() => setActiveTab('ready')}
+                  icon={<CheckCircle size={13} />}
                 >
-                  🟢 Ready (28)
+                  Ready (28)
                 </Button>
                 <Button
                   variant="tab"
                   tabTheme="amber"
                   active={activeTab === 'pending'}
                   onClick={() => setActiveTab('pending')}
+                  icon={<Clock size={13} />}
                 >
-                  ⏳ Waiting (9)
+                  Waiting (9)
                 </Button>
                 <Button
                   variant="tab"
                   tabTheme="rose"
                   active={activeTab === 'unreleased'}
                   onClick={() => setActiveTab('unreleased')}
+                  icon={<Calendar size={13} />}
                 >
-                  📅 Unreleased (5)
+                  Unreleased (5)
                 </Button>
                 <Button
                   variant="tab"
                   tabTheme="purple"
                   active={activeTab === 'watched'}
                   onClick={() => setActiveTab('watched')}
+                  icon={<Eye size={13} />}
                 >
-                  👁️ Watched (19)
+                  Watched (19)
                 </Button>
               </div>
 
@@ -159,17 +177,19 @@ export const PrimitivesShowcaseSection: React.FC = () => {
                   variant="pill"
                   active={activePill === 'scifi'}
                   onClick={() => setActivePill('scifi')}
+                  icon={<Rocket size={13} />}
                   badge={12}
                 >
-                  🚀 Sci-Fi Essentials
+                  Sci-Fi Essentials
                 </Button>
                 <Button
                   variant="pill"
                   active={activePill === 'oscar'}
                   onClick={() => setActivePill('oscar')}
+                  icon={<Trophy size={13} />}
                   badge={8}
                 >
-                  🏆 Oscar Contenders
+                  Oscar Contenders
                 </Button>
               </div>
             </div>
@@ -262,9 +282,9 @@ export const PrimitivesShowcaseSection: React.FC = () => {
               onChange={(e) => setQualitySample(e.target.value)}
               containerClassName="w-full"
               options={[
-                { value: '4k', label: '✨ 4K UHD (2160p) Only' },
-                { value: '1080p', label: '💎 1080p Full HD Standard' },
-                { value: '720p', label: '📺 720p HD Minimum' },
+                { value: '4k', label: '4K UHD (2160p) Only' },
+                { value: '1080p', label: '1080p Full HD Standard' },
+                { value: '720p', label: '720p HD Minimum' },
               ]}
             />
 
@@ -308,6 +328,59 @@ export const PrimitivesShowcaseSection: React.FC = () => {
                 <Avatar name="Cinema Club" size="md" status="away" />
                 <Avatar name="Stremio TV" size="lg" status="online" />
               </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Loading Indicators & States Showcase */}
+      <Card
+        header={
+          <div>
+            <h2 className="text-base font-bold text-white tracking-tight">
+              Standardized Loading Indicators (`Spinner` &amp; `LoadingState`)
+            </h2>
+            <p className="text-xs text-gray-400">
+              Unified ring spinner sizes, color variants, and layout wrappers used across buttons,
+              modals, tables, search dropdowns, and full-page session checks.
+            </p>
+          </div>
+        }
+      >
+        <div className="space-y-6">
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-3">
+              Spinner Sizes (`xs`, `sm`, `md`, `lg`, `xl`) &amp; Variants
+            </span>
+            <div className="flex items-center gap-5 flex-wrap">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#0c0d14] border border-white/5">
+                <Spinner size="xs" />
+                <Spinner size="sm" />
+                <Spinner size="md" />
+                <Spinner size="lg" />
+                <Spinner size="xl" />
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-purple-600 border border-purple-500">
+                <Spinner size="sm" variant="white" />
+                <Spinner size="md" variant="white" />
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200">
+                <Spinner size="md" variant="dark" />
+                <Spinner size="lg" variant="dark" />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-white/5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-xl bg-[#0c0d14] border border-white/5">
+              <LoadingState
+                variant="compact"
+                title="Loading your watchlist..."
+                description="Checking quality across active streaming sources"
+              />
+            </div>
+            <div className="rounded-xl bg-[#0c0d14] border border-white/5 flex items-center justify-center">
+              <LoadingState variant="inline" title="Searching movies..." />
             </div>
           </div>
         </div>

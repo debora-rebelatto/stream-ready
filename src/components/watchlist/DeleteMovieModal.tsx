@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { Trash2, AlertTriangle, X, Loader2 } from 'lucide-react';
+import { Trash2, AlertTriangle, X } from 'lucide-react';
+import { Spinner } from '../common';
 
 interface DeleteMovieModalProps {
   isOpen: boolean;
@@ -124,7 +125,7 @@ export const DeleteMovieModal: React.FC<DeleteMovieModalProps> = ({
           >
             {isDeleting ? (
               <>
-                <Loader2 size={15} className="animate-spin" />
+                <Spinner size="sm" variant="white" decorative />
                 <span>Removing...</span>
               </>
             ) : (

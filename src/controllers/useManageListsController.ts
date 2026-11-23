@@ -3,21 +3,26 @@ import { useWatchlist } from '../context/useAppContext';
 import type { CuratedList } from '../models';
 
 export const EMOJI_OPTIONS = [
-  '🎬',
-  '🍿',
-  '👻',
-  '💖',
-  '🚀',
-  '🏆',
-  '🤠',
-  '📺',
-  '🔥',
-  '⭐',
-  '🧟',
-  '🕵️',
-  '🧠',
-  '⚡',
+  'film',
+  'popcorn',
+  'ghost',
+  'heart',
+  'rocket',
+  'trophy',
+  'compass',
+  'tv',
+  'flame',
+  'star',
+  'skull',
+  'search',
+  'brain',
+  'zap',
+  'folder',
+  'sparkles',
+  'clapperboard',
 ];
+
+const DEFAULT_LIST_ICON_KEY = 'film';
 
 export function useManageListsController(initialTab: 'standard' | 'custom' = 'standard') {
   const {
@@ -32,10 +37,10 @@ export function useManageListsController(initialTab: 'standard' | 'custom' = 'st
 
   const [activeTab, setActiveTab] = useState<'standard' | 'custom'>(initialTab);
   const [name, setName] = useState('');
-  const [selectedEmoji, setSelectedEmoji] = useState('🎬');
+  const [selectedEmoji, setSelectedEmoji] = useState(DEFAULT_LIST_ICON_KEY);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-  const [editingEmoji, setEditingEmoji] = useState('🎬');
+  const [editingEmoji, setEditingEmoji] = useState(DEFAULT_LIST_ICON_KEY);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [addingListId, setAddingListId] = useState<string | null>(null);
   const [expandedCuratedId, setExpandedCuratedId] = useState<string | null>(null);
@@ -50,11 +55,15 @@ export function useManageListsController(initialTab: 'standard' | 'custom' = 'st
 
     if (success) {
       setName('');
-      setSelectedEmoji('🎬');
+      setSelectedEmoji(DEFAULT_LIST_ICON_KEY);
     }
   };
 
-  const handleStartEdit = (id: string, currentName: string, currentEmoji = '🎬') => {
+  const handleStartEdit = (
+    id: string,
+    currentName: string,
+    currentEmoji = DEFAULT_LIST_ICON_KEY
+  ) => {
     setEditingId(id);
     setEditingName(currentName);
     setEditingEmoji(currentEmoji);

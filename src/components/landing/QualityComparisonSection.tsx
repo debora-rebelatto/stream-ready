@@ -1,5 +1,5 @@
 import React from 'react';
-import { XCircle, CheckCircle2 } from 'lucide-react';
+import { XCircle, CheckCircle2, Flame, Popcorn } from 'lucide-react';
 
 export const QualityComparisonSection: React.FC = () => {
   return (
@@ -22,7 +22,7 @@ export const QualityComparisonSection: React.FC = () => {
             </div>
             <div className="space-y-3.5 text-xs text-gray-300">
               <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 flex items-start gap-3">
-                <span className="text-red-400 font-bold text-base mt-0.5">❌</span>
+                <XCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-white">45 streams found for new cinema title</p>
                   <p className="text-gray-400 text-[11px] mt-0.5">
@@ -32,7 +32,7 @@ export const QualityComparisonSection: React.FC = () => {
                 </div>
               </div>
               <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 flex items-start gap-3">
-                <span className="text-red-400 font-bold text-base mt-0.5">❌</span>
+                <XCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-white">Manual weekly checking</p>
                   <p className="text-gray-400 text-[11px] mt-0.5">
@@ -42,7 +42,7 @@ export const QualityComparisonSection: React.FC = () => {
                 </div>
               </div>
               <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 flex items-start gap-3">
-                <span className="text-red-400 font-bold text-base mt-0.5">❌</span>
+                <XCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-white">Ruined movie nights</p>
                   <p className="text-gray-400 text-[11px] mt-0.5">
@@ -69,7 +69,7 @@ export const QualityComparisonSection: React.FC = () => {
             </div>
             <div className="space-y-3.5 text-xs text-gray-300">
               <div className="p-3.5 rounded-xl bg-black/40 border border-purple-500/20 flex items-start gap-3">
-                <span className="text-emerald-400 font-bold text-base mt-0.5">✅</span>
+                <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-white">Anti-CAM Release Intelligence</p>
                   <p className="text-gray-400 text-[11px] mt-0.5">
@@ -79,7 +79,7 @@ export const QualityComparisonSection: React.FC = () => {
                 </div>
               </div>
               <div className="p-3.5 rounded-xl bg-black/40 border border-purple-500/20 flex items-start gap-3">
-                <span className="text-emerald-400 font-bold text-base mt-0.5">✅</span>
+                <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-white">Automated 24/7 Cloud Monitoring</p>
                   <p className="text-gray-400 text-[11px] mt-0.5">
@@ -89,12 +89,16 @@ export const QualityComparisonSection: React.FC = () => {
                 </div>
               </div>
               <div className="p-3.5 rounded-xl bg-black/40 border border-purple-500/20 flex items-start gap-3">
-                <span className="text-emerald-400 font-bold text-base mt-0.5">✅</span>
+                <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-white">Instant Smart TV Home Sync</p>
                   <p className="text-gray-400 text-[11px] mt-0.5">
                     As soon as clean 1080p or 4K drops, it appears on your Smart TV home row with
-                    the 🔥 NEW RELEASE badge!
+                    the{' '}
+                    <span className="inline-flex items-center gap-0.5 text-amber-300 font-semibold">
+                      <Flame size={11} className="inline" /> NEW RELEASE
+                    </span>{' '}
+                    badge!
                   </p>
                 </div>
               </div>
@@ -102,7 +106,10 @@ export const QualityComparisonSection: React.FC = () => {
           </div>
           <div className="mt-6 pt-4 border-t border-purple-500/20 text-[11px] text-emerald-300 font-semibold flex items-center justify-between">
             <span>Sit back, relax, and enjoy pristine cinema quality.</span>
-            <span className="text-purple-300">🍿 Popcorn ready</span>
+            <span className="inline-flex items-center gap-1.5 text-purple-300">
+              <Popcorn size={13} />
+              <span>Popcorn ready</span>
+            </span>
           </div>
         </div>
       </div>

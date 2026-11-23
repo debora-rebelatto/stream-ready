@@ -6,6 +6,7 @@ import {
   Download,
   AlertTriangle,
   Heart,
+  Settings,
 } from 'lucide-react';
 import { useSettingsController, type SettingsTab } from '../controllers/useSettingsController';
 import {
@@ -80,7 +81,7 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
             />
             <div className="h-5 w-px bg-white/10" />
             <div className="flex items-center gap-2">
-              <span className="text-lg">⚙️</span>
+              <Settings size={18} className="text-purple-400 shrink-0" />
               <h1 className="text-base sm:text-lg font-bold tracking-tight text-white">Settings</h1>
             </div>
           </div>

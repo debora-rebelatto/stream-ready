@@ -1,5 +1,5 @@
 import React from 'react';
-import { RotateCw } from 'lucide-react';
+import { Spinner, type SpinnerVariant } from './Spinner';
 
 export type ButtonVariant =
   | 'primary' // Gradient purple-to-indigo with glow
@@ -108,6 +108,15 @@ export const Button: React.FC<ButtonProps> = ({
     }
   };
 
+  const spinnerVariant: SpinnerVariant =
+    variant === 'primary' || variant === 'solid' || (variant === 'pill' && active)
+      ? 'white'
+      : variant === 'danger'
+        ? 'current'
+        : 'brand';
+
+  const spinnerSize = size === 'lg' ? 'md' : size === 'xs' ? 'xs' : 'sm';
+
   return (
     <button
       disabled={disabled || isLoading}
@@ -115,10 +124,7 @@ export const Button: React.FC<ButtonProps> = ({
       {...props}
     >
       {isLoading ? (
-        <RotateCw
-          size={size === 'lg' ? 16 : 13}
-          className="animate-spin text-purple-400 shrink-0"
-        />
+        <Spinner size={spinnerSize} variant={spinnerVariant} decorative />
       ) : (
         icon && iconPosition === 'left' && <span className="shrink-0">{icon}</span>
       )}

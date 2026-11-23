@@ -200,7 +200,7 @@ export function useDashboardController() {
         alreadyLoggedIn: true,
       });
       showToast(
-        '📱 Connected from Stremio TV! Search or add movies below to watch on your TV.',
+        'Connected from Stremio TV! Search or add movies below to watch on your TV.',
         'info'
       );
     }

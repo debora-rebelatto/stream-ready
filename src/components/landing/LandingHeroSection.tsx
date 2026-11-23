@@ -36,7 +36,7 @@ export const LandingHeroSection: React.FC<LandingHeroSectionProps> = ({
         <Info size={18} className="text-amber-400 shrink-0 mt-0.5" />
         <div>
           <strong className="text-white block font-semibold mb-0.5">
-            ⚠️ Account Connection Required to Track Movies
+            Account Connection Required to Track Movies
           </strong>
           <span className="text-xs text-amber-200/90 leading-relaxed block">
             Stremio addons are read-only inside the media player. To track movies, you must{' '}

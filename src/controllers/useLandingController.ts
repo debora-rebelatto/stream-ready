@@ -80,7 +80,7 @@ export function useLandingController({
           context,
         });
         showToast(
-          '📱 Welcome from Stremio TV! Connect your Stremio account to sync movies to your TV.',
+          'Welcome from Stremio TV! Connect your Stremio account to sync movies to your TV.',
           'info'
         );
       } else {
@@ -89,7 +89,7 @@ export function useLandingController({
           context,
         });
         showToast(
-          '👋 Welcome from Stremio! Connect your Stremio account to configure the addon.',
+          'Welcome from Stremio! Connect your Stremio account to configure the addon.',
           'info'
         );
       }
@@ -130,7 +130,7 @@ export function useLandingController({
     if (installUrl) {
       trackEvent('addon_install_clicked', { location: 'landing_page' });
       showToast(
-        '🎬 Reminder: After installing in Stremio, use the search bar on this site to add movies!',
+        'Reminder: After installing in Stremio, use the search bar on this site to add movies!',
         'info'
       );
       window.location.href = installUrl;
