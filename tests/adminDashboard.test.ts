@@ -3,6 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { adminService } from '../src/services/adminService';
 import {
   AdminKpiGrid,
+  DailySignupsChart,
+  DailyMoviesAddedChart,
   ServiceAdoptionCard,
   TopMoviesTable,
   TopThreeMoviesCard,
@@ -68,6 +70,14 @@ describe('Admin Analytics Dashboard Components', () => {
     },
     eventsBreakdown: [{ eventName: 'movie_added', count: 120 }],
     recentEvents: [{ eventName: 'movie_added', createdAt: '2026-11-17T12:00:00Z' }],
+    dailySignups: [
+      { date: '2026-11-16', newUsers: 3, cumulativeUsers: 38 },
+      { date: '2026-11-17', newUsers: 4, cumulativeUsers: 42 },
+    ],
+    dailyMoviesAdded: [
+      { date: '2026-11-16', total: 10, search: 5, recommendations: 1, curated_list: 3, manual: 1 },
+      { date: '2026-11-17', total: 15, search: 8, recommendations: 2, curated_list: 4, manual: 1 },
+    ],
     generatedAt: '2026-11-17T18:00:00Z',
   };
 
@@ -76,6 +86,45 @@ describe('Admin Analytics Dashboard Components', () => {
     expect(React.isValidElement(el)).toBe(true);
     expect(el.props.kpis.totalUsers).toBe(42);
     expect(el.props.kpis.readyWatchlistItems).toBe(90);
+  });
+
+  test('DailySignupsChart renders daily signup bars, summary metrics, and empty state', () => {
+    const html = renderToStaticMarkup(
+      React.createElement(DailySignupsChart, {
+        data: mockAnalyticsData.dailySignups,
+      })
+    );
+    expect(html).toContain('Daily New Accounts');
+    expect(html).toContain('Today:');
+    expect(html).toContain('Period:');
+    expect(html).toContain('Peak:');
+    expect(html).toContain('Nov 16');
+    expect(html).toContain('Nov 17');
+
+    const emptyHtml = renderToStaticMarkup(
+      React.createElement(DailySignupsChart, { data: [] })
+    );
+    expect(emptyHtml).toContain('No new accounts created during this period.');
+  });
+
+  test('DailyMoviesAddedChart renders stacked source bars, legend, and empty state', () => {
+    const html = renderToStaticMarkup(
+      React.createElement(DailyMoviesAddedChart, {
+        data: mockAnalyticsData.dailyMoviesAdded,
+      })
+    );
+    expect(html).toContain('Daily Movies Added by Analytics Source');
+    expect(html).toContain('search');
+    expect(html).toContain('recommendations');
+    expect(html).toContain('curated_list');
+    expect(html).toContain('manual');
+    expect(html).toContain('Nov 16');
+    expect(html).toContain('Nov 17');
+
+    const emptyHtml = renderToStaticMarkup(
+      React.createElement(DailyMoviesAddedChart, { data: [] })
+    );
+    expect(emptyHtml).toContain('No movies added during this period.');
   });
 
   test('ServiceAdoptionCard instantiates with addon and sync metrics', () => {

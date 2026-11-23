@@ -10,6 +10,8 @@ import { useAdminController, type AdminTimeRange } from '../controllers/useAdmin
 import { Button, LoadingState } from '../components';
 import {
   AdminKpiGrid,
+  DailySignupsChart,
+  DailyMoviesAddedChart,
   ServiceAdoptionCard,
   NotificationAnalyticsCard,
   TopMoviesTable,
@@ -115,6 +117,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
         {data && (
           <div className="space-y-6 animate-in fade-in duration-150">
             <AdminKpiGrid kpis={data.kpis} />
+            <DailySignupsChart data={data.dailySignups} />
+            <DailyMoviesAddedChart data={data.dailyMoviesAdded} />
             <TopThreeMoviesCard movies={data.topMovies} />
             <ServiceAdoptionCard adoption={data.serviceAdoption} />
             {data.serviceAdoption.notifications && (
