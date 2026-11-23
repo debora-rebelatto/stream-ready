@@ -40,10 +40,10 @@ export const HowItWorksSection: React.FC = () => {
           <div className="w-8 h-8 rounded-full bg-emerald-500 text-white font-bold text-xs flex items-center justify-center mb-4 shadow-md">
             3
           </div>
-          <h4 className="text-sm font-bold text-white mb-1.5">Watch in True 1080p/4K</h4>
+          <h4 className="text-sm font-bold text-white mb-1.5">Get Alerted &amp; Watch in 1080p/4K</h4>
           <p className="text-xs text-gray-400 leading-relaxed">
-            When quality releases drop, the movie automatically pops up in your TV Stremio Home
-            Catalog ready to stream with high bitrate audio.
+            When quality releases drop, receive instant alerts via Telegram, Discord, or Email and
+            stream directly from your TV Stremio Home Catalog.
           </p>
         </div>
       </div>

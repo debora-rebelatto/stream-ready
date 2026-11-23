@@ -1,5 +1,16 @@
 import React from 'react';
-import { SlidersHorizontal, Flame, Eye, Zap, Film, Lock } from 'lucide-react';
+import {
+  SlidersHorizontal,
+  Flame,
+  Eye,
+  Zap,
+  Film,
+  Lock,
+  Bell,
+  Send,
+  Mail,
+  MessageSquare,
+} from 'lucide-react';
 
 export const FeaturesGridSection: React.FC = () => {
   return (
@@ -15,6 +26,44 @@ export const FeaturesGridSection: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="sm:col-span-2 lg:col-span-3 p-6 rounded-2xl bg-gradient-to-r from-purple-950/50 via-[#141624] to-emerald-950/30 border border-purple-500/35 hover:border-purple-400/60 transition-all flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center text-emerald-400 shrink-0">
+              <Bell size={24} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-base sm:text-lg font-bold text-white">
+                  Automated Release Alerts
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  New
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-2xl">
+                Get notified automatically the moment a tracked movie drops in verified 1080p, 4K
+                UHD, or Dolby Atmos — sent once per movie with direct Stremio links and zero
+                duplicate noise.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-sky-300">
+              <Send size={13} />
+              Telegram Bot
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-purple-300">
+              <Mail size={13} />
+              Email
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-indigo-300">
+              <MessageSquare size={13} />
+              Discord Webhook
+            </span>
+          </div>
+        </div>
+
         <div className="p-6 rounded-2xl bg-[#141624] border border-white/10 hover:border-purple-500/40 transition-all hover:-translate-y-1 group">
           <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 mb-4 group-hover:scale-110 transition-transform">
             <SlidersHorizontal size={24} />

@@ -121,18 +121,18 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-2">
           {/* Primary Install & Copy Addon */}
-          <div className="flex items-center bg-[#161826] border border-white/10 rounded-lg p-0.5 shadow-sm">
+          <div className="flex items-center h-8 bg-[#161826] border border-white/10 rounded-lg p-0.5 shadow-sm">
             <a
               href={installUrl || '#'}
               onClick={handleInstallClick}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-[#7b42f6] hover:bg-[#6a34e0] text-white shadow-sm transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 h-full px-3 text-xs font-semibold rounded-md bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white transition-all cursor-pointer whitespace-nowrap"
             >
               <Play size={12} fill="currentColor" />
               <span>Install in App</span>
             </a>
             <button
               onClick={handleCopy}
-              className="p-1.5 text-gray-300 hover:text-white hover:bg-white/5 rounded-md transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center h-full px-2 text-gray-300 hover:text-white hover:bg-white/5 rounded-md transition-colors cursor-pointer"
               title="Copy manifest link"
               aria-label="Copy manifest link"
             >
@@ -140,46 +140,33 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </div>
 
-          {/* QR Code Modal Trigger */}
-          {onOpenQrModal && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onOpenQrModal}
-              icon={<QrCode size={13} className="text-purple-400" />}
-              title="Scan QR Code to open on Mobile or TV"
-            >
-              QR Code
-            </Button>
-          )}
-
-          {/* User Custom Lists (if authenticated) */}
+          {/* User Custom Lists */}
           {user && onOpenLists && (
             <Button
               variant="outline"
               size="sm"
-              className="bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-white border-purple-500/25"
+              className="h-8"
               onClick={onOpenLists}
-              icon={<Folder size={13} />}
+              icon={<Folder size={13} className="text-gray-400" />}
               title="Manage custom lists"
             >
               Lists
             </Button>
           )}
 
-          {/* Quick Utility Icon Buttons (Settings, Admin & Feedback) */}
-          <div className="flex items-center gap-1">
-            {user?.isAdmin && onOpenAdmin && (
+          {/* Consistent Utility Icon Group */}
+          <div className="flex items-center gap-1.5">
+            {onOpenQrModal && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onOpenAdmin}
-                icon={<Shield size={14} className="text-purple-300" />}
-                className="bg-purple-600/15 border-purple-500/40 text-purple-200 hover:bg-purple-600/30 hover:text-white mr-1.5 shadow-sm font-semibold"
-                title="Admin Analytics Dashboard"
-              >
-                <span className="hidden sm:inline">Admin Analytics</span>
-              </Button>
+                isIconOnly
+                className="h-8 w-8"
+                onClick={onOpenQrModal}
+                icon={<QrCode size={15} />}
+                title="Scan QR Code for Mobile & TV"
+                aria-label="Scan QR Code for Mobile & TV"
+              />
             )}
 
             {onOpenSettings && (
@@ -187,10 +174,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 variant="outline"
                 size="sm"
                 isIconOnly
+                className="h-8 w-8"
                 onClick={onOpenSettings}
                 icon={<Settings size={15} />}
-                title="Settings & Guide"
-                aria-label="Settings & Guide"
+                title="Settings & Notifications"
+                aria-label="Settings & Notifications"
               />
             )}
 
@@ -198,29 +186,45 @@ export const Navbar: React.FC<NavbarProps> = ({
               href="https://tally.so/r/dbazxA"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 border border-white/10 transition-colors cursor-pointer"
+              onClick={() => trackEvent('feedback_link_clicked', { location: 'navbar' })}
+              className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 transition-all cursor-pointer"
               title="Send Feedback"
               aria-label="Send Feedback"
             >
               <MessageSquare size={15} />
             </a>
+
+            {user?.isAdmin && onOpenAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                isIconOnly
+                className="h-8 w-8 text-purple-300 border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20"
+                onClick={onOpenAdmin}
+                icon={<Shield size={15} />}
+                title="Admin Analytics Dashboard"
+                aria-label="Admin Analytics Dashboard"
+              />
+            )}
           </div>
 
-          {/* GitHub Sponsors Button */}
-          <div className="hidden lg:flex items-center shrink-0">
-            <GitHubSponsorButton size="md" />
+          {/* GitHub Sponsors Button (wide screens only) */}
+          <div className="hidden xl:flex items-center shrink-0">
+            <GitHubSponsorButton
+              size="sm"
+              className="h-8 min-h-8 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border-white/10 hover:border-white/20 shadow-none hover:scale-100 active:scale-100"
+            />
           </div>
 
           <div className="h-4 w-px bg-white/10 mx-0.5" />
 
           {/* Auth State */}
           {isAuthLoading ? (
-            <div className="flex items-center gap-2 bg-[#1f2438]/50 border border-white/5 px-2.5 py-1.5 rounded-lg text-xs text-gray-400">
+            <div className="flex items-center gap-2 h-8 bg-[#1f2438]/50 border border-white/5 px-2.5 rounded-lg text-xs text-gray-400">
               <Spinner size="xs" variant="brand" label="Checking session..." />
             </div>
           ) : user ? (
-            <div className="flex items-center gap-1.5 bg-[#151824] border border-white/10 pl-2.5 pr-1 py-1 rounded-lg text-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+            <div className="flex items-center gap-1.5 h-8 bg-[#151824] border border-white/10 pl-2.5 pr-1 rounded-lg text-xs">
               <span
                 className="text-gray-200 max-w-32.5 truncate text-[11px] font-medium"
                 title={user.email}
@@ -242,7 +246,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </div>
           ) : (
-            <Button variant="primary" size="sm" onClick={onOpenLogin} icon={<LogIn size={13} />}>
+            <Button
+              variant="primary"
+              size="sm"
+              className="h-8"
+              onClick={onOpenLogin}
+              icon={<LogIn size={13} />}
+            >
               Sign In
             </Button>
           )}
@@ -256,7 +266,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           {user ? (
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#151824] border border-white/10">
               <div className="flex items-center gap-2 truncate max-w-42.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
                 <span className="text-xs text-gray-200 truncate font-medium">{user.email}</span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
