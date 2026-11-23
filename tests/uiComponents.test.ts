@@ -6,6 +6,9 @@ import {
   WatchlistActionButton,
   MovieCardActionButton,
   MOVIE_CARD_ACTION_VARIANTS,
+  MOVIE_STATUS_BADGE_MAP,
+  MovieCardSpecsOverlay,
+  MovieCardListMenu,
   Footer,
   GitHubRepoButton,
 } from '../src/components';
@@ -197,6 +200,46 @@ describe('UI Reusable Components (Button & Badge)', () => {
         expect(React.isValidElement(el)).toBe(true);
         expect(el.props.variant).toBe(v);
       });
+    });
+  });
+
+  describe('MovieCard Minimalist Subcomponents & Status Badges', () => {
+    test('MOVIE_STATUS_BADGE_MAP uses compact non-pulsing labels', () => {
+      expect(MOVIE_STATUS_BADGE_MAP.new.label).toBe('NEW');
+      expect(MOVIE_STATUS_BADGE_MAP.new.pulse).toBeUndefined();
+      expect(MOVIE_STATUS_BADGE_MAP.ready.label).toBe('Ready');
+      expect(MOVIE_STATUS_BADGE_MAP.waiting.label).toBe('Waiting');
+      expect(MOVIE_STATUS_BADGE_MAP.unreleased.label).toBe('Soon');
+      expect(MOVIE_STATUS_BADGE_MAP.watched.label).toBe('Watched');
+    });
+
+    test('MovieCardSpecsOverlay creates a valid React element', () => {
+      const el = React.createElement(MovieCardSpecsOverlay, {
+        isWatched: false,
+        isReady: true,
+        isUnreleased: false,
+        qualityLabel: '4K UHD',
+        streamsLabel: '149 sources',
+        streamCount: 149,
+        hasAtmos: true,
+        isLosslessAudio: false,
+        audioFormat: 'Dolby Atmos',
+      });
+      expect(React.isValidElement(el)).toBe(true);
+      expect(el.props.qualityLabel).toBe('4K UHD');
+      expect(el.props.hasAtmos).toBe(true);
+    });
+
+    test('MovieCardListMenu creates a valid React element', () => {
+      const el = React.createElement(MovieCardListMenu, {
+        isOpen: true,
+        customLists: [{ id: 'list-1', name: 'Favorites', emoji: '⭐' }],
+        itemCustomListIds: ['list-1'],
+        onToggleList: jest.fn(),
+        onClose: jest.fn(),
+      });
+      expect(React.isValidElement(el)).toBe(true);
+      expect(el.props.isOpen).toBe(true);
     });
   });
 });

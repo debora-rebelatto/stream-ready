@@ -1,20 +1,15 @@
 const {
   userRepository,
+  watchlistRepository,
   pollRepository,
   analyticsRepository,
   adminRepository,
 } = require('../repositories');
 const { encodeUserData } = require('../../lib/userData');
-const { logPostHog } = require('../../lib/posthogLogs');
 const {
   syncAddonUrlWithAccount,
   runBackgroundCheck,
 } = require('../utils/requestContext');
-
-const DEFAULT_EXCLUDED_USER_IDS = [
-  '0ae027a6-56e6-41d5-a25b-86fc1e04aed4',
-  'aa1bdc75-f539-4e11-8c90-510c0e998ce8',
-];
 
 function getHealthStatus() {
   return {
@@ -36,7 +31,13 @@ async function updateUserSettings({ authKey, userId, settings, baseUrl }) {
     syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
   }
 
-  return updated;
+  return {
+    settings: updated,
+    items: userId ? watchlistRepository.getEnrichedItems(userId) : [],
+    stats: userId
+      ? watchlistRepository.getStats(userId)
+      : { total: 0, ready: 0, pending: 0, unreleased: 0, watched: 0 },
+  };
 }
 
 async function getSystemInfo({ host, baseUrl, authKey, port }) {
@@ -62,7 +63,8 @@ async function getSystemInfo({ host, baseUrl, authKey, port }) {
 }
 
 function isTrackingExcludedUser(user) {
-  const userId = user?.userId || user?.id || null;
+  const rawUserId = user?.userId || user?.id || null;
+  const userId = rawUserId ? String(rawUserId).trim().toLowerCase() : null;
   const userEmail = (user?.userEmail || user?.email || '').toLowerCase().trim();
 
   const excludedEnvEmails =
@@ -76,13 +78,12 @@ function isTrackingExcludedUser(user) {
       .map((s) => s.trim().toLowerCase())
       .filter(Boolean)
   );
-  const excludedUserIds = new Set([
-    ...DEFAULT_EXCLUDED_USER_IDS,
-    ...excludedEnvIds
+  const excludedUserIds = new Set(
+    excludedEnvIds
       .split(',')
       .map((s) => s.trim().toLowerCase())
-      .filter(Boolean),
-  ]);
+      .filter(Boolean)
+  );
 
   return Boolean(
     (userEmail && excludedList.has(userEmail)) ||
@@ -156,7 +157,6 @@ async function triggerCronCheck({ authHeader, querySecret }) {
     }
   }
 
-  logPostHog('info', 'background_check_triggered', { trigger: 'cron_endpoint' });
   const summary = await runBackgroundCheck();
   return {
     success: true,
@@ -184,6 +184,7 @@ const systemOperationService = {
   getUserSettings,
   updateUserSettings,
   getSystemInfo,
+  isTrackingExcludedUser,
   recordClientEvent,
   getAnalyticsSummary,
   submitPollVote,

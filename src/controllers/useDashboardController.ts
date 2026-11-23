@@ -24,7 +24,6 @@ export function useDashboardController() {
     activeCustomListId,
     setActiveCustomListId,
     globalMinQuality,
-    globalMinAudio,
     isLoading: isWatchlistLoading,
     isCheckingAll,
     addItem,
@@ -322,8 +321,6 @@ export function useDashboardController() {
     selectedAudio: filters.selectedAudio,
     includeWatchedInAll: filters.includeWatchedInAll,
     searchQuery: filters.searchQuery,
-    globalMinQuality,
-    globalMinAudio,
   });
 
   const sorted = sortWatchlistItems(filtered, filters.sortBy);

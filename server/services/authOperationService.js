@@ -12,6 +12,7 @@ const {
   triggerUserOnDemandSync,
 } = require('../utils/requestContext');
 const { watchlistOperationService } = require('./watchlistOperationService');
+const { systemOperationService } = require('./systemOperationService');
 
 function triggerPostLoginBackgroundSync(authKey, baseUrl, userId) {
   if (baseUrl) {
@@ -38,7 +39,14 @@ async function authenticateUser({ email, password, authKey, baseUrl }) {
     await watchlistOperationService.restoreCloudWatchlistIfEmpty(authKey, user.id, 'auth/login');
     triggerPostLoginBackgroundSync(authKey, baseUrl, user.id);
 
-    return { success: true, authKey, user };
+    return {
+      success: true,
+      authKey,
+      user: {
+        ...user,
+        trackingExcluded: systemOperationService.isTrackingExcludedUser(user),
+      },
+    };
   }
 
   if (!email || !password) {
@@ -67,7 +75,16 @@ async function authenticateUser({ email, password, authKey, baseUrl }) {
   );
   triggerPostLoginBackgroundSync(authResult.authKey, baseUrl, userId);
 
-  return { success: true, authKey: authResult.authKey, user };
+  return {
+    success: true,
+    authKey: authResult.authKey,
+    user: user
+      ? {
+          ...user,
+          trackingExcluded: systemOperationService.isTrackingExcludedUser(user),
+        }
+      : user,
+  };
 }
 
 async function getSessionStatus({ authKey }) {
@@ -98,6 +115,7 @@ async function getSessionStatus({ authKey }) {
         email: user.email,
         isAdmin: Boolean(user.isAdmin),
         onboardingCompleted: Boolean(user.onboardingCompleted),
+        trackingExcluded: systemOperationService.isTrackingExcludedUser(user),
       },
       itemsCount: watchlistRepository.getItems(userId).length,
       supabaseConfigured: userRepository.isSupabaseConfigured(),

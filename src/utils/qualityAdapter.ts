@@ -1,34 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type {
-  AudioPreference,
-  MovieCardStatus,
-  MovieComputedStatus,
-  MovieReleaseMetadata,
-  QualityCriteria,
-  WatchlistItem,
-  WatchlistStats,
-} from '../models';
-
-export interface MovieStatusFlags {
-  isWatched: boolean;
-  isNew: boolean;
-  ready: boolean;
-  unreleased: boolean;
-}
-
-export function resolveMovieStatus({
-  isWatched,
-  isNew,
-  ready,
-  unreleased,
-}: MovieStatusFlags): MovieCardStatus {
-  if (isWatched) return 'watched';
-  if (isNew) return 'new';
-  if (ready) return 'ready';
-  if (unreleased) return 'unreleased';
-  return 'waiting';
-}
+import type { MovieComputedStatus, WatchlistItem } from '../models';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -52,225 +24,74 @@ export function formatQualityLabel(raw?: string): string {
   return q;
 }
 
-// todo: check this later
-export function isItemReady(
-  item: {
-    has1080pPlus?: boolean;
-    bestQuality?: string;
-    minQuality?: string | null;
-    hasAtmos?: boolean;
-    hasSurround?: boolean;
-    audioFormat?: string;
-  },
-  criteriaOrMinQuality: QualityCriteria | string = '1080p',
-  legacyMinAudio: AudioPreference = 'any'
-): boolean {
-  if (!item) return false;
-  const criteria: QualityCriteria =
-    typeof criteriaOrMinQuality === 'object' && criteriaOrMinQuality !== null
-      ? criteriaOrMinQuality
-      : {
-          minQuality: (criteriaOrMinQuality as '1080p' | '4k') || '1080p',
-          minAudio: legacyMinAudio,
-        };
+export function formatCompactQualityLabel(raw?: string, isUnreleased?: boolean): string {
+  if (isUnreleased) return 'Unreleased';
+  const normalized = formatQualityLabel(raw);
+  if (/4k|2160p|uhd/i.test(normalized)) return '4K';
+  if (/1080p|fhd/i.test(normalized)) return '1080p';
+  if (/720p|\bhd\b/i.test(normalized)) return '720p';
+  if (/cam|ts|theater/i.test(normalized)) return 'CAM';
+  if (/unreleased/i.test(normalized)) return 'Unreleased';
+  if (/pending/i.test(normalized)) return 'Pending';
+  if (/check error/i.test(normalized)) return 'Error';
+  return normalized;
+}
 
-  const target = item.minQuality || criteria.minQuality || '1080p';
-  const rawQuality = String(item.bestQuality || '').toLowerCase();
+export function formatCompactAudioLabel(hasAtmos?: boolean, audioFormat?: string): string {
+  if (hasAtmos) return 'ATMOS';
+  if (!audioFormat) return '';
+  const cleaned = audioFormat.trim();
+  if (!cleaned) return '';
+  if (/atmos/i.test(cleaned)) return 'ATMOS';
+  if (/truehd/i.test(cleaned)) return 'TrueHD';
+  if (/dts[- ]?hd|dts[- ]?ma|dts:x/i.test(cleaned)) return 'DTS-HD';
+  if (/dts/i.test(cleaned)) return 'DTS';
+  if (/ddp\s*5\.1|eac3|dd\+/i.test(cleaned)) return 'DDP 5.1';
+  if (/5\.1/i.test(cleaned)) return '5.1';
+  if (/7\.1/i.test(cleaned)) return '7.1';
+  return cleaned;
+}
 
-  const videoReady =
-    target === '4k'
-      ? rawQuality.includes('4k') || rawQuality.includes('2160p') || rawQuality.includes('uhd')
-      : Boolean(item.has1080pPlus);
+const DEFAULT_COMPUTED_STATUS: MovieComputedStatus = {
+  status: 'waiting',
+  isWatched: false,
+  isReady: false,
+  isNewRelease: false,
+  isUnreleased: false,
+  qualityTier: 'pending',
+  qualityLabel: 'Pending',
+  streamsLabel: '0 sources',
+  hasAtmos: false,
+  hasSurround: false,
+  isLosslessAudio: false,
+  audioFormat: '',
+  activeTargetQuality: '1080p',
+  activeTargetAudio: 'any',
+};
 
-  if (!videoReady) return false;
-
-  const audioTarget = criteria.minAudio || 'any';
-  if (audioTarget === 'atmos') {
-    return Boolean(item.hasAtmos);
+/**
+ * Pure read-only accessor for backend-computed quality & status metadata.
+ * All quality rules are evaluated on the backend; this helper never calculates quality checks.
+ */
+export function getMovieComputedStatus(item?: WatchlistItem | null): MovieComputedStatus {
+  if (item?.computed) {
+    return item.computed;
   }
-  if (audioTarget === 'surround') {
-    return Boolean(item.hasSurround || item.hasAtmos);
+  if (!item) {
+    return DEFAULT_COMPUTED_STATUS;
   }
-  return true;
-}
-
-export const THREE_MONTHS_MS = 90 * 24 * 60 * 60 * 1000;
-
-export function parseTimestampMs(dateStr?: string | null): number | null {
-  if (!dateStr) return null;
-  try {
-    const time = new Date(dateStr).getTime();
-    return Number.isNaN(time) ? null : time;
-  } catch {
-    return null;
-  }
-}
-
-export function isTimestampWithinWindow(
-  timestampMs: number | null,
-  nowMs: number = Date.now(),
-  windowMs: number = THREE_MONTHS_MS
-): boolean {
-  if (timestampMs === null) return false;
-  const diffMs = nowMs - timestampMs;
-  return diffMs >= 0 && diffMs <= windowMs;
-}
-
-export function extractReleaseYear(year?: string | number): number | null {
-  if (year === undefined || year === null) return null;
-  const yearMatch = String(year).match(/\d{4}/);
-  if (!yearMatch) return null;
-  const parsed = parseInt(yearMatch[0], 10);
-  return parsed > 0 ? parsed : null;
-}
-
-export function isCatalogTitleTooOld(
-  year?: string | number,
-  currentYear: number = new Date().getFullYear()
-): boolean {
-  const releaseYear = extractReleaseYear(year);
-  if (releaseYear === null) return false;
-  return releaseYear < currentYear - 1;
-}
-
-export function evaluateExplicitReleaseDate(
-  item: MovieReleaseMetadata,
-  nowMs: number = Date.now()
-): boolean | null {
-  const explicitDateStr = item.released || item.releaseDate;
-  const releaseTimeMs = parseTimestampMs(explicitDateStr);
-  if (releaseTimeMs === null) return null;
-
-  if (isTimestampWithinWindow(releaseTimeMs, nowMs)) {
-    return item.has1080pPlus !== false;
-  }
-  return false;
-}
-
-export function evaluateReadyTimestampRelease(
-  item: MovieReleaseMetadata,
-  nowMs: number = Date.now()
-): boolean {
-  if (!item.has1080pPlus || !item.readyAt) return false;
-  if (isCatalogTitleTooOld(item.year)) return false;
-
-  const readyTimeMs = parseTimestampMs(item.readyAt);
-  return isTimestampWithinWindow(readyTimeMs, nowMs);
-}
-
-export function isItemNewRelease(
-  item: MovieReleaseMetadata | null | undefined,
-  nowMs: number = Date.now()
-): boolean {
-  if (!item) return false;
-
-  const explicitResult = evaluateExplicitReleaseDate(item, nowMs);
-  if (explicitResult !== null) {
-    return explicitResult;
-  }
-
-  return evaluateReadyTimestampRelease(item, nowMs);
-}
-
-export function isItemUnreleased(item: {
-  has1080pPlus?: boolean;
-  bestQuality?: string;
-  streamCount?: number;
-  isWatched?: boolean;
-}): boolean {
-  if (item.has1080pPlus || item.isWatched) return false;
-  const rawQuality = formatQualityLabel(item.bestQuality);
-  return (
-    /unreleased|not released|unavailable|não lançado|indisponível/i.test(rawQuality) ||
-    ((!item.streamCount || item.streamCount === 0) && !/cam/i.test(rawQuality))
-  );
-}
-
-export function computeMovieStatus(
-  item: WatchlistItem,
-  globalMinQuality: '1080p' | '4k' = '1080p',
-  globalMinAudio: AudioPreference = 'any'
-): MovieComputedStatus {
   const isWatched = Boolean(item.isWatched);
-  const isReady = isItemReady(item, globalMinQuality, globalMinAudio);
-  const isNewRelease = isItemNewRelease(item) && !isWatched;
-  const isUnreleased = isItemUnreleased(item);
-  const status = resolveMovieStatus({
-    isWatched,
-    isNew: isNewRelease,
-    ready: isReady,
-    unreleased: isUnreleased,
-  });
-  const rawQuality = formatQualityLabel(item.bestQuality);
-  const qualityLabel = isUnreleased ? 'Unreleased' : rawQuality;
-  const streamsLabel = item.streamCount > 0 ? `${item.streamCount} sources` : '0 sources';
-  const activeTargetQuality: '1080p' | '4k' = item.minQuality || globalMinQuality || '1080p';
-  const hasAtmos = Boolean(item.hasAtmos);
-  const hasSurround = Boolean(item.hasSurround || hasAtmos);
-  const isLosslessAudio = Boolean(item.isLosslessAudio);
-  const audioFormat = item.audioFormat || (hasAtmos ? 'Dolby Atmos' : '');
-
+  const isReady = Boolean(item.has1080pPlus);
   return {
-    status,
+    ...DEFAULT_COMPUTED_STATUS,
+    status: isWatched ? 'watched' : isReady ? 'ready' : 'waiting',
     isWatched,
     isReady,
-    isNewRelease,
-    isUnreleased,
-    qualityLabel,
-    streamsLabel,
-    hasAtmos,
-    hasSurround,
-    isLosslessAudio,
-    audioFormat,
-    activeTargetQuality,
-    activeTargetAudio: globalMinAudio,
-  };
-}
-
-export function enrichWatchlistItem(
-  item: WatchlistItem,
-  globalMinQuality: '1080p' | '4k' = '1080p',
-  globalMinAudio: AudioPreference = 'any'
-): WatchlistItem {
-  return {
-    ...item,
-    computed: computeMovieStatus(item, globalMinQuality, globalMinAudio),
-  };
-}
-
-export function computeWatchlistStats(
-  items: WatchlistItem[],
-  globalMinQuality: '1080p' | '4k' = '1080p',
-  globalMinAudio: AudioPreference = 'any'
-): WatchlistStats {
-  let ready = 0;
-  let pending = 0;
-  let unreleased = 0;
-  let watched = 0;
-
-  for (const item of items) {
-    const computed =
-      item.computed &&
-      item.computed.activeTargetQuality === globalMinQuality &&
-      item.computed.activeTargetAudio === globalMinAudio
-        ? item.computed
-        : computeMovieStatus(item, globalMinQuality, globalMinAudio);
-    if (computed.isWatched) {
-      watched++;
-    } else if (computed.isReady) {
-      ready++;
-    } else if (computed.isUnreleased) {
-      unreleased++;
-    } else {
-      pending++;
-    }
-  }
-
-  return {
-    total: items.length,
-    ready,
-    pending,
-    unreleased,
-    watched,
+    qualityLabel: formatQualityLabel(item.bestQuality),
+    streamsLabel: item.streamCount > 0 ? `${item.streamCount} sources` : '0 sources',
+    hasAtmos: Boolean(item.hasAtmos),
+    hasSurround: Boolean(item.hasSurround),
+    isLosslessAudio: Boolean(item.isLosslessAudio),
+    audioFormat: item.audioFormat || '',
   };
 }

@@ -45,7 +45,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto overflow-x-hidden">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
@@ -54,20 +54,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-md bg-[#151824] border border-white/10 rounded-2xl shadow-2xl z-10 my-auto max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="relative w-full max-w-[min(28rem,calc(100vw-1.5rem))] sm:max-w-md min-w-0 bg-[#151824] border border-white/10 rounded-2xl shadow-2xl z-10 my-auto max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header - Fixed at top of modal */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/10 bg-[#151824] shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400">
+        <div className="flex items-center justify-between gap-2 px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/10 bg-[#151824] shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 shrink-0">
               <Lock size={16} />
             </div>
-            <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
+            <h3 className="text-sm sm:text-base font-bold text-white tracking-tight truncate">
               Sign in with Stremio
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10 transition-colors cursor-pointer touch-manipulation min-w-8 min-h-8 flex items-center justify-center"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 active:bg-white/10 transition-colors cursor-pointer touch-manipulation min-w-8 min-h-8 shrink-0 flex items-center justify-center"
             aria-label="Close dialog"
           >
             <X size={18} />
@@ -75,23 +75,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Scrollable Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto overscroll-contain flex-1">
-          {/* Why Account is Required Banner */}
-          <div className="mb-4 p-3 rounded-xl bg-purple-500/10 border border-purple-500/25 text-purple-200 text-xs leading-relaxed flex items-start gap-2.5">
-            <span className="text-base shrink-0 mt-0.5">💡</span>
-            <div>
-              <strong className="block text-white font-semibold mb-0.5">
-                Why connect your Stremio account?
-              </strong>
-              <span>
-                Stremio addons are read-only inside the player. Connecting your account links this
-                website to your Stremio library so you can search and add cinema movies here. Our
-                24/7 cloud scanner will automatically push 1080p FHD &amp; 4K UHD releases straight
-                to your TV!
-              </span>
-            </div>
-          </div>
-
+        <div className="p-4 sm:p-6 overflow-y-auto overflow-x-hidden overscroll-contain flex-1 min-w-0">
           {/* Tab switch */}
           <div className="grid grid-cols-2 gap-1.5 mb-4 p-1 rounded-xl bg-white/5 border border-white/5 shrink-0">
             <button
@@ -100,7 +84,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 setTab('creds');
                 setErrorMsg('');
               }}
-              className={`py-2 px-2 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 text-center truncate touch-manipulation ${
+              className={`min-w-0 py-2 px-2 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 text-center truncate touch-manipulation ${
                 tab === 'creds'
                   ? 'bg-[#7b42f6] text-white shadow'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -115,7 +99,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 setTab('key');
                 setErrorMsg('');
               }}
-              className={`py-2 px-2 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 text-center truncate touch-manipulation ${
+              className={`min-w-0 py-2 px-2 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 text-center truncate touch-manipulation ${
                 tab === 'key'
                   ? 'bg-[#7b42f6] text-white shadow'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -256,7 +240,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           {/* Notice */}
           <div className="mt-3 p-3 rounded-xl bg-black/30 border border-white/5 text-[11px] text-gray-400 leading-relaxed flex items-start gap-2">
             <span className="text-sm shrink-0">🔒</span>
-            <span>
+            <span className="min-w-0">
               <strong>Security:</strong> Authentication connects directly with the official Stremio
               API (<code>api.strem.io</code>) over encrypted TLS.
             </span>

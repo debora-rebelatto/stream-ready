@@ -1,4 +1,3 @@
-import posthog from 'posthog-js';
 import { getAuthHeaders } from './httpClient';
 import { safeStorage } from './safeStorage';
 
@@ -66,15 +65,11 @@ export interface EventDataMap {
 export type EventName = keyof EventDataMap;
 
 export const TRACKING_DISABLED_KEY = 'stremio_tracking_disabled';
+export const SERVER_TRACKING_EXCLUDED_KEY = 'stremio_server_tracking_excluded';
 export const EXCLUDED_EMAILS_KEY = 'stremio_excluded_tracking_emails';
 
 export const BUILTIN_EXCLUDED_EMAILS: string[] = [];
-export const BUILTIN_EXCLUDED_USER_IDS: string[] = [
-  '0ae027a6-56e6-41d5-a25b-86fc1e04aed4',
-  'aa1bdc75-f539-4e11-8c90-510c0e998ce8',
-];
-
-let isPostHogInitialized = false;
+export const BUILTIN_EXCLUDED_USER_IDS: string[] = [];
 
 function isDevMode(): boolean {
   return typeof process !== 'undefined' && process.env?.NODE_ENV === 'development';
@@ -144,19 +139,13 @@ export function getExcludedTrackingUserIds(): string[] {
 export function setExcludedTrackingEmails(emails: string[]): void {
   const cleanList = emails.map((e) => e.trim().toLowerCase()).filter(Boolean);
   safeStorage.set(EXCLUDED_EMAILS_KEY, JSON.stringify(cleanList));
-
-  const currentEmail = safeStorage.get('stremioEmail')?.trim().toLowerCase();
-  if (currentEmail && (cleanList.includes(currentEmail) || isTrackingBlocked(currentEmail))) {
-    try {
-      posthog.opt_out_capturing?.();
-    } catch (err) {
-      logAnalyticsError('Failed to opt out capturing for excluded email', err);
-    }
-  }
 }
 
 export function isTrackingBlocked(targetEmailOrId?: string): boolean {
-  if (safeStorage.get(TRACKING_DISABLED_KEY) === 'true') {
+  if (
+    safeStorage.get(TRACKING_DISABLED_KEY) === 'true' ||
+    safeStorage.get(SERVER_TRACKING_EXCLUDED_KEY) === 'true'
+  ) {
     return true;
   }
 
@@ -180,84 +169,18 @@ export function isTrackingBlocked(targetEmailOrId?: string): boolean {
 
 export function setTrackingDisabled(disabled: boolean): void {
   safeStorage.set(TRACKING_DISABLED_KEY, disabled ? 'true' : 'false');
-  try {
-    if (disabled) {
-      posthog.opt_out_capturing?.();
-    } else {
-      posthog.opt_in_capturing?.();
-    }
-  } catch (err) {
-    logAnalyticsError('Failed to toggle tracking preference', err);
-  }
 }
 
-export function initPostHog(apiKey?: string, host?: string): void {
-  if (typeof window === 'undefined' || isPostHogInitialized) return;
-
-  if (isTrackingBlocked()) {
-    try {
-      posthog.opt_out_capturing?.();
-    } catch (err) {
-      logAnalyticsError('Failed to opt out blocked session on init', err);
-    }
-    return;
-  }
-
-  const key = apiKey || getEnvVar('VITE_POSTHOG_KEY') || (window as any).__POSTHOG_KEY__;
-  const apiHost =
-    host ||
-    getEnvVar('VITE_POSTHOG_HOST') ||
-    (window as any).__POSTHOG_HOST__ ||
-    'https://us.i.posthog.com';
-
-  if (!key) return;
-
-  try {
-    posthog.init(key, {
-      api_host: apiHost,
-      person_profiles: 'identified_only',
-      capture_pageview: true,
-      capture_pageleave: true,
-      autocapture: true,
-      capture_exceptions: {
-        capture_unhandled_errors: true,
-        capture_unhandled_rejections: true,
-        capture_console_errors: false,
-      },
-    });
-    isPostHogInitialized = true;
-  } catch (err) {
-    logAnalyticsError('Failed to initialize PostHog', err);
-  }
+export function setServerTrackingExcluded(excluded: boolean): void {
+  safeStorage.set(SERVER_TRACKING_EXCLUDED_KEY, excluded ? 'true' : 'false');
 }
 
-export function identifyUser(userId: string, traits?: Record<string, any>): void {
-  if (isTrackingBlocked(userId) || (traits?.email && isTrackingBlocked(traits.email))) {
-    try {
-      posthog.opt_out_capturing?.();
-    } catch (err) {
-      logAnalyticsError('Failed to opt out blocked user during identify', err);
-    }
-    return;
-  }
-
-  try {
-    if (isPostHogInitialized || (posthog as any).__loaded) {
-      posthog.identify?.(userId, traits);
-    }
-  } catch (err) {
-    logAnalyticsError('Failed to identify user in PostHog', err);
-  }
+export function identifyUser(_userId: string, _traits?: Record<string, any>): void {
+  // No-op: third-party identity tracking removed
 }
 
 export function resetUser(): void {
-  try {
-    if (isPostHogInitialized || (posthog as any).__loaded) {
-      posthog.reset?.();
-    }
-  } catch (err) {
-    logAnalyticsError('Failed to reset PostHog session', err);
-  }
+  // No-op: third-party identity tracking removed
 }
 
 export function trackEvent<T extends EventName>(name: T, data?: EventDataMap[T]): void {
@@ -266,14 +189,6 @@ export function trackEvent<T extends EventName>(name: T, data?: EventDataMap[T])
   }
 
   const payload = (data || {}) as Record<string, any>;
-
-  try {
-    if (isPostHogInitialized || (posthog as any).__loaded) {
-      posthog.capture?.(name, payload);
-    }
-  } catch (err) {
-    logAnalyticsError(`Failed to capture PostHog event "${name}"`, err);
-  }
 
   try {
     if (typeof window !== 'undefined' && typeof fetch === 'function') {

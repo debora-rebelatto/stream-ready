@@ -102,7 +102,7 @@ export function calculateUserPreferenceMetrics(users: any[] = []) {
 export function calculateWatchlistItemMetrics(
   allUserItems: any[] = [],
   userSettingsMap: Map<string, any>,
-  isItemReadyFn?: (item: any, minQuality: string) => boolean
+  isItemReadyFn?: (_item: any, _minQuality: string) => boolean
 ) {
   let readyCount = 0;
   let waitingCount = 0;
@@ -275,7 +275,7 @@ export interface AdminRawDataSnapshot {
   rawEvents: any[];
   pollResults: any;
   topMovies: any[];
-  isItemReady?: (item: any, minQuality: string) => boolean;
+  isItemReady?: (_item: any, _minQuality: string) => boolean;
 }
 
 /**

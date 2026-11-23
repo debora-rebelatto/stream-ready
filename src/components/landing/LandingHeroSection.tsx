@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, ArrowRight, Play, Copy, Check, Info, QrCode } from 'lucide-react';
+import { Sparkles, ArrowRight, Play, Check, Info } from 'lucide-react';
 
 export interface LandingHeroSectionProps {
   installUrl: string;
@@ -13,12 +13,10 @@ export const LandingHeroSection: React.FC<LandingHeroSectionProps> = ({
   installUrl,
   onOpenLogin,
   onInstallClick,
-  onCopy,
-  onOpenQrModal,
 }) => {
   return (
     <section className="relative text-center max-w-4xl mx-auto pt-4 sm:pt-10 px-4">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-87.5 bg-linear-to-tr from-purple-600/25 via-indigo-600/15 to-transparent blur-[140px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-150 h-87.5 bg-linear-to-tr from-purple-600/25 via-indigo-600/15 to-transparent blur-[140px] rounded-full pointer-events-none -z-10" />
 
       <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.08] mb-6">
         Never watch a blurry <br className="hidden sm:inline" />
@@ -67,24 +65,6 @@ export const LandingHeroSection: React.FC<LandingHeroSectionProps> = ({
           <Play size={15} fill="currentColor" />
           <span>1-Click Install to Stremio</span>
         </a>
-
-        <button
-          onClick={onCopy}
-          className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white transition-all cursor-pointer"
-          title="Copy Addon Manifest Link"
-          aria-label="Copy Addon Manifest Link"
-        >
-          <Copy size={17} />
-        </button>
-
-        <button
-          onClick={onOpenQrModal}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-4 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-200 hover:text-white font-semibold text-sm transition-all cursor-pointer"
-          title="Scan QR Code to open on Phone or TV"
-        >
-          <QrCode size={16} className="text-purple-400" />
-          <span>Scan QR Code</span>
-        </button>
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-8 text-xs text-gray-400">

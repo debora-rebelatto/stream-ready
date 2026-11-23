@@ -2,8 +2,9 @@ import {
   filterWatchlistItems,
   sortWatchlistItems,
   formatQualityLabel,
-  isItemReady,
+  getMovieComputedStatus,
 } from '../../src/utils';
+import { enrichWatchlistItem } from '../../lib/db/qualityEvaluator';
 import {
   useAppController,
   useAuthController,
@@ -90,40 +91,39 @@ describe('Clean Architecture Layers (models, utils, controllers, views, server r
   ];
 
   describe('utils/watchlistFilter', () => {
+    const enrichedSampleItems = sampleItems.map((item) => enrichWatchlistItem(item, '1080p'));
+
     test('filters by ready tab and excludes watched items', () => {
-      const result = filterWatchlistItems(sampleItems, {
+      const result = filterWatchlistItems(enrichedSampleItems, {
         currentTab: 'ready',
         activeCustomListId: null,
         selectedQuality: 'all',
         includeWatchedInAll: true,
         searchQuery: '',
-        globalMinQuality: '1080p',
       });
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('tt001');
     });
 
     test('filters by watched tab', () => {
-      const result = filterWatchlistItems(sampleItems, {
+      const result = filterWatchlistItems(enrichedSampleItems, {
         currentTab: 'watched',
         activeCustomListId: null,
         selectedQuality: 'all',
         includeWatchedInAll: true,
         searchQuery: '',
-        globalMinQuality: '1080p',
       });
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('tt003');
     });
 
     test('filters by custom list ID and search query', () => {
-      const result = filterWatchlistItems(sampleItems, {
+      const result = filterWatchlistItems(enrichedSampleItems, {
         currentTab: 'all',
         activeCustomListId: 'list-1',
         selectedQuality: 'all',
         includeWatchedInAll: true,
         searchQuery: 'alpha',
-        globalMinQuality: '1080p',
       });
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('tt001');
@@ -185,7 +185,8 @@ describe('Clean Architecture Layers (models, utils, controllers, views, server r
 
     test('exports quality adapter helpers via utils barrel', () => {
       expect(formatQualityLabel('ainda não lançado')).toBe('Unreleased');
-      expect(isItemReady({ has1080pPlus: true, bestQuality: '1080p' }, '1080p')).toBe(true);
+      const enriched = enrichWatchlistItem(sampleItems[0], '1080p');
+      expect(getMovieComputedStatus(enriched).isReady).toBe(true);
     });
   });
 

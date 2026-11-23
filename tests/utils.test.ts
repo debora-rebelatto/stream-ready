@@ -3,6 +3,11 @@ import path from 'path';
 import {
   cn,
   formatQualityLabel,
+  formatCompactQualityLabel,
+  formatCompactAudioLabel,
+  getMovieComputedStatus,
+} from '../src/lib/utils';
+import {
   isItemReady,
   isItemNewRelease,
   isItemUnreleased,
@@ -16,7 +21,7 @@ import {
   computeMovieStatus,
   enrichWatchlistItem,
   computeWatchlistStats,
-} from '../src/lib/utils';
+} from '../lib/db/qualityEvaluator';
 import type { WatchlistItem } from '../src/models';
 
 describe('Frontend Utils (src/lib/utils.ts)', () => {
@@ -287,6 +292,7 @@ describe('Frontend Utils (src/lib/utils.ts)', () => {
         isReady: true,
         isNewRelease: true,
         isUnreleased: false,
+        qualityTier: '4k',
         qualityLabel: '4K UHD',
         streamsLabel: '12 sources',
         hasAtmos: false,
@@ -296,6 +302,7 @@ describe('Frontend Utils (src/lib/utils.ts)', () => {
         activeTargetQuality: '4k',
         activeTargetAudio: 'any',
       });
+      expect(getMovieComputedStatus(enriched)).toEqual(enriched.computed);
     });
 
     test('computes unreleased status and label accurately when streams are 0', () => {
@@ -402,6 +409,27 @@ describe('Frontend Utils (src/lib/utils.ts)', () => {
 
       const updated = computeWatchlistStats(sampleItems.slice(0, 3), '1080p');
       expect(updated).toEqual({ total: 3, ready: 2, pending: 1, unreleased: 0, watched: 0 });
+    });
+  });
+
+  describe('formatCompactQualityLabel & formatCompactAudioLabel', () => {
+    test('shortens video quality labels for compact poster chips', () => {
+      expect(formatCompactQualityLabel('4K UHD')).toBe('4K');
+      expect(formatCompactQualityLabel('2160p REMUX')).toBe('4K');
+      expect(formatCompactQualityLabel('1080p FHD')).toBe('1080p');
+      expect(formatCompactQualityLabel('720p HD')).toBe('720p');
+      expect(formatCompactQualityLabel('CAM / Theater Rip')).toBe('CAM');
+      expect(formatCompactQualityLabel('Pending')).toBe('Pending');
+      expect(formatCompactQualityLabel('4K UHD', true)).toBe('Unreleased');
+    });
+
+    test('shortens audio format labels for compact poster chips', () => {
+      expect(formatCompactAudioLabel(true, 'Dolby Atmos')).toBe('ATMOS');
+      expect(formatCompactAudioLabel(false, 'Dolby Atmos')).toBe('ATMOS');
+      expect(formatCompactAudioLabel(false, 'Dolby TrueHD')).toBe('TrueHD');
+      expect(formatCompactAudioLabel(false, 'DTS-HD MA')).toBe('DTS-HD');
+      expect(formatCompactAudioLabel(false, 'DDP 5.1')).toBe('DDP 5.1');
+      expect(formatCompactAudioLabel(false, '')).toBe('');
     });
   });
 });

@@ -5,12 +5,7 @@ import { App } from './App';
 import './index.css';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
-import { initPostHog, isTrackingBlocked } from './utils';
-
-// Initialize PostHog if VITE_POSTHOG_KEY is configured and tracking is not blocked
-if (!isTrackingBlocked()) {
-  initPostHog();
-}
+import { isTrackingBlocked } from './utils';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

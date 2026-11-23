@@ -56,7 +56,11 @@ async function deleteList({ authKey, userId, listId, baseUrl }) {
     syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
   }
 
-  return typeof result === 'object' && result !== null ? result : { success: true };
+  const baseResult = typeof result === 'object' && result !== null ? result : { success: true };
+  return {
+    ...baseResult,
+    stats: watchlistRepository.getStats(userId),
+  };
 }
 
 async function assignItemLists({ authKey, userId, itemId, listIds, baseUrl }) {
@@ -67,7 +71,12 @@ async function assignItemLists({ authKey, userId, itemId, listIds, baseUrl }) {
     syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
   }
 
-  return updatedItem;
+  if (!updatedItem) return updatedItem;
+  const userSettings = userRepository.getSettings(userId) || {};
+  return watchlistRepository.enrichWatchlistItem(updatedItem, {
+    minQuality: userSettings.minQuality || '1080p',
+    minAudio: userSettings.minAudio || 'any',
+  });
 }
 
 async function listCuratedCatalogs(userId) {

@@ -1,5 +1,5 @@
 import { api } from '../utils';
-import type { CustomList, CuratedList, WatchlistItem } from '../models';
+import type { CustomList, CuratedList, WatchlistItem, WatchlistStats } from '../models';
 
 export const customListService = {
   /**
@@ -37,6 +37,7 @@ export const customListService = {
     success: boolean;
     deletedItemsCount?: number;
     deletedItemIds?: string[];
+    stats?: WatchlistStats;
     error?: string;
   }> {
     return api.deleteCustomList(id);

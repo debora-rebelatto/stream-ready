@@ -3,4 +3,5 @@ export interface StremioUser {
   email: string;
   isAdmin?: boolean;
   onboardingCompleted?: boolean;
+  trackingExcluded?: boolean;
 }

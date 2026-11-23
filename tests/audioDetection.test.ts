@@ -1,9 +1,10 @@
 import { extractAudioInfo, parseStreams } from '../server/services/qualityCheckerService';
+import { filterWatchlistItems } from '../src/utils';
 import {
   isItemReady,
   computeMovieStatus,
-  filterWatchlistItems,
-} from '../src/utils';
+  enrichWatchlistItem,
+} from '../lib/db/qualityEvaluator';
 import type { WatchlistItem } from '../src/models';
 
 describe('Audio Format Detection & Filtering', () => {
@@ -120,15 +121,15 @@ describe('Audio Format Detection & Filtering', () => {
     });
 
     test('filters watchlist items by selectedAudio using backend flags', () => {
-      const all = [atmosMovie, losslessMovie, stereoMovie];
+      const all = [atmosMovie, losslessMovie, stereoMovie].map((item) =>
+        enrichWatchlistItem(item, '1080p', 'any')
+      );
       const baseCriteria = {
         currentTab: 'all' as const,
         activeCustomListId: null,
         selectedQuality: 'all',
         includeWatchedInAll: true,
         searchQuery: '',
-        globalMinQuality: '1080p' as const,
-        globalMinAudio: 'any' as const,
       };
 
       expect(filterWatchlistItems(all, { ...baseCriteria, selectedAudio: 'atmos' }).map((m) => m.id)).toEqual([

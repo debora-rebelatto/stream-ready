@@ -14,12 +14,15 @@ export interface MovieReleaseMetadata {
   year?: string | number;
 }
 
+export type MovieQualityTier = '4k' | '1080p' | '720p' | 'pending';
+
 export interface MovieComputedStatus {
   status: MovieCardStatus;
   isWatched: boolean;
   isReady: boolean;
   isNewRelease: boolean;
   isUnreleased: boolean;
+  qualityTier?: MovieQualityTier;
   qualityLabel: string;
   streamsLabel: string;
   hasAtmos: boolean;

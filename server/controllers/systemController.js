@@ -19,13 +19,13 @@ async function updateSettingsHandler(req, res) {
     const { authKey, userId } = await getRequestUser(req);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const settings = await systemOperationService.updateUserSettings({
+    const { settings, items, stats } = await systemOperationService.updateUserSettings({
       authKey,
       userId,
       settings: req.body,
       baseUrl: getBaseUrl(req),
     });
-    return res.json({ success: true, settings });
+    return res.json({ success: true, settings, items, stats });
   } catch (err) {
     console.error('[Settings Save Error]', err);
     return res.status(500).json({ error: err.message });
