@@ -1,4 +1,5 @@
 import { buildRecommendedList, CURATED_RECOMMENDED_MOVIES } from '../src/lib/recommendations';
+import { enrichWatchlistItem } from '../lib/db/qualityEvaluator';
 import type { WatchlistItem } from '../src/types';
 
 describe('recommendations library', () => {
@@ -64,24 +65,30 @@ describe('recommendations library', () => {
 
   test('detects when a curated Letterboxd movie is already in user watchlist and marks isInWatchlist', () => {
     const userItems: WatchlistItem[] = [
-      {
-        id: 'tt34384661', // Godzilla Minus Zero
-        name: 'Godzilla Minus Zero',
-        has1080pPlus: true,
-        bestQuality: '1080p FHD',
-        streamCount: 20,
-        type: 'movie',
-        isWatched: false,
-      },
-      {
-        id: 'tt45368240', // You Can See Everything
-        name: 'You Can See Everything',
-        has1080pPlus: false,
-        bestQuality: 'CAM / TS',
-        streamCount: 1,
-        type: 'movie',
-        isWatched: false,
-      },
+      enrichWatchlistItem(
+        {
+          id: 'tt34384661', // Godzilla Minus Zero
+          name: 'Godzilla Minus Zero',
+          has1080pPlus: true,
+          bestQuality: '1080p FHD',
+          streamCount: 20,
+          type: 'movie',
+          isWatched: false,
+        },
+        '1080p'
+      ),
+      enrichWatchlistItem(
+        {
+          id: 'tt45368240', // You Can See Everything
+          name: 'You Can See Everything',
+          has1080pPlus: false,
+          bestQuality: 'CAM / TS',
+          streamCount: 1,
+          type: 'movie',
+          isWatched: false,
+        },
+        '1080p'
+      ),
     ];
 
     const list = buildRecommendedList(userItems, '1080p', 6);

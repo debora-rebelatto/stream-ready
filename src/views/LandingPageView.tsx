@@ -41,7 +41,7 @@ export const LandingPageView: React.FC<LandingPageProps> = (props) => {
   } = useLandingController(props);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0c0d14]">
+    <div className="min-h-screen flex flex-col bg-[#0c0d14] overflow-x-clip">
       <Navbar
         onOpenLogin={handleOpenLogin}
         onOpenInstallGuide={handleOpenInstallGuide}

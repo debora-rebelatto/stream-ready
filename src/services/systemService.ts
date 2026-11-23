@@ -1,5 +1,5 @@
 import { api } from '../utils';
-import type { ServerInfo, AppSettings } from '../models';
+import type { ServerInfo, AppSettings, WatchlistItem, WatchlistStats } from '../models';
 
 export const systemService = {
   /**
@@ -19,9 +19,12 @@ export const systemService = {
   /**
    * Updates user settings and notification preferences
    */
-  async saveSettings(
-    settings: Partial<AppSettings>
-  ): Promise<{ success: boolean; settings: AppSettings }> {
+  async saveSettings(settings: Partial<AppSettings>): Promise<{
+    success: boolean;
+    settings: AppSettings;
+    items?: WatchlistItem[];
+    stats?: WatchlistStats;
+  }> {
     return api.saveSettings(settings);
   },
 };

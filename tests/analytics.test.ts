@@ -1,28 +1,16 @@
 import {
   trackEvent,
-  initPostHog,
   identifyUser,
   resetUser,
   isTrackingBlocked,
   setTrackingDisabled,
+  setServerTrackingExcluded,
   setExcludedTrackingEmails,
   getExcludedTrackingEmails,
+  BUILTIN_EXCLUDED_USER_IDS,
 } from '../src/lib/analytics';
-import posthog from 'posthog-js';
 
-jest.mock('posthog-js', () => ({
-  __esModule: true,
-  default: {
-    init: jest.fn(),
-    capture: jest.fn(),
-    identify: jest.fn(),
-    reset: jest.fn(),
-    opt_out_capturing: jest.fn(),
-    opt_in_capturing: jest.fn(),
-  },
-}));
-
-describe('analytics.trackEvent (PostHog & Supabase)', () => {
+describe('analytics.trackEvent (Supabase)', () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
@@ -224,27 +212,9 @@ describe('analytics.trackEvent (PostHog & Supabase)', () => {
     );
   });
 
-  it('captures with PostHog once initialized', () => {
-    initPostHog('phc_test_key_123', 'https://us.i.posthog.com');
-    expect(posthog.init).toHaveBeenCalledWith(
-      'phc_test_key_123',
-      expect.objectContaining({
-        api_host: 'https://us.i.posthog.com',
-      })
-    );
-
-    trackEvent('addon_install_clicked', { location: 'landing_page' });
-    expect(posthog.capture).toHaveBeenCalledWith('addon_install_clicked', {
-      location: 'landing_page',
-    });
-
-    identifyUser('user@example.com', { email: 'user@example.com' });
-    expect(posthog.identify).toHaveBeenCalledWith('user@example.com', {
-      email: 'user@example.com',
-    });
-
-    resetUser();
-    expect(posthog.reset).toHaveBeenCalledTimes(1);
+  it('executes identifyUser and resetUser safely without throwing', () => {
+    expect(() => identifyUser('user@example.com', { email: 'user@example.com' })).not.toThrow();
+    expect(() => resetUser()).not.toThrow();
   });
 
   it('handles tracking safely without throwing when network fails', () => {
@@ -266,19 +236,29 @@ describe('analytics.trackEvent (PostHog & Supabase)', () => {
     it('blocks tracking when global opt-out is enabled', () => {
       setTrackingDisabled(true);
       expect(isTrackingBlocked()).toBe(true);
-      expect(posthog.opt_out_capturing).toHaveBeenCalled();
 
       trackEvent('addon_manifest_copied', { location: 'navbar' });
       expect(global.fetch).not.toHaveBeenCalled();
-      expect(posthog.capture).not.toHaveBeenCalled();
 
       setTrackingDisabled(false);
       expect(isTrackingBlocked()).toBe(false);
     });
 
-    it('blocks tracking for built-in developer accounts by default', () => {
-      expect(isTrackingBlocked('0ae027a6-56e6-41d5-a25b-86fc1e04aed4')).toBe(true);
-      expect(isTrackingBlocked('aa1bdc75-f539-4e11-8c90-510c0e998ce8')).toBe(true);
+    it('does not hardcode any built-in user IDs in client code', () => {
+      expect(BUILTIN_EXCLUDED_USER_IDS).toEqual([]);
+    });
+
+    it('blocks tracking when server flags the authenticated session as excluded', () => {
+      expect(isTrackingBlocked()).toBe(false);
+
+      setServerTrackingExcluded(true);
+      expect(isTrackingBlocked()).toBe(true);
+
+      trackEvent('addon_manifest_copied', { location: 'navbar' });
+      expect(global.fetch).not.toHaveBeenCalled();
+
+      setServerTrackingExcluded(false);
+      expect(isTrackingBlocked()).toBe(false);
     });
 
     it('blocks tracking for accounts in the excluded list', () => {
@@ -295,15 +275,9 @@ describe('analytics.trackEvent (PostHog & Supabase)', () => {
       localStorage.setItem('stremioEmail', 'myaccount1@gmail.com');
       expect(isTrackingBlocked()).toBe(true);
 
-      // trackEvent must not send anything to fetch or posthog
+      // trackEvent must not send anything to fetch
       trackEvent('movie_added', { title: 'Dune', imdbId: 'tt1160419' });
       expect(global.fetch).not.toHaveBeenCalled();
-      expect(posthog.capture).not.toHaveBeenCalled();
-
-      // identifyUser must trigger opt-out instead of identifying
-      identifyUser('myaccount1@gmail.com', { email: 'myaccount1@gmail.com' });
-      expect(posthog.opt_out_capturing).toHaveBeenCalled();
-      expect(posthog.identify).not.toHaveBeenCalled();
     });
 
     it('blocks tracking for user IDs in the excluded list', () => {

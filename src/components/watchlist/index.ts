@@ -1,5 +1,9 @@
 export { MovieCard, MOVIE_STATUS_BADGE_MAP } from './MovieCard';
 export type { MovieStatusBadgeConfig } from './MovieCard';
+export { MovieCardSpecsOverlay } from './MovieCardSpecsOverlay';
+export type { MovieCardSpecsOverlayProps } from './MovieCardSpecsOverlay';
+export { MovieCardListMenu } from './MovieCardListMenu';
+export type { MovieCardListMenuProps } from './MovieCardListMenu';
 export {
   MovieCardActionButton,
   MOVIE_CARD_ACTION_VARIANTS,

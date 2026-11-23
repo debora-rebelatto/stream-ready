@@ -1,10 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { AudioPreference, WatchlistItem, WatchlistStats } from '../models';
+import type { WatchlistItem, WatchlistStats } from '../models';
 import { watchlistService, cinemetaService, authService } from '../services';
 import {
-  enrichWatchlistItem,
-  computeWatchlistStats,
   trackEvent,
   safeStorage,
   type EventSource,
@@ -12,7 +10,6 @@ import {
 } from '../utils';
 import { useToastStore } from './toastStore';
 import { useAuthStore } from './authStore';
-import { useSettingsStore } from './settingsStore';
 
 const RATINGS_CACHE_KEY = 'stremio_ratings_cache';
 
@@ -38,6 +35,29 @@ function saveStoredRatings(ratings: Record<string, string>) {
   safeStorage.set(RATINGS_CACHE_KEY, JSON.stringify(ratings));
 }
 
+function attachCachedRatings(loadedItems: WatchlistItem[]): WatchlistItem[] {
+  const storedRatings = getStoredRatings();
+  let updatedRatings = false;
+
+  const itemsWithRatings = loadedItems.map((item) => {
+    const rating =
+      item.imdbRating && String(item.imdbRating) !== 'N/A'
+        ? String(item.imdbRating)
+        : storedRatings[item.id] || '';
+    if (item.imdbRating && !storedRatings[item.id]) {
+      storedRatings[item.id] = String(item.imdbRating);
+      updatedRatings = true;
+    }
+    return rating ? { ...item, imdbRating: rating } : item;
+  });
+
+  if (updatedRatings) {
+    saveStoredRatings(storedRatings);
+  }
+
+  return itemsWithRatings;
+}
+
 export interface WatchlistStoreState {
   items: WatchlistItem[];
   stats: WatchlistStats;
@@ -48,11 +68,16 @@ export interface WatchlistStoreState {
 
   setCurrentTab: (tab: 'all' | 'ready' | 'pending' | 'unreleased' | 'watched') => void;
   setItems: (
-    itemsOrFn: WatchlistItem[] | ((prev: WatchlistItem[]) => WatchlistItem[])
+    itemsOrFn: WatchlistItem[] | ((prev: WatchlistItem[]) => WatchlistItem[]),
+    nextStats?: WatchlistStats
   ) => void;
+  applyServerWatchlistSnapshot: (items: WatchlistItem[], stats?: WatchlistStats) => void;
   clearWatchlistState: () => void;
-  recomputeItemsEnrichment: (quality: '1080p' | '4k', audio?: AudioPreference) => void;
-  updateItemsAfterListDeletion: (deletedListId: string, deletedSet: Set<string>) => void;
+  updateItemsAfterListDeletion: (
+    deletedListId: string,
+    deletedSet: Set<string>,
+    nextStats?: WatchlistStats
+  ) => void;
   updateItemLists: (itemId: string, listIds: string[]) => void;
   refreshWatchlist: () => Promise<void>;
   addItem: (id: string, source?: EventSource) => Promise<boolean>;
@@ -77,37 +102,34 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
         set({ currentTab: tab });
       },
 
-      setItems: (itemsOrFn) => {
-        const { globalMinQuality: quality, globalMinAudio: audio } = useSettingsStore.getState();
+      setItems: (itemsOrFn, nextStats) => {
         set((state) => {
           const nextItems =
             typeof itemsOrFn === 'function' ? itemsOrFn(state.items) : itemsOrFn;
           return {
             items: nextItems,
-            stats: computeWatchlistStats(nextItems, quality, audio),
+            ...(nextStats ? { stats: nextStats } : {}),
           };
         });
+      },
+
+      applyServerWatchlistSnapshot: (serverItems, serverStats) => {
+        const itemsWithRatings = attachCachedRatings(serverItems || []);
+        set((state) => ({
+          items: itemsWithRatings,
+          stats: serverStats ?? state.stats,
+        }));
       },
 
       clearWatchlistState: () => {
         set({ items: [], stats: EMPTY_STATS });
       },
 
-      recomputeItemsEnrichment: (quality: '1080p' | '4k', audio?: AudioPreference) => {
-        const minAudio = audio ?? useSettingsStore.getState().globalMinAudio;
-        set((state) => {
-          const enriched = state.items.map((item) =>
-            enrichWatchlistItem(item, quality, minAudio)
-          );
-          return {
-            items: enriched,
-            stats: computeWatchlistStats(enriched, quality, minAudio),
-          };
-        });
-      },
-
-      updateItemsAfterListDeletion: (deletedListId: string, deletedSet: Set<string>) => {
-        const { globalMinQuality: quality, globalMinAudio: audio } = useSettingsStore.getState();
+      updateItemsAfterListDeletion: (
+        deletedListId: string,
+        deletedSet: Set<string>,
+        nextStats?: WatchlistStats
+      ) => {
         set((state) => {
           const updated = state.items
             .filter((item) => {
@@ -130,7 +152,7 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
 
           return {
             items: updated,
-            stats: computeWatchlistStats(updated, quality, audio),
+            ...(nextStats ? { stats: nextStats } : {}),
           };
         });
       },
@@ -145,7 +167,6 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
 
       refreshWatchlist: async () => {
         const user = useAuthStore.getState().user;
-        const { globalMinQuality: quality, globalMinAudio: audio } = useSettingsStore.getState();
         const showToast = useToastStore.getState().showToast;
 
         if (!user) {
@@ -163,30 +184,11 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
             return;
           }
 
-          const loadedItems = res.items || [];
-          const storedRatings = getStoredRatings();
-          let updatedRatings = false;
-
-          const itemsWithRatings = loadedItems.map((item) => {
-            const rating =
-              item.imdbRating && String(item.imdbRating) !== 'N/A'
-                ? String(item.imdbRating)
-                : storedRatings[item.id] || '';
-            if (item.imdbRating && !storedRatings[item.id]) {
-              storedRatings[item.id] = String(item.imdbRating);
-              updatedRatings = true;
-            }
-            const withRating = rating ? { ...item, imdbRating: rating } : item;
-            return enrichWatchlistItem(withRating, quality, audio);
-          });
-
-          if (updatedRatings) {
-            saveStoredRatings(storedRatings);
-          }
+          const itemsWithRatings = attachCachedRatings(res.items || []);
 
           set({
             items: itemsWithRatings,
-            stats: computeWatchlistStats(itemsWithRatings, quality, audio),
+            stats: res.stats || EMPTY_STATS,
           });
 
           // Background fill missing ratings
@@ -227,7 +229,6 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
 
       addItem: async (id: string, source: EventSource = 'manual'): Promise<boolean> => {
         const showToast = useToastStore.getState().showToast;
-        const { globalMinQuality: quality, globalMinAudio: audio } = useSettingsStore.getState();
 
         showToast('Adding movie and checking quality...', 'info');
         try {
@@ -236,32 +237,26 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
             showToast(res.error || 'Error adding movie.', 'error');
             return false;
           }
-          const item = res.item;
-          const storedRatings = getStoredRatings();
-          const rating =
-            item.imdbRating && String(item.imdbRating) !== 'N/A'
-              ? String(item.imdbRating)
-              : storedRatings[item.id] || '';
-          if (item.imdbRating && String(item.imdbRating) !== 'N/A' && !storedRatings[item.id]) {
-            storedRatings[item.id] = String(item.imdbRating);
-            saveStoredRatings(storedRatings);
-          }
-          const withRating = rating ? { ...item, imdbRating: rating } : item;
-          const enriched = enrichWatchlistItem(withRating, quality, audio);
+          const [item] = attachCachedRatings([res.item]);
 
-          get().setItems((prev) => [enriched, ...prev.filter((i) => i.id !== enriched.id)]);
+          get().setItems(
+            (prev) => [item, ...prev.filter((i) => i.id !== item.id)],
+            res.stats
+          );
+
+          const isReady = Boolean(item.computed?.isReady ?? item.has1080pPlus);
 
           trackEvent('movie_added', {
             title: item.name,
             year: item.year ? String(item.year) : undefined,
             imdbId: id,
             source,
-            isReady: Boolean(item.has1080pPlus),
+            isReady,
           });
 
-          if (item.has1080pPlus) {
+          if (isReady) {
             showToast(
-              `🎉 "${item.name}" added! Already READY in good quality (${item.bestQuality})!`,
+              `🎉 "${item.name}" added! Already READY in good quality (${item.computed?.qualityLabel || item.bestQuality})!`,
               'success'
             );
           } else {
@@ -281,7 +276,7 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
           if (res.success) {
             trackEvent('movie_removed', { title: name, imdbId: id });
             showToast(`"${name}" removed from watchlist.`, 'info');
-            get().setItems((prev) => prev.filter((i) => i.id !== id));
+            get().setItems((prev) => prev.filter((i) => i.id !== id), res.stats);
             return true;
           }
           showToast('Error removing item.', 'error');
@@ -344,25 +339,24 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
 
       markWatched: async (id: string, watched: boolean) => {
         const showToast = useToastStore.getState().showToast;
-        const { globalMinQuality: quality, globalMinAudio: audio } = useSettingsStore.getState();
         try {
           const res = await watchlistService.setWatched(id, watched);
           if (res.success) {
             trackEvent('movie_watched_toggled', { isWatched: watched, imdbId: id });
-            get().setItems((prev) =>
-              prev.map((i) =>
-                i.id === id
-                  ? enrichWatchlistItem(
-                      {
-                        ...i,
-                        isWatched: watched,
-                        watchedAt: watched ? new Date().toISOString() : null,
-                      },
-                      quality,
-                      audio
-                    )
-                  : i
-              )
+            get().setItems(
+              (prev) =>
+                prev.map((i) =>
+                  i.id === id
+                    ? res.item
+                      ? { ...res.item, imdbRating: res.item.imdbRating || i.imdbRating }
+                      : {
+                          ...i,
+                          isWatched: watched,
+                          watchedAt: watched ? new Date().toISOString() : null,
+                        }
+                    : i
+                ),
+              res.stats
             );
             showToast(
               watched
@@ -378,14 +372,15 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
 
       syncWatchedFromStremio: async () => {
         const showToast = useToastStore.getState().showToast;
-        const { globalMinQuality: quality, globalMinAudio: audio } = useSettingsStore.getState();
         set({ isSyncingWatched: true });
         showToast('Syncing watched history from Stremio...', 'info');
         try {
           const res = await watchlistService.syncWatchedFromStremio();
           if (res.success) {
             if (res.items) {
-              get().setItems(res.items.map((item) => enrichWatchlistItem(item, quality, audio)));
+              get().applyServerWatchlistSnapshot(res.items, res.stats);
+            } else if (res.stats) {
+              set({ stats: res.stats });
             }
             const { newlyAdded, newlyMarked, totalWatched } = res.result || {};
             const count = (newlyAdded || 0) + (newlyMarked || 0);

@@ -155,9 +155,9 @@ describe('Domain Stores & Single Source of Truth (Zustand)', () => {
     });
   });
 
-  describe('WatchlistStore & Stats Recomputation', () => {
-    it('computes stats whenever items are set', () => {
-      const { setItems, setCurrentTab } = useWatchlistStore.getState();
+  describe('WatchlistStore & Server-Computed Stats', () => {
+    it('stores server-computed stats whenever items snapshot is applied', () => {
+      const { applyServerWatchlistSnapshot, setCurrentTab } = useWatchlistStore.getState();
 
       const sample: WatchlistItem[] = [
         {
@@ -189,7 +189,13 @@ describe('Domain Stores & Single Source of Truth (Zustand)', () => {
         },
       ];
 
-      setItems(sample);
+      applyServerWatchlistSnapshot(sample, {
+        total: 3,
+        ready: 1,
+        pending: 1,
+        unreleased: 0,
+        watched: 1,
+      });
       const state = useWatchlistStore.getState();
       expect(state.items).toHaveLength(3);
       expect(state.stats.total).toBe(3);

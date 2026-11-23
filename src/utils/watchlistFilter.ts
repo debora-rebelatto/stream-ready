@@ -1,7 +1,6 @@
-import type { AudioPreference, WatchlistItem } from '../models';
-import { computeMovieStatus, enrichWatchlistItem } from './qualityAdapter';
+import type { WatchlistItem } from '../models';
+import { getMovieComputedStatus } from './qualityAdapter';
 
-// TODO: check this later it has a better way to do this
 export type WatchlistTab = 'all' | 'ready' | 'unreleased' | 'pending' | 'watched';
 
 export type WatchlistSortOption =
@@ -38,8 +37,6 @@ export interface WatchlistFilterCriteria {
   selectedAudio?: string;
   includeWatchedInAll: boolean;
   searchQuery: string;
-  globalMinQuality: '1080p' | '4k';
-  globalMinAudio?: AudioPreference;
 }
 
 export function filterWatchlistItems(
@@ -53,79 +50,53 @@ export function filterWatchlistItems(
     selectedAudio = 'all',
     includeWatchedInAll,
     searchQuery,
-    globalMinQuality,
-    globalMinAudio = 'any',
   } = criteria;
 
-  return items
-    .map((item) =>
-      item.computed &&
-      item.computed.activeTargetQuality === (item.minQuality || globalMinQuality) &&
-      item.computed.activeTargetAudio === globalMinAudio
-        ? item
-        : enrichWatchlistItem(item, globalMinQuality, globalMinAudio)
-    )
-    .filter((item) => {
-      const computed =
-        item.computed ?? computeMovieStatus(item, globalMinQuality, globalMinAudio);
+  return items.filter((item) => {
+    const computed = getMovieComputedStatus(item);
 
-      if (activeCustomListId) {
-        if (!Array.isArray(item.customLists) || !item.customLists.includes(activeCustomListId)) {
-          return false;
-        }
+    if (activeCustomListId) {
+      if (!Array.isArray(item.customLists) || !item.customLists.includes(activeCustomListId)) {
+        return false;
       }
+    }
 
-      if (currentTab === 'watched') {
-        if (!computed.isWatched) return false;
-      } else if (currentTab === 'all') {
-        if (!includeWatchedInAll && computed.isWatched) return false;
-      } else {
-        if (computed.isWatched) return false;
+    if (currentTab === 'watched') {
+      if (!computed.isWatched) return false;
+    } else if (currentTab === 'all') {
+      if (!includeWatchedInAll && computed.isWatched) return false;
+    } else {
+      if (computed.isWatched) return false;
 
-        if (currentTab === 'ready' && !computed.isReady) return false;
-        if (currentTab === 'unreleased' && !computed.isUnreleased) return false;
-        if (currentTab === 'pending' && (computed.isReady || computed.isUnreleased)) return false;
+      if (currentTab === 'ready' && !computed.isReady) return false;
+      if (currentTab === 'unreleased' && !computed.isUnreleased) return false;
+      if (currentTab === 'pending' && (computed.isReady || computed.isUnreleased)) return false;
+    }
+
+    if (currentTab !== 'watched' && selectedQuality !== 'all') {
+      const tier = computed.qualityTier || 'pending';
+      if (tier !== selectedQuality) return false;
+    }
+
+    if (currentTab !== 'watched' && selectedAudio && selectedAudio !== 'all') {
+      if (selectedAudio === 'atmos') {
+        if (!computed.hasAtmos) return false;
+      } else if (selectedAudio === 'lossless') {
+        if (!computed.isLosslessAudio) return false;
+      } else if (selectedAudio === 'surround') {
+        if (!computed.hasSurround) return false;
       }
+    }
 
-      if (currentTab !== 'watched' && selectedQuality !== 'all') {
-        const q = String(item.bestQuality || '').toLowerCase();
-        if (selectedQuality === '4k') {
-          if (!q.includes('4k') && !q.includes('2160p')) return false;
-        } else if (selectedQuality === '1080p') {
-          if (!q.includes('1080p')) return false;
-        } else if (selectedQuality === '720p') {
-          if (!q.includes('720p')) return false;
-        } else if (selectedQuality === 'pending') {
-          if (
-            q.includes('1080p') ||
-            q.includes('4k') ||
-            q.includes('2160p') ||
-            q.includes('720p')
-          ) {
-            return false;
-          }
-        }
-      }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchName = (item.name || '').toLowerCase().includes(q);
+      const matchYear = String(item.year || '').includes(q);
+      if (!matchName && !matchYear) return false;
+    }
 
-      if (currentTab !== 'watched' && selectedAudio && selectedAudio !== 'all') {
-        if (selectedAudio === 'atmos') {
-          if (!computed.hasAtmos) return false;
-        } else if (selectedAudio === 'lossless') {
-          if (!computed.isLosslessAudio) return false;
-        } else if (selectedAudio === 'surround') {
-          if (!computed.hasSurround) return false;
-        }
-      }
-
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const matchName = (item.name || '').toLowerCase().includes(q);
-        const matchYear = String(item.year || '').includes(q);
-        if (!matchName && !matchYear) return false;
-      }
-
-      return true;
-    });
+    return true;
+  });
 }
 
 function getYearNum(y?: string | number): number {

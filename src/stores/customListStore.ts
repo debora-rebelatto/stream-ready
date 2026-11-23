@@ -125,7 +125,7 @@ export const useCustomListStore = create<CustomListStoreState>()(
             }));
 
             const deletedSet = new Set(res.deletedItemIds || []);
-            useWatchlistStore.getState().updateItemsAfterListDeletion(id, deletedSet);
+            useWatchlistStore.getState().updateItemsAfterListDeletion(id, deletedSet, res.stats);
 
             showToast('List and its movies removed successfully.', 'info');
             return true;

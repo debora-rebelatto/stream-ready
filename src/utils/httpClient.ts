@@ -202,6 +202,7 @@ export const api = {
   ): Promise<{
     success: boolean;
     item: WatchlistItem;
+    stats?: WatchlistStats;
     error?: string;
     message?: string;
   }> {
@@ -250,6 +251,7 @@ export const api = {
     success: boolean;
     item: WatchlistItem;
     becameReady: boolean;
+    stats?: WatchlistStats;
   }> {
     const res = await fetch(`/api/check/${id}`, {
       method: 'POST',
@@ -279,9 +281,12 @@ export const api = {
     return res.json();
   },
 
-  async saveSettings(
-    settings: Partial<AppSettings>
-  ): Promise<{ success: boolean; settings: AppSettings }> {
+  async saveSettings(settings: Partial<AppSettings>): Promise<{
+    success: boolean;
+    settings: AppSettings;
+    items?: WatchlistItem[];
+    stats?: WatchlistStats;
+  }> {
     const res = await fetch('/api/settings', {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -355,6 +360,7 @@ export const api = {
     success: boolean;
     deletedItemsCount?: number;
     deletedItemIds?: string[];
+    stats?: WatchlistStats;
     error?: string;
   }> {
     const res = await fetch(`/api/lists/${id}`, {

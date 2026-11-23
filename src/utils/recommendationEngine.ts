@@ -1,5 +1,5 @@
 import type { WatchlistItem } from '../models';
-import { isItemReady, formatQualityLabel } from './qualityAdapter';
+import { getMovieComputedStatus } from './qualityAdapter';
 
 export interface RecommendedMovie {
   id: string;
@@ -103,7 +103,7 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
 
 export function buildRecommendedList(
   watchlistItems: WatchlistItem[] = [],
-  globalMinQuality: '1080p' | '4k' = '1080p',
+  _globalMinQuality: '1080p' | '4k' = '1080p',
   maxTotal: number = 6,
   sourceList: RecommendedMovie[] = CURATED_RECOMMENDED_MOVIES
 ): RecommendedMovie[] {
@@ -117,13 +117,14 @@ export function buildRecommendedList(
       };
     }
 
-    const ready = isItemReady(userItem, globalMinQuality);
-    const qualityLabel = formatQualityLabel(userItem.bestQuality);
+    const computed = getMovieComputedStatus(userItem);
+    const hasGoodVideo =
+      computed.isReady || computed.qualityTier === '4k' || computed.qualityTier === '1080p';
 
     return {
       ...curated,
-      isReady: ready,
-      qualityBadge: qualityLabel || curated.qualityBadge,
+      isReady: hasGoodVideo,
+      qualityBadge: computed.qualityLabel || curated.qualityBadge,
       isInWatchlist: true,
     };
   });

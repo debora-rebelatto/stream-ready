@@ -172,5 +172,113 @@ describe('Lauren Tan Constraint Engineering: Architecture & Invariant Tests', ()
         expect(lineCount).toBeLessThanOrEqual(225);
       }
     });
+
+    it('keeps lib/db.js as a thin facade and lib/db/* stores modular (< 350 lines each)', () => {
+      const facadePath = path.join(__dirname, '..', 'lib', 'db.js');
+      const facadeLines = fs.readFileSync(facadePath, 'utf8').split(/\r?\n/).length;
+      expect(facadeLines).toBeLessThanOrEqual(120);
+
+      const dbModulesDir = path.join(__dirname, '..', 'lib', 'db');
+      const dbModules = fs.readdirSync(dbModulesDir).filter((f) => f.endsWith('.js'));
+      expect(dbModules.length).toBeGreaterThanOrEqual(5);
+
+      for (const file of dbModules) {
+        const fullPath = path.join(dbModulesDir, file);
+        const lineCount = fs.readFileSync(fullPath, 'utf8').split(/\r?\n/).length;
+        expect(lineCount).toBeLessThanOrEqual(350);
+      }
+    });
+  });
+
+  describe('Level 5: Mobile Responsiveness & Overflow Invariants', () => {
+    it('prevents horizontal overflow on the landing page and bounds LoginModal to the viewport', () => {
+      const heroSource = fs.readFileSync(
+        path.join(__dirname, '../src/components/landing/LandingHeroSection.tsx'),
+        'utf8'
+      );
+      const landingSource = fs.readFileSync(
+        path.join(__dirname, '../src/views/LandingPageView.tsx'),
+        'utf8'
+      );
+      const loginModalSource = fs.readFileSync(
+        path.join(__dirname, '../src/components/auth/LoginModal.tsx'),
+        'utf8'
+      );
+
+      // Decorative hero glow must never exceed viewport width on mobile
+      expect(heroSource).not.toMatch(/(?<!max-)w-150\b/);
+      expect(landingSource).toMatch(/overflow-x-clip/);
+
+      // LoginModal must stay strictly bounded inside mobile viewports
+      expect(loginModalSource).toMatch(/overflow-x-hidden/);
+      expect(loginModalSource).toMatch(/max-w-\[min\(28rem,calc\(100vw-1\.5rem\)\)\]/);
+    });
+  });
+
+  describe('Level 6: Backend-Only Quality Evaluation Invariant', () => {
+    function collectFiles(dir: string): string[] {
+      const results: string[] = [];
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          results.push(...collectFiles(fullPath));
+        } else if (/\.(ts|tsx)$/.test(entry.name)) {
+          results.push(fullPath);
+        }
+      }
+      return results;
+    }
+
+    it('forbids frontend source files from defining or calling quality calculation functions', () => {
+      const srcDir = path.join(__dirname, '..', 'src');
+      const frontendFiles = collectFiles(srcDir);
+      const forbiddenPattern =
+        /\b(isItemReady|isItemUnreleased|isItemNewRelease|computeMovieStatus|enrichWatchlistItem|computeWatchlistStats)\b/;
+
+      for (const filePath of frontendFiles) {
+        const content = fs.readFileSync(filePath, 'utf8');
+        expect(content).not.toMatch(forbiddenPattern);
+      }
+    });
+
+    it('computes derived quality status on the backend without persisting computed columns to DB rows', async () => {
+      const { itemToRow } = require('../lib/db/itemMapper');
+      const email = `quality_backend_${Date.now()}@test.com`;
+      const bucket = db.ensureUserBucket(email);
+
+      await db.addItem(
+        {
+          id: 'tt15239678',
+          name: 'Dune: Part Two',
+          year: '2024',
+          has1080pPlus: true,
+          bestQuality: '4K UHD',
+          hasAtmos: true,
+          audioFormat: 'Dolby Atmos',
+          streamCount: 18,
+        },
+        bucket.id!
+      );
+
+      // Default 1080p / any -> ready
+      const enriched1080 = db.getEnrichedItems(bucket.id!);
+      expect(enriched1080).toHaveLength(1);
+      expect(enriched1080[0].computed.isReady).toBe(true);
+      expect(enriched1080[0].computed.qualityTier).toBe('4k');
+      expect(enriched1080[0].computed.hasAtmos).toBe(true);
+
+      // Database row payload must NOT persist derived computed object
+      const dbRow = itemToRow(enriched1080[0], bucket.id!);
+      expect(dbRow.computed).toBeUndefined();
+      expect(dbRow.quality_tier).toBeUndefined();
+      expect(dbRow.is_ready).toBeUndefined();
+
+      // Updating settings dynamically recomputes status on read
+      await db.updateSettings({ minQuality: '4k', minAudio: 'atmos' }, bucket.id!);
+      const enriched4kAtmos = db.getEnrichedItems(bucket.id!);
+      expect(enriched4kAtmos[0].computed.isReady).toBe(true);
+      expect(enriched4kAtmos[0].computed.activeTargetQuality).toBe('4k');
+      expect(enriched4kAtmos[0].computed.activeTargetAudio).toBe('atmos');
+    });
   });
 });

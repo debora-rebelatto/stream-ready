@@ -5,7 +5,6 @@ const fs = require('fs');
 const { userRepository } = require('./server/repositories');
 const { registerControllers } = require('./server/controllers');
 const { runBackgroundCheck } = require('./server/utils/requestContext');
-const { logPostHog } = require('./lib/posthogLogs');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
@@ -78,7 +77,6 @@ if (!process.env.VERCEL && require.main === module) {
 
   app.listen(PORT, '0.0.0.0', async () => {
     await userRepository.ensureLoaded(true);
-    logPostHog('info', 'server_started', { runtime: 'stateful_node' });
     console.log(`=======================================================`);
     console.log(`🚀 STREMIO WATCHLIST (GOOD QUALITY TRACKER) RUNNING`);
     console.log(`👉 Port: ${PORT}`);

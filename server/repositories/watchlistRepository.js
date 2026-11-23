@@ -2,6 +2,7 @@ const db = require('../../lib/db');
 
 const watchlistRepository = {
   getItems: (userId) => db.getItems(userId),
+  getEnrichedItems: (userId) => db.getEnrichedItems(userId),
   getAllUsersItems: () => db.getAllUsersItems(),
   getItem: (id, userId) => db.getItem(id, userId),
   addItem: (item, userId) => db.addItem(item, userId),
@@ -14,6 +15,10 @@ const watchlistRepository = {
   isItemReady: (item, globalMinQuality, globalMinAudio) =>
     db.isItemReady(item, globalMinQuality, globalMinAudio),
   isItemUnreleased: (item) => db.isItemUnreleased(item),
+  computeMovieStatus: (item, criteria, legacyMinAudio) =>
+    db.computeMovieStatus(item, criteria, legacyMinAudio),
+  enrichWatchlistItem: (item, criteria, legacyMinAudio) =>
+    db.enrichWatchlistItem(item, criteria, legacyMinAudio),
   cleanImdbId: (rawId) => db.cleanImdbId(rawId),
   isLegitimateMovieId: (rawId) => db.isLegitimateMovieId(rawId),
   getTopMovies: (limit = 10) => {

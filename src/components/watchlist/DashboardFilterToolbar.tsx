@@ -99,29 +99,30 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
       </div>
 
       <div className="bg-[#151824] border border-white/5 rounded-2xl p-3 sm:p-4 mb-6 shadow-sm">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
           <Input
             type="text"
             value={searchQuery}
             onChange={(e) => onFilterChange('searchQuery', e.target.value)}
             onClear={() => onFilterChange('searchQuery', '')}
             leftIcon={<Search size={14} />}
-            placeholder="Filter by title or year in your list..."
-            containerClassName="flex-1 min-w-50"
+            placeholder="Filter by title or year..."
+            containerClassName="flex-1 min-w-0"
             className="text-xs"
           />
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap shrink-0">
             {currentTab !== 'watched' && (
               <Select
                 value={selectedQuality}
                 onChange={(e) => onFilterChange('selectedQuality', e.target.value)}
+                className="max-w-[140px] truncate"
                 options={[
-                  { value: 'all', label: '🎯 All Qualities' },
-                  { value: '4k', label: '✨ 4K / 2160p' },
-                  { value: '1080p', label: '💎 1080p Full HD' },
-                  { value: '720p', label: '📺 720p HD' },
-                  { value: 'pending', label: '⏳ Waiting / Pending' },
+                  { value: 'all', label: 'All Qualities' },
+                  { value: '4k', label: '4K / 2160p' },
+                  { value: '1080p', label: '1080p Full HD' },
+                  { value: '720p', label: '720p HD' },
+                  { value: 'pending', label: 'Waiting / Pending' },
                 ]}
               />
             )}
@@ -130,11 +131,12 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
               <Select
                 value={selectedAudio}
                 onChange={(e) => onFilterChange('selectedAudio', e.target.value)}
+                className="max-w-[135px] truncate"
                 options={[
-                  { value: 'all', label: '🔊 All Audio' },
-                  { value: 'atmos', label: '🌊 Dolby Atmos' },
-                  { value: 'lossless', label: '💎 Lossless (TrueHD / DTS-HD)' },
-                  { value: 'surround', label: '🔈 Surround 5.1+' },
+                  { value: 'all', label: 'All Audio' },
+                  { value: 'atmos', label: 'Dolby Atmos' },
+                  { value: 'lossless', label: 'Lossless (TrueHD / DTS-HD)' },
+                  { value: 'surround', label: 'Surround 5.1+' },
                 ]}
               />
             )}
@@ -143,7 +145,7 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
               <Button
                 type="button"
                 variant="outline"
-                className={`rounded-xl px-3 py-2 font-semibold ${
+                className={`rounded-xl px-3 py-2 font-semibold whitespace-nowrap shrink-0 ${
                   includeWatchedInAll
                     ? 'bg-purple-600/20 text-purple-300 border-purple-500/40 hover:bg-purple-600/30'
                     : 'bg-[#1e2235] text-gray-400 border-white/10 hover:text-gray-200'
@@ -168,7 +170,7 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
             <Select
               value={sortBy}
               onChange={(e) => onFilterChange('sortBy', e.target.value as WatchlistSortOption)}
-              className="text-purple-300 font-medium"
+              className="text-purple-300 font-medium max-w-[190px] truncate"
               options={[
                 { value: 'added_desc', label: '↕️ Added: Newest First' },
                 { value: 'added_asc', label: '↕️ Added: Oldest First' },
@@ -185,7 +187,7 @@ export const DashboardFilterToolbar: React.FC<DashboardFilterToolbarProps> = ({
             {hasActiveFilters && (
               <Button
                 variant="danger"
-                className="rounded-xl px-2.5 py-2 font-semibold"
+                className="rounded-xl px-2.5 py-2 font-semibold whitespace-nowrap shrink-0"
                 onClick={onClearFilters}
                 icon={<X size={12} />}
                 title="Reset all filters"

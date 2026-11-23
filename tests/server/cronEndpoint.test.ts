@@ -9,10 +9,6 @@ jest.mock('../../server/utils/requestContext', () => ({
   runBackgroundCheck: jest.fn().mockResolvedValue({ totalChecked: 10, qualityFound: 2 }),
 }));
 
-jest.mock('../../lib/posthogLogs', () => ({
-  logPostHog: jest.fn(),
-}));
-
 describe('GET /api/cron Endpoint', () => {
   let app: any;
   const originalEnv = process.env.CRON_SECRET;

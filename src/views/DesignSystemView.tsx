@@ -82,15 +82,13 @@ export const DesignSystemView: React.FC<DesignSystemViewProps> = ({ onBack }) =>
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
         {/* Hero Overview Banner */}
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-950/40 via-[#151824] to-indigo-950/30 border border-purple-500/25 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="p-6 rounded-2xl bg-linear-to-r from-purple-950/40 via-[#151824] to-indigo-950/30 border border-purple-500/25 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5 max-w-2xl">
             <div className="flex items-center gap-2">
               <Badge variant="emerald" size="xs" uppercase icon={<Sparkles size={10} />}>
                 Clean Architecture UI Kit
               </Badge>
-              <span className="text-xs text-gray-400">
-                React 19 • Tailwind CSS v4 • Zero External UI Dependencies
-              </span>
+             
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
               Cinema-Grade Dark UI Library &amp; Component Catalog

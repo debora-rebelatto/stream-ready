@@ -5,13 +5,16 @@ import {
   trackEvent,
   identifyUser as identifyAnalyticsUser,
   resetUser as resetAnalyticsUser,
+  setServerTrackingExcluded,
 } from '../utils';
 
 function identifyUser(user: StremioUser) {
+  setServerTrackingExcluded(Boolean(user.trackingExcluded));
   identifyAnalyticsUser(user.id || user.email, { email: user.email });
 }
 
 function resetUser() {
+  setServerTrackingExcluded(false);
   resetAnalyticsUser();
 }
 

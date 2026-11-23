@@ -27,13 +27,26 @@ async function restoreCloudWatchlistIfEmpty(authKey, userId, logPrefix = 'watchl
   }
 }
 
+function getUserCriteria(userId) {
+  const userSettings = userRepository.getSettings(userId) || {};
+  return {
+    minQuality: userSettings.minQuality || '1080p',
+    minAudio: userSettings.minAudio || 'any',
+  };
+}
+
+function enrichItemForUser(item, userId) {
+  if (!item) return item;
+  return watchlistRepository.enrichWatchlistItem(item, getUserCriteria(userId));
+}
+
 async function listUserItems({ authKey, userId, filter, tab, listId }) {
   await userRepository.ensureLoaded(Boolean(process.env.VERCEL));
 
   if (!authKey || !userId) {
     return {
       items: [],
-      stats: { total: 0, ready: 0, pending: 0 },
+      stats: { total: 0, ready: 0, pending: 0, unreleased: 0, watched: 0 },
       requireAuth: true,
     };
   }
@@ -42,32 +55,24 @@ async function listUserItems({ authKey, userId, filter, tab, listId }) {
   await restoreCloudWatchlistIfEmpty(authKey, userId, 'api/items');
 
   const effectiveFilter = tab || filter;
-  let items = watchlistRepository.getItems(userId);
-  const userSettings = userRepository.getSettings(userId);
-  const qualityCriteria = {
-    minQuality: userSettings.minQuality || '1080p',
-    minAudio: userSettings.minAudio || 'any',
-  };
+  let items = watchlistRepository.getEnrichedItems(userId);
 
   if (listId) {
     items = items.filter((i) => Array.isArray(i.customLists) && i.customLists.includes(listId));
   }
 
   if (effectiveFilter === 'watched') {
-    items = items.filter((i) => Boolean(i.isWatched));
+    items = items.filter((i) => Boolean(i.computed?.isWatched));
   } else if (effectiveFilter === 'ready') {
-    items = items.filter((i) => !i.isWatched && watchlistRepository.isItemReady(i, qualityCriteria));
+    items = items.filter((i) => !i.computed?.isWatched && Boolean(i.computed?.isReady));
   } else if (effectiveFilter === 'pending') {
     items = items.filter(
-      (i) =>
-        !i.isWatched &&
-        !watchlistRepository.isItemReady(i, qualityCriteria) &&
-        !watchlistRepository.isItemUnreleased(i)
+      (i) => !i.computed?.isWatched && !i.computed?.isReady && !i.computed?.isUnreleased
     );
   } else if (effectiveFilter === 'unreleased') {
-    items = items.filter((i) => !i.isWatched && watchlistRepository.isItemUnreleased(i));
+    items = items.filter((i) => !i.computed?.isWatched && Boolean(i.computed?.isUnreleased));
   } else if (effectiveFilter === 'unwatched') {
-    items = items.filter((i) => !i.isWatched);
+    items = items.filter((i) => !i.computed?.isWatched);
   }
 
   return {
@@ -139,7 +144,7 @@ async function addMovieToWatchlist({ authKey, userId, id, type = 'movie', baseUr
   if (existing) {
     return {
       success: true,
-      item: existing,
+      item: enrichItemForUser(existing, userId),
       stats: watchlistRepository.getStats(userId),
       message: 'Item is already in your watchlist',
     };
@@ -171,7 +176,11 @@ async function addMovieToWatchlist({ authKey, userId, id, type = 'movie', baseUr
     syncAddonUrlWithAccount(authKey, baseUrl, userId).catch(() => {});
   }
 
-  return { success: true, item: saved, stats: watchlistRepository.getStats(userId) };
+  return {
+    success: true,
+    item: enrichItemForUser(saved, userId),
+    stats: watchlistRepository.getStats(userId),
+  };
 }
 
 async function recheckSingleMovie({ userId, id }) {
@@ -182,42 +191,46 @@ async function recheckSingleMovie({ userId, id }) {
     throw err;
   }
 
+  const criteria = getUserCriteria(userId);
+  const wasReady = watchlistRepository.isItemReady(item, criteria);
   const quality = await checkMovieQuality(id, item.type || 'movie', item.name, item.year);
-  const wasReady = item.has1080pPlus;
 
   const updated = await watchlistRepository.updateItem(id, buildQualityPatch(quality), userId);
+  const enriched = enrichItemForUser(updated, userId);
 
   return {
     success: true,
-    item: updated,
-    becameReady: !wasReady && quality.has1080pPlus,
+    item: enriched,
+    becameReady: !wasReady && Boolean(enriched?.computed?.isReady),
+    stats: watchlistRepository.getStats(userId),
   };
 }
 
 async function recheckAllMovies({ userId, forceAll = true }) {
+  const criteria = getUserCriteria(userId);
   let items = watchlistRepository.getItems(userId).filter((i) => !i.isWatched);
   if (forceAll === false) {
-    items = items.filter((i) => !i.has1080pPlus);
+    items = items.filter((i) => !watchlistRepository.isItemReady(i, criteria));
   }
 
   let newlyReady = 0;
 
   for (const item of items) {
+    const wasReady = watchlistRepository.isItemReady(item, criteria);
     const quality = await checkMovieQuality(
       item.id,
       item.type || 'movie',
       item.name,
       item.year
     );
-    const wasReady = item.has1080pPlus;
 
-    await watchlistRepository.updateItem(
+    const updated = await watchlistRepository.updateItem(
       item.id,
       buildQualityPatch(quality, { includeExtended: true }),
       userId
     );
 
-    if (!wasReady && quality.has1080pPlus) {
+    if (!wasReady && watchlistRepository.isItemReady(updated, criteria)) {
       newlyReady++;
     }
 
@@ -257,7 +270,7 @@ async function toggleMovieWatched({ authKey, userId, id, watched, baseUrl }) {
 
   return {
     success: true,
-    item: updated,
+    item: enrichItemForUser(updated, userId),
     stats: watchlistRepository.getStats(userId),
   };
 }
@@ -272,7 +285,7 @@ async function syncWatchedHistory({ authKey, userId, baseUrl }) {
   return {
     success: true,
     result,
-    items: watchlistRepository.getItems(userId),
+    items: watchlistRepository.getEnrichedItems(userId),
     stats: watchlistRepository.getStats(userId),
   };
 }
@@ -282,7 +295,7 @@ async function syncClientBatch({ authKey, userId, clientItems, baseUrl }) {
     return {
       success: true,
       count: 0,
-      items: watchlistRepository.getItems(userId),
+      items: watchlistRepository.getEnrichedItems(userId),
       stats: watchlistRepository.getStats(userId),
     };
   }
@@ -322,7 +335,7 @@ async function syncClientBatch({ authKey, userId, clientItems, baseUrl }) {
   return {
     success: true,
     added,
-    items: watchlistRepository.getItems(userId),
+    items: watchlistRepository.getEnrichedItems(userId),
     stats: watchlistRepository.getStats(userId),
   };
 }

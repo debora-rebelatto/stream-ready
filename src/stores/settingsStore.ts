@@ -41,21 +41,19 @@ export const useSettingsStore = create<SettingsStoreState>((set, get) => {
     const prevValue = get()[stateKey];
     set({ [stateKey]: nextValue } as Partial<SettingsStoreState>);
 
-    if (options.recomputeWatchlist) {
-      const { globalMinQuality, globalMinAudio } = get();
-      useWatchlistStore.getState().recomputeItemsEnrichment(globalMinQuality, globalMinAudio);
-    }
-
     try {
-      await systemService.saveSettings(apiPatch);
+      const res = await systemService.saveSettings(apiPatch);
+      if (options.recomputeWatchlist) {
+        if (Array.isArray(res?.items)) {
+          useWatchlistStore.getState().applyServerWatchlistSnapshot(res.items, res.stats);
+        } else {
+          await useWatchlistStore.getState().refreshWatchlist();
+        }
+      }
       options.onSuccess?.();
       showToast(options.successMessage, 'success');
     } catch {
       set({ [stateKey]: prevValue } as Partial<SettingsStoreState>);
-      if (options.recomputeWatchlist) {
-        const { globalMinQuality, globalMinAudio } = get();
-        useWatchlistStore.getState().recomputeItemsEnrichment(globalMinQuality, globalMinAudio);
-      }
       showToast(options.errorMessage, 'error');
     }
   }
