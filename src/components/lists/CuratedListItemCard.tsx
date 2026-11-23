@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Loader2,
   Check,
   Plus,
   ChevronDown,
@@ -8,6 +7,7 @@ import {
   Star,
 } from 'lucide-react';
 import type { CuratedList } from '../../models';
+import { ListIcon, Spinner } from '../common';
 
 export interface CuratedListItemCardProps {
   curated: CuratedList;
@@ -36,8 +36,8 @@ export const CuratedListItemCard: React.FC<CuratedListItemCardProps> = ({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <span className="text-2xl shrink-0 p-2 rounded-xl bg-white/5 border border-white/10">
-            {curated.emoji}
+          <span className="shrink-0 p-2.5 rounded-xl bg-white/5 border border-white/10 text-purple-300 flex items-center justify-center">
+            <ListIcon icon={curated.emoji} className="w-5 h-5" />
           </span>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -79,7 +79,7 @@ export const CuratedListItemCard: React.FC<CuratedListItemCardProps> = ({
           >
             {isAdding ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Spinner size="sm" variant="white" decorative />
                 <span>Adding...</span>
               </>
             ) : alreadyAdded ? (

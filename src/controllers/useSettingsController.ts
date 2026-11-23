@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 import { useWatchlist, useToast, useAuth } from '../context/useAppContext';
 import { watchlistService } from '../services';
 
-export type SettingsTab = 'quality' | 'sync' | 'backup' | 'account';
+export type SettingsTab = 'quality' | 'notifications' | 'sync' | 'backup' | 'account';
 
 export interface UseSettingsControllerProps {
   manifestUrl?: string;
+  initialTab?: SettingsTab;
   onBack?: () => void;
 }
 
 export function useSettingsController({
   manifestUrl = 'https://stremiowatchlist.vercel.app/manifest.json',
+  initialTab = 'quality',
   onBack,
 }: UseSettingsControllerProps = {}) {
   const {
@@ -33,7 +35,7 @@ export function useSettingsController({
   const { user, logout } = useAuth();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<SettingsTab>('quality');
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const [isExporting, setIsExporting] = useState(false);
   const [copiedManifest, setCopiedManifest] = useState(false);
 
@@ -72,7 +74,7 @@ export function useSettingsController({
       URL.revokeObjectURL(url);
 
       showToast(
-        `🎉 Exported ${items.length} movie${items.length === 1 ? '' : 's'} successfully!`,
+        `Exported ${items.length} movie${items.length === 1 ? '' : 's'} successfully!`,
         'success'
       );
     } catch (err: any) {
@@ -100,7 +102,7 @@ export function useSettingsController({
         const res = await watchlistService.importBackup(items);
         if (res.success) {
           showToast(
-            `🎉 Imported ${res.addedCount ?? items.length} movies into your watchlist!`,
+            `Imported ${res.addedCount ?? items.length} movies into your watchlist!`,
             'success'
           );
           await refreshWatchlist();

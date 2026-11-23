@@ -1,6 +1,7 @@
 import React from 'react';
-import { Info, Loader2 } from 'lucide-react';
+import { Info } from 'lucide-react';
 import type { CuratedList } from '../../models';
+import { LoadingState } from '../common';
 import { CuratedListItemCard } from './CuratedListItemCard';
 
 interface CuratedListsTabProps {
@@ -34,10 +35,7 @@ export const CuratedListsTab: React.FC<CuratedListsTabProps> = ({
       </div>
 
       {isCuratedListsLoading && curatedLists.length === 0 ? (
-        <div className="py-12 flex flex-col items-center justify-center text-gray-400 gap-2">
-          <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
-          <span className="text-xs">Loading standard lists...</span>
-        </div>
+        <LoadingState variant="compact" title="Loading standard lists..." />
       ) : (
         curatedLists.map((curated) => (
           <CuratedListItemCard

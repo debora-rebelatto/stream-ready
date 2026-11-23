@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import type { MovieCardStatus, WatchlistItem } from '../../models';
 import { getMovieComputedStatus } from '../../utils';
 import { useWatchlist } from '../../context/useAppContext';
-import { Badge, type BadgeVariant } from '../common';
+import { Badge, ListIcon, type BadgeVariant } from '../common';
 import { MovieCardActionButton } from './MovieCardActionButton';
 import { MovieCardSpecsOverlay } from './MovieCardSpecsOverlay';
 import { MovieCardListMenu } from './MovieCardListMenu';
@@ -232,7 +232,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
               title={`Lists: ${itemLists.map((l) => l.name).join(', ')}`}
               aria-label={`Manage lists for ${item.name}`}
             >
-              <span>{itemLists[0].emoji || '🎬'}</span>
+              <ListIcon icon={itemLists[0].emoji} className="w-3 h-3" />
               {itemLists.length > 1 && (
                 <span className="text-[10px] font-medium text-purple-300/80">
                   +{itemLists.length - 1}

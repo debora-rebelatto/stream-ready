@@ -3,6 +3,7 @@ import QRCode from 'qrcode';
 import { X, QrCode, Smartphone, Tv, Copy, Check, ExternalLink, Download } from 'lucide-react';
 import { useToast } from '../../context/useAppContext';
 import { trackEvent } from '../../utils';
+import { Spinner } from '../common';
 
 interface QrCodeModalProps {
   isOpen: boolean;
@@ -162,7 +163,7 @@ export const QrCodeModal: React.FC<QrCodeModalProps> = ({
           <div className="flex flex-col items-center justify-center p-5 bg-[#0b0c14] border border-white/5 rounded-2xl">
             <div className="p-3 bg-white rounded-2xl shadow-xl flex items-center justify-center min-w-55 min-h-55">
               {isGenerating ? (
-                <div className="w-8 h-8 border-3 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
+                <Spinner size="lg" variant="dark" label="Generating QR code..." />
               ) : qrDataUrl ? (
                 <img
                   src={qrDataUrl}

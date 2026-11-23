@@ -3,13 +3,15 @@ import {
   ArrowLeft,
   RefreshCw,
   Palette,
+  Shield,
 } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useAdminController, type AdminTimeRange } from '../controllers/useAdminController';
-import { Button } from '../components';
+import { Button, LoadingState } from '../components';
 import {
   AdminKpiGrid,
   ServiceAdoptionCard,
+  NotificationAnalyticsCard,
   TopMoviesTable,
   TopThreeMoviesCard,
   PollFeedbackCard,
@@ -54,7 +56,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
             />
             <div className="h-5 w-px bg-white/10" />
             <div className="flex items-center gap-2">
-              <span className="text-lg">🛡️</span>
+              <Shield size={18} className="text-purple-400 shrink-0" />
               <h1 className="text-base sm:text-lg font-bold tracking-tight text-white">
                 Admin Analytics &amp; Adoption
               </h1>
@@ -96,7 +98,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
               size="sm"
               onClick={handleRefresh}
               isLoading={isLoading}
-              icon={<RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />}
+              icon={<RefreshCw size={14} />}
               title="Refresh Analytics"
             >
               <span className="hidden sm:inline">Refresh</span>
@@ -107,10 +109,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">   
         {isLoading && !data && (
-          <div className="py-20 text-center space-y-3">
-            <RefreshCw size={28} className="animate-spin text-purple-400 mx-auto" />
-            <p className="text-xs text-gray-400">Loading platform analytics and telemetry...</p>
-          </div>
+          <LoadingState title="Loading platform analytics and telemetry..." />
         )}
 
         {data && (
@@ -118,6 +117,9 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onBack }
             <AdminKpiGrid kpis={data.kpis} />
             <TopThreeMoviesCard movies={data.topMovies} />
             <ServiceAdoptionCard adoption={data.serviceAdoption} />
+            {data.serviceAdoption.notifications && (
+              <NotificationAnalyticsCard notifications={data.serviceAdoption.notifications} />
+            )}
             <TopMoviesTable movies={data.topMovies} />
             <EventActivityFeed
               eventsBreakdown={data.eventsBreakdown}

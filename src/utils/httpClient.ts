@@ -8,6 +8,11 @@ import type {
   CustomList,
   CuratedList,
   TopMovieMetric,
+  NotificationChannel,
+  NotificationPreferences,
+  NotificationStatusResponse,
+  TelegramLinkResponse,
+  TestNotificationResponse,
 } from '../models';
 import { safeStorage } from './safeStorage';
 
@@ -458,5 +463,76 @@ export const api = {
     } catch {
       return { hasVoted: false };
     }
+  },
+
+  async getNotificationStatus(): Promise<NotificationStatusResponse> {
+    const res = await fetch('/api/notifications/status', {
+      headers: getAuthHeaders(),
+    });
+    const data = await safeJsonParse(res, 'Failed to load notification settings');
+    if (!res.ok) {
+      throw new Error(data?.error || `Failed to load notification settings (${res.status})`);
+    }
+    return data;
+  },
+
+  async saveNotificationSettings(
+    settings: Partial<NotificationPreferences>
+  ): Promise<{ success: boolean; error?: string } & Partial<NotificationStatusResponse>> {
+    const res = await fetch('/api/notifications/settings', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(settings),
+    });
+    const data = await safeJsonParse(res, 'Failed to save notification settings');
+    if (!res.ok) {
+      throw new Error(data?.error || `Failed to save notification settings (${res.status})`);
+    }
+    return data;
+  },
+
+  async testNotification(channel: NotificationChannel): Promise<TestNotificationResponse> {
+    const res = await fetch('/api/notifications/test', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ channel }),
+    });
+    const data = await safeJsonParse<TestNotificationResponse>(
+      res,
+      'Failed to send test notification'
+    );
+    if (!res.ok && !data?.error) {
+      return { success: false, channel, error: `Test failed (${res.status})` };
+    }
+    return data;
+  },
+
+  async createTelegramLink(): Promise<TelegramLinkResponse> {
+    const res = await fetch('/api/notifications/telegram/link', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    const data = await safeJsonParse<TelegramLinkResponse>(
+      res,
+      'Failed to create Telegram link'
+    );
+    if (!res.ok) {
+      throw new Error(data?.error || `Failed to create Telegram link (${res.status})`);
+    }
+    return data;
+  },
+
+  async unlinkTelegram(): Promise<
+    { success: boolean; error?: string } & Partial<NotificationStatusResponse>
+  > {
+    const res = await fetch('/api/notifications/telegram/unlink', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    const data = await safeJsonParse(res, 'Failed to unlink Telegram');
+    if (!res.ok) {
+      throw new Error(data?.error || `Failed to unlink Telegram (${res.status})`);
+    }
+    return data;
   },
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tv, RefreshCw, BookOpen, Check, Copy, Play, QrCode, Sparkles } from 'lucide-react';
+import { Tv, RefreshCw, BookOpen, Check, Copy, Play, QrCode, Sparkles, AlertTriangle } from 'lucide-react';
 import type { StremioUser } from '../../models';
 import { Button, Switch, Badge } from '../common';
 
@@ -105,14 +105,15 @@ export const SyncSettingsCard: React.FC<SyncSettingsCardProps> = ({
             onClick={onSyncWatchedNow}
             isLoading={isSyncingWatched}
             disabled={!user}
-            icon={<RefreshCw size={14} className={isSyncingWatched ? 'animate-spin' : ''} />}
+            icon={<RefreshCw size={14} />}
             className="w-full sm:w-auto"
           >
             {isSyncingWatched ? 'Syncing with Stremio...' : 'Run Watched Verification Now'}
           </Button>
           {!user && (
-            <p className="text-xs text-amber-400 mt-2 flex items-center gap-1">
-              ⚠️ Please sign in with your Stremio credentials to activate watched synchronization.
+            <p className="text-xs text-amber-400 mt-2 flex items-center gap-1.5">
+              <AlertTriangle size={13} className="shrink-0" />
+              <span>Please sign in with your Stremio credentials to activate watched synchronization.</span>
             </p>
           )}
         </div>

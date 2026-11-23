@@ -13,6 +13,13 @@ CREATE TABLE IF NOT EXISTS public.watchlist_users (
   track_watchlist_watched BOOLEAN DEFAULT TRUE,  -- Rastrear filmes da lista assistidos após adição
   sync_previously_watched BOOLEAN DEFAULT FALSE, -- Sincronizar filmes assistidos anteriormente no Stremio
   onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE, -- Whether first-login setup wizard was completed
+  notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  discord_webhook_url TEXT,
+  discord_notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  telegram_chat_id TEXT,
+  telegram_notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  email_notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  notification_email TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -34,6 +41,7 @@ CREATE TABLE IF NOT EXISTS public.watchlist_items (
   stream_count INTEGER DEFAULT 0,                 -- Quantidade de fontes encontradas
   added_at TIMESTAMPTZ DEFAULT NOW(),             -- Data de adição
   last_checked TIMESTAMPTZ,                       -- Data da última verificação
+  notified_at TIMESTAMPTZ,                        -- Timestamp of the last sent release notification
   CONSTRAINT uq_watchlist_items_user_imdb UNIQUE (user_id, imdb_id) -- Garante um registro por filme por usuário
 );
 
@@ -124,5 +132,18 @@ CREATE POLICY "analytics_events_all"
   TO anon, authenticated
   USING (true)
   WITH CHECK (true);
+
+-- 7. IDEMPOTENT MIGRATIONS FOR EXISTING DATABASES
+ALTER TABLE public.watchlist_users
+  ADD COLUMN IF NOT EXISTS notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS discord_webhook_url TEXT,
+  ADD COLUMN IF NOT EXISTS discord_notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS telegram_chat_id TEXT,
+  ADD COLUMN IF NOT EXISTS telegram_notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS email_notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS notification_email TEXT;
+
+ALTER TABLE public.watchlist_items
+  ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ;
 
 NOTIFY pgrst, 'reload schema';

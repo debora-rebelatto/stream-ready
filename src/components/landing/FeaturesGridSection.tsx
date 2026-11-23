@@ -30,7 +30,7 @@ export const FeaturesGridSection: React.FC = () => {
           <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4 group-hover:scale-110 transition-transform">
             <Flame size={24} />
           </div>
-          <h3 className="text-base font-bold text-white mb-2">🔥 NEW RELEASE Badges</h3>
+          <h3 className="text-base font-bold text-white mb-2">NEW RELEASE Badges</h3>
           <p className="text-xs text-gray-400 leading-relaxed">
             Spot fresh arrivals instantly. Any movie released or available in good quality within
             the last 3 months gets highlighted with a flaming badge in Stremio and web.

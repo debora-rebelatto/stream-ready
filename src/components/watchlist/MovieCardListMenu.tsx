@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Check, X } from 'lucide-react';
 import type { CustomList } from '../../models';
+import { ListIcon } from '../common';
 
 export interface MovieCardListMenuProps {
   isOpen: boolean;
@@ -72,7 +73,7 @@ export const MovieCardListMenu: React.FC<MovieCardListMenuProps> = ({
                 }`}
               >
                 <span className="flex items-center gap-1.5 truncate">
-                  <span className="text-sm shrink-0">{list.emoji || '🎬'}</span>
+                  <ListIcon icon={list.emoji} className="w-3.5 h-3.5 text-purple-300" />
                   <span className="truncate">{list.name}</span>
                 </span>
                 {inList && <Check size={13} className="text-purple-400 shrink-0 ml-1" />}

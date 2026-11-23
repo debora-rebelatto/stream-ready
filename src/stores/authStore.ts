@@ -111,7 +111,7 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
         }
 
         trackEvent('auth_login_success', { method: 'credentials' });
-        showToast(`🎉 Welcome, ${res.user.email}!`, 'success');
+        showToast(`Welcome, ${res.user.email}!`, 'success');
         return { success: true };
       }
       return { success: false, error: res.error || 'Login failed' };
@@ -143,7 +143,7 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
         }
 
         trackEvent('auth_login_success', { method: 'authKey' });
-        showToast(`🎉 Connected as ${res.user.email}!`, 'success');
+        showToast(`Connected as ${res.user.email}!`, 'success');
         return { success: true };
       }
       return { success: false, error: res.error || 'Invalid AuthKey' };
@@ -198,7 +198,7 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
       if (res.success) {
         trackEvent('addon_install_clicked', { location: 'navbar' });
         showToast(
-          '🎉 Addon installed to Stremio! Remember to search and add your movies here on the website.',
+          'Addon installed to Stremio! Remember to search and add your movies here on the website.',
           'success'
         );
         return { success: true };

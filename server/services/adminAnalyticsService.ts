@@ -3,7 +3,6 @@ const SEVEN_DAYS_MS = 7 * ONE_DAY_MS;
 const THIRTY_DAYS_MS = 30 * ONE_DAY_MS;
 
 export const POLL_OPTION_LABELS: Record<string, string> = {
-  notifications: 'Automated notifications (Telegram/Discord/Email)',
   tv_shows: 'TV Shows and Series support',
   import_lists: '1-Click import from Letterboxd/Trakt/IMDb',
   debrid_filters: 'Real-Debrid and provider source filtering',
@@ -279,6 +278,69 @@ export interface AdminRawDataSnapshot {
 }
 
 /**
+ * Calculates notification channel adoption, delivery volume, and link click-throughs.
+ */
+export function calculateNotificationMetrics(users: any[] = [], rawEvents: any[] = []) {
+  let enabledUsers = 0;
+  let emailUsers = 0;
+  let telegramUsers = 0;
+  let discordUsers = 0;
+
+  for (const u of users) {
+    const s = u?.settings || {};
+    if (!s.notificationsEnabled) continue;
+    enabledUsers++;
+    if (s.emailNotificationsEnabled) emailUsers++;
+    if (s.telegramNotificationsEnabled && s.telegramChatId) telegramUsers++;
+    if (s.discordNotificationsEnabled && (s.discordWebhookUrl || s.hasDiscordWebhook)) {
+      discordUsers++;
+    }
+  }
+
+  let sentTotal = 0;
+  let sentEmail = 0;
+  let sentTelegram = 0;
+  let sentDiscord = 0;
+  let clickedTotal = 0;
+  let clickedEmail = 0;
+  let clickedTelegram = 0;
+  let clickedDiscord = 0;
+
+  for (const ev of rawEvents) {
+    if (!ev) continue;
+    if (ev.event_name === 'notification_sent') {
+      const channels = Array.isArray(ev.metadata?.channels) ? ev.metadata.channels : [];
+      sentTotal += channels.length || 1;
+      if (channels.includes('email')) sentEmail++;
+      if (channels.includes('telegram')) sentTelegram++;
+      if (channels.includes('discord')) sentDiscord++;
+    } else if (ev.event_name === 'notification_link_clicked') {
+      clickedTotal++;
+      const ch = ev.metadata?.channel;
+      if (ch === 'email') clickedEmail++;
+      else if (ch === 'telegram') clickedTelegram++;
+      else if (ch === 'discord') clickedDiscord++;
+    }
+  }
+
+  return {
+    enabledUsers,
+    enabledPercent: calculatePercentage(enabledUsers, users.length),
+    emailUsers,
+    telegramUsers,
+    discordUsers,
+    sentTotal,
+    sentEmail,
+    sentTelegram,
+    sentDiscord,
+    clickedTotal,
+    clickedEmail,
+    clickedTelegram,
+    clickedDiscord,
+  };
+}
+
+/**
  * Orchestrates all domain calculators to assemble the complete Admin Analytics report.
  */
 export function buildAdminAnalyticsReport(snapshot: AdminRawDataSnapshot) {
@@ -295,6 +357,7 @@ export function buildAdminAnalyticsReport(snapshot: AdminRawDataSnapshot) {
     snapshot.isItemReady
   );
   const funnel = calculateEventFunnelMetrics(rawEvents);
+  const notifications = calculateNotificationMetrics(users, rawEvents);
   const pollResults = formatPollMetrics(snapshot.pollResults);
   const recentEvents = formatRecentEvents(rawEvents, 20);
 
@@ -344,6 +407,7 @@ export function buildAdminAnalyticsReport(snapshot: AdminRawDataSnapshot) {
         usersWithCustomLists: prefs.usersWithCustomListsCount,
         curatedListAddedEvents: funnel.curatedListAddedEvents,
       },
+      notifications,
     },
     topMovies: snapshot.topMovies || [],
     pollResults,
@@ -359,6 +423,7 @@ export const adminAnalyticsService = {
   calculateUserPreferenceMetrics,
   calculateWatchlistItemMetrics,
   calculateEventFunnelMetrics,
+  calculateNotificationMetrics,
   formatPollMetrics,
   formatRecentEvents,
   buildAdminAnalyticsReport,

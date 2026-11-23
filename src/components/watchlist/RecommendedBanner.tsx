@@ -143,7 +143,7 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({
     setIsAddingId(movieId);
     try {
       await addItem(movieId, 'recommendations');
-      showToast(`🎬 "${movieName}" added to your watchlist!`, 'success');
+      showToast(`"${movieName}" added to your watchlist!`, 'success');
     } catch {
       showToast(`Failed to add "${movieName}"`, 'error');
     } finally {
@@ -257,7 +257,10 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({
           </div>
 
           {/* Title */}
-          <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight drop-shadow-lg mb-1 sm:mb-2 leading-tight line-clamp-1 sm:line-clamp-2">
+          <h2
+            className="text-xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight drop-shadow-lg mb-1 sm:mb-2 leading-tight line-clamp-1 sm:line-clamp-2"
+            title={currentMovie.name}
+          >
             {currentMovie.name}
           </h2>
 
@@ -287,7 +290,10 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({
 
           {/* Brief Description: Hidden on mobile to keep hero clean and focused */}
           {currentMovie.description && (
-            <p className="hidden sm:block text-xs sm:text-sm text-gray-300/90 leading-relaxed line-clamp-2 mb-4 drop-shadow">
+            <p
+              className="hidden sm:line-clamp-2 text-xs sm:text-sm text-gray-300/90 leading-relaxed mb-4 drop-shadow"
+              title={currentMovie.description}
+            >
               {currentMovie.description}
             </p>
           )}

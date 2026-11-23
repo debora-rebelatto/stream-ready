@@ -256,11 +256,11 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
 
           if (isReady) {
             showToast(
-              `🎉 "${item.name}" added! Already READY in good quality (${item.computed?.qualityLabel || item.bestQuality})!`,
+              `"${item.name}" added! Already READY in good quality (${item.computed?.qualityLabel || item.bestQuality})!`,
               'success'
             );
           } else {
-            showToast(`⏳ "${item.name}" added! Waiting for good quality release.`, 'info');
+            showToast(`"${item.name}" added! Waiting for good quality release.`, 'info');
           }
           return true;
         } catch {
@@ -294,7 +294,7 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
           if (res.success && res.item) {
             if (res.becameReady) {
               showToast(
-                `🎉 "${res.item.name}" is now available in good quality (${res.item.bestQuality})!`,
+                `"${res.item.name}" is now available in good quality (${res.item.bestQuality})!`,
                 'success'
               );
             } else {
@@ -324,7 +324,7 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
               newlyReady: res.newlyReady || 0,
             });
             if (res.newlyReady > 0) {
-              showToast(`🎉 ${res.newlyReady} movie(s) are now ready in good quality!`, 'success');
+              showToast(`${res.newlyReady} movie(s) are now ready in good quality!`, 'success');
             } else {
               showToast('Check completed. Watchlist status updated.', 'info');
             }
@@ -360,8 +360,8 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
             );
             showToast(
               watched
-                ? '👁️ Movie moved to Watched History.'
-                : '↩️ Movie restored to active watchlist.',
+                ? 'Movie moved to Watched History.'
+                : 'Movie restored to active watchlist.',
               'success'
             );
           }
@@ -385,7 +385,7 @@ export const useWatchlistStore = create<WatchlistStoreState>()(
             const { newlyAdded, newlyMarked, totalWatched } = res.result || {};
             const count = (newlyAdded || 0) + (newlyMarked || 0);
             if (count > 0) {
-              showToast(`🎉 Synced ${count} watched movies from your Stremio account!`, 'success');
+              showToast(`Synced ${count} watched movies from your Stremio account!`, 'success');
             } else {
               showToast(
                 `Watched history is already up to date (${totalWatched || 0} movies).`,

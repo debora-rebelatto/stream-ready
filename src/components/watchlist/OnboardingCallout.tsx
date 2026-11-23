@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, Plus, X, Film, Tv } from 'lucide-react';
 import { CURATED_RECOMMENDED_MOVIES, trackEvent, safeStorage } from '../../utils';
 import { useWatchlist, useToast } from '../../context/useAppContext';
-import { Button } from '../common';
+import { Button, Spinner } from '../common';
 
 export const ONBOARDING_DISMISS_KEY = 'stremio_onboarding_dismissed';
 const COOLDOWN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -91,7 +91,7 @@ export const OnboardingCallout: React.FC = () => {
           source: 'onboarding_callout_batch',
         });
         showToast(
-          `🎉 ${addedCount} movies added! Check your Stremio home screen or catalog.`,
+          `${addedCount} movies added! Check your Stremio home screen or catalog.`,
           'success'
         );
       }
@@ -130,7 +130,7 @@ export const OnboardingCallout: React.FC = () => {
               </div>
 
               <h2 className="text-base sm:text-xl font-black text-white tracking-tight">
-                Activate your Stremio Watchlist in 1 Click 🎬
+                Activate your Stremio Watchlist in 1 Click
               </h2>
 
               <p className="text-xs sm:text-sm text-gray-300 mt-1 max-w-2xl leading-relaxed">
@@ -164,6 +164,7 @@ export const OnboardingCallout: React.FC = () => {
                 variant="primary"
                 onClick={handleBatchAddTopPicks}
                 disabled={isBatchAdding}
+                isLoading={isBatchAdding}
                 icon={<Sparkles size={14} />}
               >
                 {isBatchAdding && batchProgress
@@ -209,7 +210,7 @@ export const OnboardingCallout: React.FC = () => {
                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-purple-600/30 hover:bg-purple-600 text-purple-200 hover:text-white border border-purple-500/40 hover:border-transparent transition-all cursor-pointer disabled:opacity-50"
                       >
                         {isAddingThis ? (
-                          <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          <Spinner size="xs" variant="white" decorative />
                         ) : (
                           <Plus size={11} />
                         )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Check, Plus } from 'lucide-react';
 import { useWatchlist, useToast } from '../../context/useAppContext';
+import { Spinner } from '../common';
 
 export interface WatchlistActionButtonProps {
   movieId: string;
@@ -42,7 +43,7 @@ export const WatchlistActionButton: React.FC<WatchlistActionButtonProps> = ({
     setInternalLoading(true);
     try {
       await addItem(movieId, 'recommendations');
-      showToast(`🎬 "${movieName || 'Movie'}" added to your watchlist!`, 'success');
+      showToast(`"${movieName || 'Movie'}" added to your watchlist!`, 'success');
     } catch {
       showToast(`Failed to add "${movieName || 'movie'}"`, 'error');
     } finally {
@@ -72,7 +73,7 @@ export const WatchlistActionButton: React.FC<WatchlistActionButtonProps> = ({
       aria-label="Add to Watchlist"
     >
       {isLoading ? (
-        <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        <Spinner size="sm" variant="white" decorative />
       ) : (
         <Plus size={14} />
       )}

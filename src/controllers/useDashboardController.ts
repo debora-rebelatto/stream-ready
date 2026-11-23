@@ -10,7 +10,12 @@ import {
   type DashboardFilterState,
 } from '../utils';
 import { isBetaNoticeDismissed } from '../components/feedback';
+import {
+  hasSeenNotificationsAnnouncement,
+  markNotificationsAnnouncementSeen,
+} from '../components/onboarding';
 import { isUserOnboardingCompleted } from './useSetupWizardController';
+import type { SettingsTab } from './useSettingsController';
 
 export function useDashboardController() {
   const { user, deleteAccount, markOnboardingCompleted } = useAuth();
@@ -137,6 +142,8 @@ export function useDashboardController() {
   const [isSetupWizardOpen, setIsSetupWizardOpen] = useState(false);
   const [setupWizardMode, setSetupWizardMode] = useState<SetupWizardMode>('first-login');
   const [completedInSessionUserId, setCompletedInSessionUserId] = useState<string | null>(null);
+  const [isNotificationsAnnouncementOpen, setIsNotificationsAnnouncementOpen] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>('quality');
   const listTopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -164,6 +171,37 @@ export function useDashboardController() {
     }
   }, [user, items.length, markOnboardingCompleted]);
 
+  useEffect(() => {
+    if (!user) {
+      setIsNotificationsAnnouncementOpen(false);
+      return;
+    }
+    const userKey = user.id || user.email;
+    if (
+      isUserOnboardingCompleted(user) &&
+      !isSetupWizardOpen &&
+      currentView === 'dashboard' &&
+      !hasSeenNotificationsAnnouncement(userKey)
+    ) {
+      setIsNotificationsAnnouncementOpen(true);
+    }
+  }, [user, isSetupWizardOpen, currentView]);
+
+  const handleDismissNotificationsAnnouncement = () => {
+    const userKey = user?.id || user?.email || null;
+    markNotificationsAnnouncementSeen(userKey);
+    setIsNotificationsAnnouncementOpen(false);
+  };
+
+  const handleOpenNotificationsSettings = () => {
+    const userKey = user?.id || user?.email || null;
+    markNotificationsAnnouncementSeen(userKey);
+    setIsNotificationsAnnouncementOpen(false);
+    setSettingsInitialTab('notifications');
+    setCurrentView('settings');
+    window.location.hash = '#settings';
+  };
+
   const handleOpenSetupWizardReview = () => {
     setSetupWizardMode('review');
     setIsSetupWizardOpen(true);
@@ -181,6 +219,7 @@ export function useDashboardController() {
     const userKey = user?.id || user?.email || null;
     if (setupWizardMode === 'first-login' && userKey) {
       setCompletedInSessionUserId(userKey);
+      markNotificationsAnnouncementSeen(userKey);
     }
     if (!user?.onboardingCompleted) {
       await markOnboardingCompleted(true);
@@ -200,9 +239,16 @@ export function useDashboardController() {
         alreadyLoggedIn: true,
       });
       showToast(
-        '📱 Connected from Stremio TV! Search or add movies below to watch on your TV.',
+        'Connected from Stremio TV! Search or add movies below to watch on your TV.',
         'info'
       );
+    } else if (
+      source === 'notification_email' ||
+      source === 'notification_telegram' ||
+      source === 'notification_discord'
+    ) {
+      const channel = source.replace('notification_', '');
+      trackEvent('notification_link_clicked', { channel, source });
     }
   }, [showToast]);
 
@@ -228,6 +274,7 @@ export function useDashboardController() {
   }, []);
 
   const handleOpenSettings = () => {
+    setSettingsInitialTab('quality');
     setCurrentView('settings');
     window.location.hash = '#settings';
   };
@@ -417,5 +464,9 @@ export function useDashboardController() {
     handleOpenSetupWizardReview,
     handleCloseSetupWizard,
     handleSetupWizardComplete,
+    isNotificationsAnnouncementOpen,
+    handleDismissNotificationsAnnouncement,
+    handleOpenNotificationsSettings,
+    settingsInitialTab,
   };
 }

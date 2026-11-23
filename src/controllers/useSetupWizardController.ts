@@ -33,6 +33,8 @@ export function resolveStepActionTaken(stepId: SetupStepId, activity: SetupStepA
       return 'skipped_install';
     case 'features':
       return 'reviewed_features';
+    case 'notifications':
+      return 'reviewed_notifications';
     case 'movies':
       return activity.watchlistCount > 0 ? 'added_movies' : 'skipped_movies';
     default:
@@ -288,7 +290,7 @@ export function useSetupWizardController({
           movieIds: pendingMovies.map((m) => m.id),
           source: 'setup_wizard_batch',
         });
-        showToast(`🎉 ${addedCount} starter movies added to your watchlist!`, 'success');
+        showToast(`${addedCount} starter movies added to your watchlist!`, 'success');
       }
     } finally {
       setIsBatchAdding(false);

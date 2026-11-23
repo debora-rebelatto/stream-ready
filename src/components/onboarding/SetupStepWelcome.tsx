@@ -1,21 +1,27 @@
 import React from 'react';
-import { Globe, Tv, ArrowRightLeft } from 'lucide-react';
+import { Globe, Tv, ArrowRightLeft, CheckCircle2, List, Hourglass } from 'lucide-react';
 
 const CATALOG_PREVIEWS = [
   {
-    name: '🟢 Watchlist: Ready (Good Quality)',
+    name: 'Watchlist: Ready (Good Quality)',
     description: 'Confirmed 1080p / 4K digital releases, ready to stream right now.',
     accent: 'border-emerald-500/30 bg-emerald-500/5',
+    iconColor: 'text-emerald-400',
+    Icon: CheckCircle2,
   },
   {
-    name: '📋 Watchlist: All Movies',
+    name: 'Watchlist: All Movies',
     description: 'Your complete tracked movie queue, in one row.',
     accent: 'border-purple-500/30 bg-purple-500/5',
+    iconColor: 'text-purple-400',
+    Icon: List,
   },
   {
-    name: '⏳ Watchlist: Waiting for Quality',
+    name: 'Watchlist: Waiting for Quality',
     description: 'Theater-only, CAM, or unreleased titles monitored in the background.',
     accent: 'border-amber-500/30 bg-amber-500/5',
+    iconColor: 'text-amber-400',
+    Icon: Hourglass,
   },
 ];
 
@@ -55,14 +61,20 @@ export const SetupStepWelcome: React.FC = () => (
         Your 3 automatic Stremio catalogs
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {CATALOG_PREVIEWS.map((catalog) => (
-          <div key={catalog.name} className={`p-4 rounded-xl border ${catalog.accent}`}>
-            <p className="text-xs font-bold text-white">{catalog.name}</p>
+        {CATALOG_PREVIEWS.map((catalog) => {
+          const CatalogIcon = catalog.Icon;
+          return (
+            <div key={catalog.name} className={`p-4 rounded-xl border ${catalog.accent}`}>
+              <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                <CatalogIcon size={14} className={`${catalog.iconColor} shrink-0`} />
+                <span>{catalog.name}</span>
+              </p>
             <p className="text-[11px] text-gray-400 mt-1.5 leading-relaxed">
               {catalog.description}
             </p>
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </section>
   </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Trash2, X, Loader2 } from 'lucide-react';
+import { AlertTriangle, Trash2, X } from 'lucide-react';
+import { Spinner } from '../common';
 
 interface DeleteAccountModalProps {
   isOpen: boolean;
@@ -94,8 +95,9 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
         {/* Warning Body */}
         <div className="space-y-3 mb-5">
           <div className="p-3.5 rounded-xl bg-red-950/25 border border-red-500/20 text-xs text-gray-300 leading-relaxed">
-            <p className="font-semibold text-red-300 mb-1.5">
-              ⚠️ Warning: This action cannot be undone.
+            <p className="font-semibold text-red-300 mb-1.5 flex items-center gap-1.5">
+              <AlertTriangle size={14} className="shrink-0" />
+              <span>Warning: This action cannot be undone.</span>
             </p>
             <p className="text-gray-400 text-[11.5px] mb-2">
               All data associated with your account will be completely bulldozed from the database:
@@ -156,7 +158,7 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
             >
               {isDeleting ? (
                 <>
-                  <Loader2 size={14} className="animate-spin" />
+                  <Spinner size="sm" variant="white" decorative />
                   <span>Deleting...</span>
                 </>
               ) : (

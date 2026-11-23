@@ -1,4 +1,5 @@
 import React from 'react';
+import { Film } from 'lucide-react';
 
 export interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -10,7 +11,7 @@ export interface EmptyStateProps {
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  icon = '🎬',
+  icon = <Film className="w-8 h-8" />,
   title,
   description,
   actions,

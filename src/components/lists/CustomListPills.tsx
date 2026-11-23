@@ -1,7 +1,7 @@
 import React from 'react';
-import { Folder, Sparkles, FolderPlus } from 'lucide-react';
+import { Folder, Sparkles, FolderPlus, X } from 'lucide-react';
 import type { CustomList, WatchlistItem } from '../../models';
-import { Button } from '../common';
+import { Button, ListIcon } from '../common';
 
 interface CustomListPillsProps {
   items: WatchlistItem[];
@@ -51,7 +51,7 @@ export const CustomListPills: React.FC<CustomListPillsProps> = ({
               variant="pill"
               active={isSelected}
               onClick={() => setActiveCustomListId(isSelected ? null : l.id)}
-              icon={<span>{l.emoji || '📁'}</span>}
+              icon={<ListIcon icon={l.emoji} className="w-3.5 h-3.5" />}
               badge={count}
             >
               {l.name}
@@ -66,7 +66,7 @@ export const CustomListPills: React.FC<CustomListPillsProps> = ({
           icon={<Sparkles size={13} />}
           title="Explore and add standard streaming lists (Netflix, Disney+, HBO Max, etc.)"
         >
-          ⭐ Standard Lists
+          Standard Lists
         </Button>
 
         <Button
@@ -83,7 +83,7 @@ export const CustomListPills: React.FC<CustomListPillsProps> = ({
       {activeList && (
         <div className="mb-4 p-3 rounded-xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-purple-200">
-            <span className="text-xl">{activeList.emoji || '🎬'}</span>
+            <ListIcon icon={activeList.emoji} className="w-4 h-4 text-purple-300" />
             <span>
               Showing movies in list <strong>{activeList.name}</strong> ({filteredCount} movie
               {filteredCount === 1 ? '' : 's'})
@@ -91,9 +91,10 @@ export const CustomListPills: React.FC<CustomListPillsProps> = ({
           </div>
           <button
             onClick={() => setActiveCustomListId(null)}
-            className="text-xs text-purple-400 hover:text-purple-200 font-semibold px-2 py-1 rounded-lg hover:bg-purple-500/10 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-xs text-purple-400 hover:text-purple-200 font-semibold px-2 py-1 rounded-lg hover:bg-purple-500/10 transition-colors cursor-pointer"
           >
-            Show all movies ✕
+            <span>Show all movies</span>
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}

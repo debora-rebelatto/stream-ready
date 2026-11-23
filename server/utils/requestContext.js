@@ -4,6 +4,7 @@ const { getManifest } = require('../../lib/stremioAddon');
 const { getUserInfo, saveAccountWatchlist } = require('../../lib/stremioAuth');
 const { decodeUserData } = require('../../lib/userData');
 const { buildQualityPatch } = require('./qualityPatch');
+const { notificationOperationService } = require('../services/notificationOperationService');
 
 const PORT = process.env.PORT || 7000;
 const userSyncThrottle = new Map();
@@ -69,11 +70,20 @@ function triggerUserOnDemandSync(authKey, userId) {
         await db.syncWatchedWithStremio(authKey, userId);
       }
 
-      const pendingItems = db.getItems(userId).filter((i) => !i.has1080pPlus && !i.isWatched);
+      const criteria = db.getUserQualityCriteria(userId);
+      const pendingItems = db
+        .getItems(userId)
+        .filter((i) => !db.isItemReady(i, criteria) && !i.isWatched);
       for (const item of pendingItems.slice(0, 5)) {
+        const wasReady = db.isItemReady(item, criteria);
         const q = await checkMovieQuality(item.id, item.type || 'movie', item.name, item.year);
         if (q && q.has1080pPlus) {
-          await db.updateItem(item.id, buildQualityPatch(q), userId);
+          const updated = await db.updateItem(item.id, buildQualityPatch(q), userId);
+          if (!wasReady && updated && db.isItemReady(updated, criteria) && !item.notifiedAt) {
+            await notificationOperationService
+              .notifyMovieReady({ userId, movie: updated })
+              .catch((e) => console.warn(`[OnDemandSync:${userId}] Notify error:`, e.message));
+          }
         }
         await new Promise((r) => setTimeout(r, 600));
       }
@@ -94,6 +104,7 @@ async function runBackgroundCheck() {
     totalPendingItems: 0,
     uniqueCheckedCount: 0,
     newlyReadyCount: 0,
+    notificationsSentCount: 0,
   };
 
   try {
@@ -119,9 +130,11 @@ async function runBackgroundCheck() {
       }
     }
 
-    const allPending = db
-      .getAllUsersItems()
-      .filter((entry) => !entry.item.has1080pPlus && !entry.item.isWatched);
+    const allPending = db.getAllUsersItems().filter((entry) => {
+      if (entry.item.isWatched) return false;
+      const criteria = db.getUserQualityCriteria(entry.userId);
+      return !db.isItemReady(entry.item, criteria);
+    });
     summary.totalPendingItems = allPending.length;
 
     if (allPending.length > 0) {
@@ -167,11 +180,26 @@ async function runBackgroundCheck() {
         }
 
         for (const { userId, item } of entries) {
-          await db.updateItem(
+          const criteria = db.getUserQualityCriteria(userId);
+          const wasReady = db.isItemReady(item, criteria);
+          const updated = await db.updateItem(
             item.id,
             buildQualityPatch(quality, { includeExtended: true }),
             userId
           );
+          if (!wasReady && updated && db.isItemReady(updated, criteria) && !item.notifiedAt) {
+            try {
+              const notifyRes = await notificationOperationService.notifyMovieReady({
+                userId,
+                movie: updated,
+              });
+              if (notifyRes?.sent) {
+                summary.notificationsSentCount++;
+              }
+            } catch (notifyErr) {
+              console.warn(`[AutoChecker:${userId}] Notification error:`, notifyErr.message);
+            }
+          }
         }
 
         await new Promise((r) => setTimeout(r, 150));

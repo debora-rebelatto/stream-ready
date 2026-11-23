@@ -2,16 +2,19 @@ import React from 'react';
 import {
   ArrowLeft,
   Sliders,
+  Bell,
   Tv,
   Download,
   AlertTriangle,
   Heart,
+  Settings,
 } from 'lucide-react';
 import { useSettingsController, type SettingsTab } from '../controllers/useSettingsController';
 import {
   Button,
   GitHubSponsorButton,
   QualitySettingsCard,
+  NotificationsSettingsCard,
   SyncSettingsCard,
   BackupSettingsCard,
   AccountDangerCard,
@@ -23,6 +26,7 @@ export interface SettingsPageProps {
   onOpenInstallGuide?: () => void;
   onOpenQrModal?: () => void;
   onOpenSetupWizard?: () => void;
+  initialTab?: SettingsTab;
   manifestUrl?: string;
   installUrl?: string;
 }
@@ -33,6 +37,7 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
   onOpenInstallGuide,
   onOpenQrModal,
   onOpenSetupWizard,
+  initialTab = 'quality',
   manifestUrl = 'https://stremiowatchlist.vercel.app/manifest.json',
   installUrl,
 }) => {
@@ -54,10 +59,11 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
     handleExport,
     handleImport,
     handleLogout,
-  } = useSettingsController({ manifestUrl, onBack });
+  } = useSettingsController({ manifestUrl, initialTab, onBack });
 
   const navItems: Array<{ id: SettingsTab; label: string; icon: React.ReactNode }> = [
     { id: 'quality', label: 'Quality & Detection', icon: <Sliders size={16} /> },
+    { id: 'notifications', label: 'Notifications & Alerts', icon: <Bell size={16} /> },
     { id: 'sync', label: 'Stremio Sync', icon: <Tv size={16} /> },
     { id: 'backup', label: 'Backup & Restore', icon: <Download size={16} /> },
     { id: 'account', label: 'Account & Danger Zone', icon: <AlertTriangle size={16} /> },
@@ -80,7 +86,7 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
             />
             <div className="h-5 w-px bg-white/10" />
             <div className="flex items-center gap-2">
-              <span className="text-lg">⚙️</span>
+              <Settings size={18} className="text-purple-400 shrink-0" />
               <h1 className="text-base sm:text-lg font-bold tracking-tight text-white">Settings</h1>
             </div>
           </div>
@@ -144,6 +150,8 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
 
           <section className="flex-1 min-w-0">
             {activeTab === 'quality' && <QualitySettingsCard />}
+
+            {activeTab === 'notifications' && <NotificationsSettingsCard />}
 
             {activeTab === 'sync' && (
               <SyncSettingsCard

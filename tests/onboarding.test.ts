@@ -2,10 +2,14 @@ import React from 'react';
 import {
   ONBOARDING_DISMISS_KEY,
   FirstTimeSetupModal,
+  NotificationsAnnouncementModal,
+  hasSeenNotificationsAnnouncement,
+  markNotificationsAnnouncementSeen,
   SetupProgressStepper,
   SetupStepWelcome,
   SetupStepInstallStremio,
   SetupStepFeaturesTour,
+  SetupStepNotifications,
   SetupStepFirstMovies,
 } from '../src/components';
 import { SETUP_WIZARD_STEPS } from '../src/models';
@@ -62,15 +66,16 @@ describe('OnboardingCallout logic & starter recommendations', () => {
     expect(isExpiredDismissed).toBe(false);
   });
 
-  it('defines 4 sequential setup wizard steps with valid metadata', () => {
-    expect(SETUP_WIZARD_STEPS).toHaveLength(4);
+  it('defines 5 sequential setup wizard steps with valid metadata', () => {
+    expect(SETUP_WIZARD_STEPS).toHaveLength(5);
     expect(SETUP_WIZARD_STEPS.map((step) => step.id)).toEqual([
       'welcome',
       'install',
       'features',
+      'notifications',
       'movies',
     ]);
-    expect(SETUP_WIZARD_STEPS.map((step) => step.stepNumber)).toEqual([1, 2, 3, 4]);
+    expect(SETUP_WIZARD_STEPS.map((step) => step.stepNumber)).toEqual([1, 2, 3, 4, 5]);
 
     for (const step of SETUP_WIZARD_STEPS) {
       expect(step.shortTitle.trim().length).toBeGreaterThan(0);
@@ -127,6 +132,15 @@ describe('OnboardingCallout logic & starter recommendations', () => {
           watchlistCount: 0,
         })
       ).toBe('reviewed_features');
+
+      expect(
+        resolveStepActionTaken('notifications', {
+          installedToAccount: false,
+          hasOpenedStremioApp: false,
+          hasCopiedManifest: false,
+          watchlistCount: 0,
+        })
+      ).toBe('reviewed_notifications');
 
       expect(
         resolveStepActionTaken('movies', {
@@ -187,6 +201,12 @@ describe('OnboardingCallout logic & starter recommendations', () => {
           autoSyncWatched: false,
           onToggleAutoSync: noop,
         }),
+        React.createElement(SetupStepNotifications),
+        React.createElement(NotificationsAnnouncementModal, {
+          isOpen: false,
+          onClose: noop,
+          onConfigureNow: noop,
+        }),
         React.createElement(SetupStepFirstMovies, {
           items: [],
           addingMovieId: null,
@@ -199,6 +219,13 @@ describe('OnboardingCallout logic & starter recommendations', () => {
       for (const element of elements) {
         expect(React.isValidElement(element)).toBe(true);
       }
+    });
+
+    it('tracks per-user dismissal of the NotificationsAnnouncementModal in storage', () => {
+      expect(hasSeenNotificationsAnnouncement('user-1')).toBe(false);
+      markNotificationsAnnouncementSeen('user-1');
+      expect(hasSeenNotificationsAnnouncement('user-1')).toBe(true);
+      expect(hasSeenNotificationsAnnouncement('user-2')).toBe(false);
     });
   });
 });

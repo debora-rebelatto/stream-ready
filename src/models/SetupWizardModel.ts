@@ -1,4 +1,4 @@
-export type SetupStepId = 'welcome' | 'install' | 'features' | 'movies';
+export type SetupStepId = 'welcome' | 'install' | 'features' | 'notifications' | 'movies';
 
 export type SetupWizardMode = 'first-login' | 'review';
 
@@ -33,8 +33,15 @@ export const SETUP_WIZARD_STEPS: readonly SetupStepDefinition[] = [
     subtitle: 'Customize how releases are detected and watched movies are automatically archived',
   },
   {
-    id: 'movies',
+    id: 'notifications',
     stepNumber: 4,
+    shortTitle: 'Alerts',
+    title: 'Set Up Automated Release Alerts',
+    subtitle: 'Get notified via Telegram, Discord, or Email the moment a movie drops in good quality',
+  },
+  {
+    id: 'movies',
+    stepNumber: 5,
     shortTitle: 'Add Movies',
     title: 'Add Your First Movies',
     subtitle: 'Populate your watchlist now so your Stremio rows are ready right away',

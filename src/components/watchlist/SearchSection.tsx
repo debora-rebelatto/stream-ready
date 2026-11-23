@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSearchController } from '../../controllers';
 import { Search, X, Plus, Check } from 'lucide-react';
+import { LoadingState } from '../common';
 
 export const SearchSection: React.FC = () => {
   const {
@@ -41,7 +42,7 @@ export const SearchSection: React.FC = () => {
       {isOpen && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-[#151824] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-40 max-h-96 overflow-y-auto divide-y divide-white/5">
           {isLoading && (
-            <div className="p-4 text-center text-xs text-gray-400">Searching movies...</div>
+            <LoadingState variant="inline" title="Searching movies..." className="w-full" />
           )}
 
           {!isLoading && results.length === 0 && (

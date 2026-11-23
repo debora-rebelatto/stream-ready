@@ -9,3 +9,4 @@ export * from './useSettingsController';
 export * from './useWatchlistController';
 export * from './useAdminController';
 export * from './useSetupWizardController';
+export * from './useNotificationsController';

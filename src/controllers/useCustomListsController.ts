@@ -61,13 +61,13 @@ export function useCustomListsController({
     }
   }, []);
 
-  const createCustomList = async (name: string, emoji = '🎬'): Promise<boolean> => {
+  const createCustomList = async (name: string, emoji = 'film'): Promise<boolean> => {
     try {
       const res = await customListService.createCustomList(name, emoji);
       if (res.success && res.list) {
         trackEvent('custom_list_created', { listName: res.list.name });
         setCustomLists((prev) => [...prev, res.list]);
-        showToast(`📁 List "${res.list.name}" created successfully!`, 'success');
+        showToast(`List "${res.list.name}" created successfully!`, 'success');
         return true;
       } else {
         showToast(res.error || 'Failed to create list.', 'error');

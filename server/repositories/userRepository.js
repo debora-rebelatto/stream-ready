@@ -9,6 +9,7 @@ const userRepository = {
   getAllUsers: () => db.getAllUsers(),
   deleteUser: (identifier) => db.deleteUser(identifier),
   getSettings: (userId) => db.getSettings(userId),
+  getRawNotificationSettings: (userId) => db.getRawNotificationSettings(userId),
   updateSettings: (settings, userId) => db.updateSettings(settings, userId),
 };
 

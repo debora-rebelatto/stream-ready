@@ -1,9 +1,27 @@
 import React from 'react';
-import { Sparkles, Search, X } from 'lucide-react';
+import {
+  Sparkles,
+  Search,
+  X,
+  Film,
+  Clock,
+  Eye,
+  Calendar,
+  List,
+  type LucideIcon,
+} from 'lucide-react';
 import type { WatchlistItem } from '../../models';
 import type { WatchlistTab } from '../../utils';
 import { MovieCard } from './MovieCard';
-import { Pagination, Button, EmptyState } from '../common';
+import { Pagination, Button, EmptyState, LoadingState } from '../common';
+
+const TAB_EMPTY_CONFIG: Record<WatchlistTab, { Icon: LucideIcon; title: string }> = {
+  all: { Icon: List, title: 'Your watchlist is empty' },
+  ready: { Icon: Film, title: 'No movies ready in good quality yet' },
+  pending: { Icon: Clock, title: 'No movies waiting for good quality!' },
+  unreleased: { Icon: Calendar, title: 'No unreleased movies found!' },
+  watched: { Icon: Eye, title: 'No movies in your watched history' },
+};
 
 interface WatchlistGridProps {
   isLoading: boolean;
@@ -37,38 +55,15 @@ export const WatchlistGrid: React.FC<WatchlistGridProps> = ({
   onItemsPerPageChange,
 }) => {
   if (isLoading) {
-    return (
-      <div className="py-20 text-center flex flex-col items-center justify-center">
-        <div className="w-8 h-8 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mb-3" />
-        <p className="text-xs text-gray-400">Loading your watchlist...</p>
-      </div>
-    );
+    return <LoadingState title="Loading your watchlist..." />;
   }
 
   if (sortedCount === 0) {
-    const emptyIcon = hasActiveFilters
-      ? '🔍'
-      : currentTab === 'ready'
-        ? '🎬'
-        : currentTab === 'pending'
-          ? '⏳'
-          : currentTab === 'watched'
-            ? '👁️'
-            : currentTab === 'unreleased'
-              ? '📅'
-              : '📋';
-
+    const tabConfig = TAB_EMPTY_CONFIG[currentTab] ?? TAB_EMPTY_CONFIG.all;
+    const EmptyIcon = hasActiveFilters ? Search : tabConfig.Icon;
     const emptyTitle = hasActiveFilters
       ? 'No titles found with active filters'
-      : currentTab === 'ready'
-        ? 'No movies ready in good quality yet'
-        : currentTab === 'pending'
-          ? 'No movies waiting for good quality!'
-          : currentTab === 'unreleased'
-            ? 'No unreleased movies found!'
-            : currentTab === 'watched'
-              ? 'No movies in your watched history'
-              : 'Your watchlist is empty';
+      : tabConfig.title;
 
     const emptyDescription = hasActiveFilters
       ? 'Try searching for another title or clearing the selected filters.'
@@ -80,7 +75,7 @@ export const WatchlistGrid: React.FC<WatchlistGridProps> = ({
 
     return (
       <EmptyState
-        icon={emptyIcon}
+        icon={<EmptyIcon className="w-8 h-8" />}
         title={emptyTitle}
         description={emptyDescription}
         actions={

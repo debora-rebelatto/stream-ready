@@ -281,4 +281,31 @@ describe('Lauren Tan Constraint Engineering: Architecture & Invariant Tests', ()
       expect(enriched4kAtmos[0].computed.activeTargetAudio).toBe('atmos');
     });
   });
+
+  describe('Level 5: UI Design Invariants (Icons Over Emojis)', () => {
+    it('enforces that no raw emoji characters appear in frontend src/ files', () => {
+      const srcDir = path.join(__dirname, '../src');
+      const emojiRegex = /[\p{Extended_Pictographic}\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu;
+      const violations: string[] = [];
+
+      const walk = (dir: string) => {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          const fullPath = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            walk(fullPath);
+          } else if (/\.(ts|tsx|js|jsx)$/.test(entry.name)) {
+            const content = fs.readFileSync(fullPath, 'utf8');
+            const matches = content.match(emojiRegex);
+            if (matches) {
+              const rel = path.relative(path.join(__dirname, '..'), fullPath);
+              violations.push(`${rel}: ${[...new Set(matches)].join(' ')}`);
+            }
+          }
+        }
+      };
+
+      walk(srcDir);
+      expect(violations).toEqual([]);
+    });
+  });
 });

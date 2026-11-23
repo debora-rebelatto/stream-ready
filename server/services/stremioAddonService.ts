@@ -96,10 +96,12 @@ export function getManifest(hostUrl: string = '', userId: string = ''): AddonMan
       const userLists = db.getCustomLists(userId);
       if (Array.isArray(userLists)) {
         for (const l of userLists) {
+          const isIconKey = l.emoji && /^[a-z0-9_-]+$/i.test(l.emoji);
+          const prefix = !l.emoji || isIconKey ? '' : `${l.emoji} `;
           allCatalogs.push({
             type: 'movie',
             id: `watchlist_custom_${l.id}`,
-            name: `${l.emoji || '🎬'} Watchlist: ${l.name}`,
+            name: `${prefix}Watchlist: ${l.name}`,
             extra: [{ name: 'skip', isRequired: false }],
           });
         }

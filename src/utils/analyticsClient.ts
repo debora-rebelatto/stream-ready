@@ -60,6 +60,7 @@ export interface EventDataMap {
   qr_code_scanned: { source: string; context?: string; userAgent?: string };
   qr_landing_viewed: { source: string; context?: string; alreadyLoggedIn?: boolean };
   stremio_configure_opened: { source: string; context?: string };
+  notification_link_clicked: { channel: string; source: string };
 }
 
 export type EventName = keyof EventDataMap;

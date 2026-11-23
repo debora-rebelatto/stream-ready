@@ -15,7 +15,7 @@ import {
   QrCode,
   Shield,
 } from 'lucide-react';
-import { GitHubSponsorButton, Button, Badge } from '../common';
+import { GitHubSponsorButton, Button, Badge, Spinner } from '../common';
 
 export interface NavbarProps {
   onOpenSettings?: () => void;
@@ -82,7 +82,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (installUrl) {
       trackEvent('addon_install_clicked', { location: 'navbar' });
       showToast(
-        '🎬 Reminder: After installing in Stremio, use the search bar on this site to add movies!',
+        'Reminder: After installing in Stremio, use the search bar on this site to add movies!',
         'info'
       );
       window.location.href = installUrl;
@@ -216,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Auth State */}
           {isAuthLoading ? (
             <div className="flex items-center gap-2 bg-[#1f2438]/50 border border-white/5 px-2.5 py-1.5 rounded-lg text-xs text-gray-400">
-              <div className="w-3 h-3 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
+              <Spinner size="xs" variant="brand" label="Checking session..." />
             </div>
           ) : user ? (
             <div className="flex items-center gap-1.5 bg-[#151824] border border-white/10 pl-2.5 pr-1 py-1 rounded-lg text-xs">
