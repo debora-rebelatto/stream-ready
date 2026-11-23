@@ -27,6 +27,7 @@ export interface EventDataMap {
   filter_tab_switched: { tab: string };
   sort_changed: { sortBy: string };
   quality_setting_updated: { minQuality: string; scope?: 'global' };
+  audio_setting_updated: { minAudio: string; scope?: 'global' };
   sync_setting_updated: { setting: string; enabled: boolean };
   recheck_all_triggered: { totalItems?: number; newlyReady?: number };
   custom_list_created: { listName: string };

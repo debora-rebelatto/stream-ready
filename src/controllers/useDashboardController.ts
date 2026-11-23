@@ -4,9 +4,10 @@ import { systemService, watchlistService, adminService, cinemetaService } from '
 import type { TopMovieMetric, SetupWizardMode, KpiMetrics } from '../models';
 import {
   trackEvent,
+  DEFAULT_DASHBOARD_FILTERS,
   filterWatchlistItems,
   sortWatchlistItems,
-  type WatchlistSortOption,
+  type DashboardFilterState,
 } from '../utils';
 import { isBetaNoticeDismissed } from '../components/feedback';
 import { isUserOnboardingCompleted } from './useSetupWizardController';
@@ -23,6 +24,7 @@ export function useDashboardController() {
     activeCustomListId,
     setActiveCustomListId,
     globalMinQuality,
+    globalMinAudio,
     isLoading: isWatchlistLoading,
     isCheckingAll,
     addItem,
@@ -296,55 +298,49 @@ export function useDashboardController() {
     }
   };
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedQuality, setSelectedQuality] = useState<string>('all');
-  const [includeWatchedInAll, setIncludeWatchedInAll] = useState(true);
-  const [sortBy, setSortBy] = useState<WatchlistSortOption>('added_desc');
+  const [filters, setFilters] = useState<DashboardFilterState>(DEFAULT_DASHBOARD_FILTERS);
+
+  const updateFilter = <K extends keyof DashboardFilterState>(
+    key: K,
+    value: DashboardFilterState[K]
+  ) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    if (key === 'sortBy') {
+      trackEvent('sort_changed', { sortBy: String(value) });
+    }
+  };
 
   const handleTabChange = (tab: typeof currentTab) => {
     setCurrentTab(tab);
     trackEvent('filter_tab_switched', { tab });
   };
 
-  const handleSortChange = (newSort: WatchlistSortOption) => {
-    setSortBy(newSort);
-    trackEvent('sort_changed', { sortBy: newSort });
-  };
-
   const filtered = filterWatchlistItems(items, {
     currentTab,
     activeCustomListId,
-    selectedQuality,
-    includeWatchedInAll,
-    searchQuery,
+    selectedQuality: filters.selectedQuality,
+    selectedAudio: filters.selectedAudio,
+    includeWatchedInAll: filters.includeWatchedInAll,
+    searchQuery: filters.searchQuery,
     globalMinQuality,
+    globalMinAudio,
   });
 
-  const sorted = sortWatchlistItems(filtered, sortBy);
+  const sorted = sortWatchlistItems(filtered, filters.sortBy);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [
-    currentTab,
-    activeCustomListId,
-    selectedQuality,
-    searchQuery,
-    sortBy,
-    itemsPerPage,
-    includeWatchedInAll,
-  ]);
+  }, [currentTab, activeCustomListId, filters, itemsPerPage]);
 
   const hasActiveFilters =
-    searchQuery !== '' ||
-    (currentTab !== 'watched' && selectedQuality !== 'all') ||
-    sortBy !== 'added_desc' ||
-    (currentTab === 'all' && !includeWatchedInAll);
+    filters.searchQuery !== '' ||
+    (currentTab !== 'watched' && filters.selectedQuality !== 'all') ||
+    (currentTab !== 'watched' && filters.selectedAudio !== 'all') ||
+    filters.sortBy !== 'added_desc' ||
+    (currentTab === 'all' && !filters.includeWatchedInAll);
 
   const clearFilters = () => {
-    setSearchQuery('');
-    setSelectedQuality('all');
-    setSortBy('added_desc');
-    setIncludeWatchedInAll(true);
+    setFilters(DEFAULT_DASHBOARD_FILTERS);
   };
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / itemsPerPage));
@@ -407,15 +403,9 @@ export function useDashboardController() {
     setIsDeleteAccountOpen,
     isDeletingAccount,
     handleConfirmDeleteAccount,
-    searchQuery,
-    setSearchQuery,
-    selectedQuality,
-    setSelectedQuality,
-    includeWatchedInAll,
-    setIncludeWatchedInAll,
-    sortBy,
+    filters,
+    updateFilter,
     handleTabChange,
-    handleSortChange,
     sorted,
     hasActiveFilters,
     clearFilters,

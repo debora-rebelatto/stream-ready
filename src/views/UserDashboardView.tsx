@@ -71,15 +71,9 @@ export const UserDashboardView: React.FC = () => {
     setIsDeleteAccountOpen,
     isDeletingAccount,
     handleConfirmDeleteAccount,
-    searchQuery,
-    setSearchQuery,
-    selectedQuality,
-    setSelectedQuality,
-    includeWatchedInAll,
-    setIncludeWatchedInAll,
-    sortBy,
+    filters,
+    updateFilter,
     handleTabChange,
-    handleSortChange,
     sorted,
     hasActiveFilters,
     clearFilters,
@@ -251,14 +245,8 @@ export const UserDashboardView: React.FC = () => {
           onTabChange={handleTabChange}
           isCheckingAll={isCheckingAll}
           onRecheckAll={recheckAll}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedQuality={selectedQuality}
-          setSelectedQuality={setSelectedQuality}
-          includeWatchedInAll={includeWatchedInAll}
-          setIncludeWatchedInAll={setIncludeWatchedInAll}
-          sortBy={sortBy}
-          onSortChange={handleSortChange}
+          filters={filters}
+          onFilterChange={updateFilter}
           hasActiveFilters={hasActiveFilters}
           onClearFilters={clearFilters}
           totalCount={sorted.length}

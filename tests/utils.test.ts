@@ -289,7 +289,12 @@ describe('Frontend Utils (src/lib/utils.ts)', () => {
         isUnreleased: false,
         qualityLabel: '4K UHD',
         streamsLabel: '12 sources',
+        hasAtmos: false,
+        hasSurround: false,
+        isLosslessAudio: false,
+        audioFormat: '',
         activeTargetQuality: '4k',
+        activeTargetAudio: 'any',
       });
     });
 

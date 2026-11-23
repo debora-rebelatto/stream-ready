@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.watchlist_users (
   email TEXT UNIQUE NOT NULL,                   -- E-mail da conta Stremio (em minúsculas)
   stremio_auth_key TEXT,                         -- Chave de autenticação criptografada
   min_quality TEXT DEFAULT '1080p',              -- Qualidade mínima desejada ('1080p' ou '4k')
+  min_audio TEXT DEFAULT 'any',                  -- Preferência mínima de áudio ('any', 'surround', 'atmos')
   auto_sync_watched BOOLEAN DEFAULT FALSE,       -- Sincronização automática de vistos (desativada por padrão)
   track_watchlist_watched BOOLEAN DEFAULT TRUE,  -- Rastrear filmes da lista assistidos após adição
   sync_previously_watched BOOLEAN DEFAULT FALSE, -- Sincronizar filmes assistidos anteriormente no Stremio
@@ -28,6 +29,8 @@ CREATE TABLE IF NOT EXISTS public.watchlist_items (
   poster TEXT DEFAULT '',                         -- URL do poster
   has_1080p_plus BOOLEAN DEFAULT FALSE,           -- Se possui boa qualidade disponível
   best_quality TEXT DEFAULT 'Pending',            -- Qualidade detectada ('1080p FHD', '4K UHD', etc.)
+  has_atmos BOOLEAN DEFAULT FALSE,                -- Se possui áudio Dolby Atmos confirmado
+  audio_format TEXT DEFAULT '',                   -- Melhor formato de áudio detectado ('Dolby Atmos', 'TrueHD 7.1', 'DDP 5.1', etc.)
   stream_count INTEGER DEFAULT 0,                 -- Quantidade de fontes encontradas
   added_at TIMESTAMPTZ DEFAULT NOW(),             -- Data de adição
   last_checked TIMESTAMPTZ,                       -- Data da última verificação

@@ -11,7 +11,8 @@ const watchlistRepository = {
   syncWatchedWithStremio: (authKey, userId, options) =>
     db.syncWatchedWithStremio(authKey, userId, options),
   getStats: (userId) => db.getStats(userId),
-  isItemReady: (item, globalMinQuality) => db.isItemReady(item, globalMinQuality),
+  isItemReady: (item, globalMinQuality, globalMinAudio) =>
+    db.isItemReady(item, globalMinQuality, globalMinAudio),
   isItemUnreleased: (item) => db.isItemUnreleased(item),
   cleanImdbId: (rawId) => db.cleanImdbId(rawId),
   isLegitimateMovieId: (rawId) => db.isLegitimateMovieId(rawId),

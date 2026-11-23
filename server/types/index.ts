@@ -29,12 +29,22 @@ export interface StreamItem {
   [key: string]: any;
 }
 
+export interface AudioFormatInfo {
+  hasAtmos: boolean;
+  hasSurround: boolean;
+  audioFormat: string;
+  tier: number;
+}
+
 export interface ParsedStreams {
   has1080pPlus: boolean;
   isReady: boolean;
   isCamOnly: boolean;
   isUnreleased?: boolean;
   bestQuality: string;
+  hasAtmos: boolean;
+  hasSurround: boolean;
+  audioFormat: string;
   streamCount: number;
   cleanStreamCount: number;
   count1080pPlus: number;

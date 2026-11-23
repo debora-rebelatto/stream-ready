@@ -1,7 +1,7 @@
 import React from 'react';
 
 export type BadgeVariant =
-  'purple' | 'emerald' | 'amber' | 'rose' | 'blue' | 'neutral' | 'gradient';
+  'purple' | 'emerald' | 'amber' | 'rose' | 'blue' | 'cyan' | 'neutral' | 'gradient';
 
 export type BadgeSize = 'xs' | 'sm' | 'md' | 'lg';
 
@@ -45,6 +45,7 @@ export const Badge: React.FC<BadgeProps> = ({
     amber: 'bg-amber-500/15 text-amber-300 border-amber-500/30 shadow-xs',
     rose: 'bg-rose-500/15 text-rose-300 border-rose-500/30 shadow-xs',
     blue: 'bg-blue-500/15 text-blue-300 border-blue-500/30 shadow-xs',
+    cyan: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30 shadow-xs',
     neutral: 'bg-white/10 text-gray-300 border-white/10 shadow-xs',
     gradient:
       'bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 text-white border-amber-300 shadow-md',
@@ -56,6 +57,7 @@ export const Badge: React.FC<BadgeProps> = ({
     amber: 'bg-amber-400',
     rose: 'bg-rose-400',
     blue: 'bg-blue-400',
+    cyan: 'bg-cyan-400',
     neutral: 'bg-gray-400',
     gradient: 'bg-yellow-200',
   };

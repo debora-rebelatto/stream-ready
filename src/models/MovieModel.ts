@@ -1,3 +1,5 @@
+import type { AudioPreference } from './SettingsModel';
+
 export type MovieCardStatus = 'watched' | 'new' | 'ready' | 'unreleased' | 'waiting';
 
 export interface MovieReleaseMetadata {
@@ -5,6 +7,10 @@ export interface MovieReleaseMetadata {
   released?: string | null;
   releaseDate?: string | null;
   has1080pPlus?: boolean;
+  hasAtmos?: boolean;
+  hasSurround?: boolean;
+  isLosslessAudio?: boolean;
+  audioFormat?: string;
   year?: string | number;
 }
 
@@ -16,7 +22,12 @@ export interface MovieComputedStatus {
   isUnreleased: boolean;
   qualityLabel: string;
   streamsLabel: string;
+  hasAtmos: boolean;
+  hasSurround: boolean;
+  isLosslessAudio: boolean;
+  audioFormat: string;
   activeTargetQuality: '1080p' | '4k';
+  activeTargetAudio: AudioPreference;
 }
 
 export interface WatchlistItem extends MovieReleaseMetadata {
@@ -34,6 +45,10 @@ export interface WatchlistItem extends MovieReleaseMetadata {
   addedAt?: string | null;
   has1080pPlus: boolean;
   bestQuality?: string;
+  hasAtmos?: boolean;
+  hasSurround?: boolean;
+  isLosslessAudio?: boolean;
+  audioFormat?: string;
   streamCount: number;
   count1080pPlus?: number;
   lastChecked?: string | null;

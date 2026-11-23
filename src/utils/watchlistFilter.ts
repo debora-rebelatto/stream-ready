@@ -1,6 +1,7 @@
-import type { WatchlistItem } from '../models';
+import type { AudioPreference, WatchlistItem } from '../models';
 import { computeMovieStatus, enrichWatchlistItem } from './qualityAdapter';
 
+// TODO: check this later it has a better way to do this
 export type WatchlistTab = 'all' | 'ready' | 'unreleased' | 'pending' | 'watched';
 
 export type WatchlistSortOption =
@@ -14,13 +15,31 @@ export type WatchlistSortOption =
   | 'title_desc'
   | 'streams_desc';
 
+export interface DashboardFilterState {
+  searchQuery: string;
+  selectedQuality: string;
+  selectedAudio: string;
+  includeWatchedInAll: boolean;
+  sortBy: WatchlistSortOption;
+}
+
+export const DEFAULT_DASHBOARD_FILTERS: DashboardFilterState = {
+  searchQuery: '',
+  selectedQuality: 'all',
+  selectedAudio: 'all',
+  includeWatchedInAll: true,
+  sortBy: 'added_desc',
+};
+
 export interface WatchlistFilterCriteria {
   currentTab: WatchlistTab;
   activeCustomListId: string | null;
   selectedQuality: string;
+  selectedAudio?: string;
   includeWatchedInAll: boolean;
   searchQuery: string;
   globalMinQuality: '1080p' | '4k';
+  globalMinAudio?: AudioPreference;
 }
 
 export function filterWatchlistItems(
@@ -31,19 +50,24 @@ export function filterWatchlistItems(
     currentTab,
     activeCustomListId,
     selectedQuality,
+    selectedAudio = 'all',
     includeWatchedInAll,
     searchQuery,
     globalMinQuality,
+    globalMinAudio = 'any',
   } = criteria;
 
   return items
     .map((item) =>
-      item.computed && item.computed.activeTargetQuality === (item.minQuality || globalMinQuality)
+      item.computed &&
+      item.computed.activeTargetQuality === (item.minQuality || globalMinQuality) &&
+      item.computed.activeTargetAudio === globalMinAudio
         ? item
-        : enrichWatchlistItem(item, globalMinQuality)
+        : enrichWatchlistItem(item, globalMinQuality, globalMinAudio)
     )
     .filter((item) => {
-      const computed = item.computed ?? computeMovieStatus(item, globalMinQuality);
+      const computed =
+        item.computed ?? computeMovieStatus(item, globalMinQuality, globalMinAudio);
 
       if (activeCustomListId) {
         if (!Array.isArray(item.customLists) || !item.customLists.includes(activeCustomListId)) {
@@ -80,6 +104,16 @@ export function filterWatchlistItems(
           ) {
             return false;
           }
+        }
+      }
+
+      if (currentTab !== 'watched' && selectedAudio && selectedAudio !== 'all') {
+        if (selectedAudio === 'atmos') {
+          if (!computed.hasAtmos) return false;
+        } else if (selectedAudio === 'lossless') {
+          if (!computed.isLosslessAudio) return false;
+        } else if (selectedAudio === 'surround') {
+          if (!computed.hasSurround) return false;
         }
       }
 

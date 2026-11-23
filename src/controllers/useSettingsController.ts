@@ -16,6 +16,8 @@ export function useSettingsController({
   const {
     globalMinQuality,
     setGlobalMinQuality,
+    globalMinAudio,
+    setGlobalMinAudio,
     stats,
     autoSyncWatched,
     setAutoSyncWatched,
@@ -126,6 +128,8 @@ export function useSettingsController({
     logout,
     globalMinQuality,
     setGlobalMinQuality,
+    globalMinAudio,
+    setGlobalMinAudio,
     stats,
     autoSyncWatched,
     setAutoSyncWatched,

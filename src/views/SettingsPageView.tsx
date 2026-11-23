@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   Heart,
 } from 'lucide-react';
-import { useToast } from '../context/useAppContext';
 import { useSettingsController, type SettingsTab } from '../controllers/useSettingsController';
 import {
   Button,
@@ -37,12 +36,8 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
   manifestUrl = 'https://stremiowatchlist.vercel.app/manifest.json',
   installUrl,
 }) => {
-  const { showToast } = useToast();
   const {
     user,
-    globalMinQuality,
-    setGlobalMinQuality,
-    stats,
     autoSyncWatched,
     setAutoSyncWatched,
     trackWatchlistWatched,
@@ -148,21 +143,7 @@ export const SettingsPageView: React.FC<SettingsPageProps> = ({
           </aside>
 
           <section className="flex-1 min-w-0">
-            {activeTab === 'quality' && (
-              <QualitySettingsCard
-                globalMinQuality={globalMinQuality}
-                stats={stats}
-                onSelectQuality={(quality) => {
-                  setGlobalMinQuality(quality);
-                  showToast(
-                    quality === '4k'
-                      ? 'Default quality set to 4K UHD Only.'
-                      : 'Default quality set to 1080p Full HD.',
-                    'success'
-                  );
-                }}
-              />
-            )}
+            {activeTab === 'quality' && <QualitySettingsCard />}
 
             {activeTab === 'sync' && (
               <SyncSettingsCard

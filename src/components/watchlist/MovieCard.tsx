@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Folder,
   Check,
+  Volume2,
 } from 'lucide-react';
 
 export interface MovieStatusBadgeConfig {
@@ -65,7 +66,8 @@ interface MovieCardProps {
 }
 
 export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
-  const { markWatched, globalMinQuality, customLists, toggleItemCustomList } = useWatchlist();
+  const { markWatched, globalMinQuality, globalMinAudio, customLists, toggleItemCustomList } =
+    useWatchlist();
   const [isListMenuOpen, setIsListMenuOpen] = useState(false);
 
   // Close menu when clicking outside
@@ -83,8 +85,17 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
     isNewRelease: isNew,
     qualityLabel: qualityText,
     streamsLabel: streamsText,
-  } = item.computed ?? computeMovieStatus(item, globalMinQuality);
+    hasAtmos,
+    isLosslessAudio,
+    audioFormat,
+  } = item.computed ?? computeMovieStatus(item, globalMinQuality, globalMinAudio);
   const badgeConfig = MOVIE_STATUS_BADGE_MAP[status];
+  const displayAudioLabel = hasAtmos ? 'Dolby Atmos' : audioFormat;
+  const audioBadgeVariant: BadgeVariant = hasAtmos
+    ? 'cyan'
+    : isLosslessAudio
+      ? 'purple'
+      : 'neutral';
 
   const itemLists = customLists.filter((l) => (item.customLists || []).includes(l.id));
 
@@ -199,24 +210,38 @@ export const MovieCard: React.FC<MovieCardProps> = ({ item, onDelete }) => {
 
         {/* Quality Info */}
         <div className="flex flex-col gap-1.5 pt-1 border-t border-white/5">
-          {/* Detected Quality Pill */}
-          <div
-            className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded border self-start ${
-              isWatched
-                ? 'bg-purple-900/20 text-purple-300 border-purple-500/30'
-                : ready
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                  : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-            }`}
-          >
-            {isWatched ? (
-              <span>Watched</span>
-            ) : (
-              <>
-                <span>{qualityText}</span>
-                <span className="text-gray-500">•</span>
-                <span>{streamsText}</span>
-              </>
+          {/* Detected Quality & Audio Pills */}
+          <div className="flex items-center flex-wrap gap-1.5">
+            <div
+              className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded border self-start ${
+                isWatched
+                  ? 'bg-purple-900/20 text-purple-300 border-purple-500/30'
+                  : ready
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                    : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+              }`}
+            >
+              {isWatched ? (
+                <span>Watched</span>
+              ) : (
+                <>
+                  <span>{qualityText}</span>
+                  <span className="text-gray-500">•</span>
+                  <span>{streamsText}</span>
+                </>
+              )}
+            </div>
+
+            {!isWatched && ready && displayAudioLabel && (
+              <Badge
+                variant={audioBadgeVariant}
+                size="xs"
+                uppercase={hasAtmos}
+                icon={<Volume2 size={10} />}
+                title={`Detected audio: ${displayAudioLabel}`}
+              >
+                {displayAudioLabel}
+              </Badge>
             )}
           </div>
 

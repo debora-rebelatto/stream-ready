@@ -1,0 +1,30 @@
+<svg width="500" height="750" viewBox="0 0 500 750" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e1338"/>
+      <stop offset="50%" stop-color="#0e1122"/>
+      <stop offset="100%" stop-color="#070913"/>
+    </linearGradient>
+    <linearGradient id="btnGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <clipPath id="cardClip">
+      <rect width="500" height="750" rx="24"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background Card -->
+  <rect width="500" height="750" fill="url(#bgGrad)" rx="24"/>
+  <rect x="10" y="10" width="480" height="730" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-opacity="0.4" rx="20"/>
+
+  <g clip-path="url(#cardClip)">
+    <!-- Primary Action: Direct Scan Notice in Maximum Size -->
+    <rect x="20" y="35" width="460" height="145" rx="22" fill="url(#btnGrad)"/>
+    <text x="250" y="125" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="52" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="2">SCAN QR CODE</text>
+
+    <!-- Edge-to-edge Scannable QR Code without lateral spacing -->
+    <rect x="0" y="215" width="500" height="500" fill="#ffffff"/>
+    <image href="data:image/png;base64,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" x="0" y="215" width="500" height="500"/>
+  </g>
+</svg>

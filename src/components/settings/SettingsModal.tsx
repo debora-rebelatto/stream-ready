@@ -1,6 +1,5 @@
 import React from 'react';
 import { Sliders } from 'lucide-react';
-import { useToast } from '../../context/useAppContext';
 import { useSettingsController } from '../../controllers/useSettingsController';
 import { ModalShell, GitHubSponsorButton } from '../common';
 import { QualitySettingsCard } from './QualitySettingsCard';
@@ -19,12 +18,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   onOpenDeleteAccount,
 }) => {
-  const { showToast } = useToast();
   const {
     user,
-    globalMinQuality,
-    setGlobalMinQuality,
-    stats,
     autoSyncWatched,
     setAutoSyncWatched,
     trackWatchlistWatched,
@@ -62,19 +57,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </>
       }
     >
-      <QualitySettingsCard
-        globalMinQuality={globalMinQuality}
-        stats={stats}
-        onSelectQuality={(quality) => {
-          setGlobalMinQuality(quality);
-          showToast(
-            quality === '4k'
-              ? 'Default quality set to 4K UHD Only.'
-              : 'Default quality set to 1080p Full HD.',
-            'success'
-          );
-        }}
-      />
+      <QualitySettingsCard />
 
       <SyncSettingsCard
         user={user}

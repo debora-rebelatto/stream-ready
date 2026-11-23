@@ -1,4 +1,7 @@
 export { QualitySettingsCard } from './QualitySettingsCard';
+export { PreferenceSelectorCard } from './PreferenceSelectorCard';
+export { VideoQualitySettingsCard } from './VideoQualitySettingsCard';
+export { AudioSettingsCard } from './AudioSettingsCard';
 export { SyncSettingsCard } from './SyncSettingsCard';
 export { BackupSettingsCard } from './BackupSettingsCard';
 export { AccountDangerCard } from './AccountDangerCard';
