@@ -111,4 +111,25 @@ describe('recommendations library', () => {
     const list = buildRecommendedList([], '1080p', 4);
     expect(list).toHaveLength(4);
   });
+
+  test('rebalances an all-ready sourceList by mixing in curated unreleased movies', () => {
+    const allReadySource = Array.from({ length: 9 }, (_, i) => ({
+      id: `tt900000${i}`,
+      name: `Released Movie ${i + 1}`,
+      year: '2026',
+      category: 'ready' as const,
+      qualityBadge: '4K UHD',
+      isReady: true,
+      banner: `https://images.metahub.space/background/medium/tt900000${i}/img.jpg`,
+    }));
+
+    const list = buildRecommendedList([], '1080p', 9, allReadySource);
+    expect(list).toHaveLength(9);
+
+    const readyCount = list.filter((m) => m.isReady).length;
+    const unreleasedCount = list.filter((m) => !m.isReady).length;
+
+    expect(readyCount).toBe(6);
+    expect(unreleasedCount).toBe(3);
+  });
 });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Sparkles, Clock, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { Sparkles, Clock, Calendar, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import {
   buildRecommendedList,
   fetchTrendingMovies,
@@ -247,6 +247,11 @@ export const RecommendedBanner: React.FC<RecommendedBannerProps> = ({
                     ? currentMovie.qualityBadge
                     : 'Ready to Watch'}
                 </span>
+              </span>
+            ) : currentMovie.category === 'upcoming' ? (
+              <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold uppercase tracking-wide bg-purple-500/25 border border-purple-400/35 text-purple-200 backdrop-blur-md">
+                <Calendar size={11} className="text-purple-300" />
+                <span>{currentMovie.qualityBadge || 'Coming Soon • Unreleased'}</span>
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold uppercase tracking-wide bg-amber-500/20 border border-amber-400/30 text-amber-300 backdrop-blur-md">
