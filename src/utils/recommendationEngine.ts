@@ -25,6 +25,7 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
     id: 'tt34384661',
     name: 'Godzilla Minus Zero',
     year: '2026',
+    category: 'ready',
     poster: 'https://images.metahub.space/poster/medium/tt34384661/img.jpg',
     banner: 'https://images.metahub.space/background/medium/tt34384661/img.jpg',
     genres: ['Action', 'Adventure', 'Drama'],
@@ -38,11 +39,12 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
     id: 'tt15799564',
     name: 'Wild Horse Nine',
     year: '2026',
+    category: 'upcoming',
     poster: 'https://images.metahub.space/poster/medium/tt15799564/img.jpg',
     banner: 'https://images.metahub.space/background/medium/tt15799564/img.jpg',
     genres: ['Comedy', 'Crime', 'Drama'],
     imdbRating: 'Upcoming',
-    qualityBadge: 'Coming Soon • CAM Only',
+    qualityBadge: 'Coming Soon • Unreleased',
     isReady: false,
     description:
       'CIA agents Chris and Lee face a trust-testing mission from Santiago to Easter Island during 1973 in Chile.',
@@ -51,6 +53,7 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
     id: 'tt34206385',
     name: 'Primetime',
     year: '2026',
+    category: 'ready',
     poster: 'https://images.metahub.space/poster/medium/tt34206385/img.jpg',
     banner: 'https://images.metahub.space/background/medium/tt34206385/img.jpg',
     genres: ['Biography', 'Crime', 'Drama'],
@@ -64,11 +67,12 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
     id: 'tt2056785',
     name: 'Wildwood',
     year: '2026',
+    category: 'upcoming',
     poster: 'https://images.metahub.space/poster/medium/tt2056785/img.jpg',
     banner: 'https://images.metahub.space/background/medium/tt2056785/img.jpg',
     genres: ['Animation', 'Adventure', 'Fantasy'],
     imdbRating: '8.7',
-    qualityBadge: 'Coming Soon • CAM Only',
+    qualityBadge: 'Coming Soon • Unreleased',
     isReady: false,
     description:
       'The adventures of Prue McKeel as she sets off to the magical forests outside Portland to find her kidnapped brother in Laika’s stop-motion epic.',
@@ -77,6 +81,7 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
     id: 'tt45368240',
     name: 'You Can See Everything',
     year: '2026',
+    category: 'in_theaters',
     poster: 'https://images.metahub.space/poster/medium/tt45368240/img.jpg',
     banner: 'https://images.metahub.space/background/medium/tt45368240/img.jpg',
     genres: ['Documentary', 'Biography'],
@@ -90,6 +95,7 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
     id: 'tt35538033',
     name: 'Resident Evil',
     year: '2026',
+    category: 'ready',
     poster: 'https://images.metahub.space/poster/medium/tt35538033/img.jpg',
     banner: 'https://images.metahub.space/background/medium/tt35538033/img.jpg',
     genres: ['Action', 'Horror', 'Sci-Fi'],
@@ -101,14 +107,62 @@ export const CURATED_RECOMMENDED_MOVIES: RecommendedMovie[] = [
   },
 ];
 
+function ensureBalancedSourcePool(
+  sourceList: RecommendedMovie[],
+  maxTotal: number
+): RecommendedMovie[] {
+  const sliced = sourceList.slice(0, maxTotal);
+  if (maxTotal < 3 || sliced.length < 3) {
+    return sliced;
+  }
+
+  const hasUnreleased = sliced.some((movie) => !movie.isReady);
+  if (hasUnreleased) {
+    return sliced;
+  }
+
+  // Safeguard: if an upstream trending list returns only already-released movies,
+  // interleave curated unreleased titles so the hero always showcases tracking value.
+  const targetUnreleased = Math.max(1, Math.floor(maxTotal / 3));
+  const existingIds = new Set(sliced.map((m) => m.id));
+  const unreleasedBackfill = CURATED_RECOMMENDED_MOVIES.filter(
+    (m) => !m.isReady && !existingIds.has(m.id)
+  ).slice(0, targetUnreleased);
+
+  if (unreleasedBackfill.length === 0) {
+    return sliced;
+  }
+
+  const readyCount = Math.max(0, maxTotal - unreleasedBackfill.length);
+  const readyKeep = sliced.slice(0, readyCount);
+  const balanced: RecommendedMovie[] = [];
+
+  let rIdx = 0;
+  let uIdx = 0;
+  while (balanced.length < maxTotal && (rIdx < readyKeep.length || uIdx < unreleasedBackfill.length)) {
+    if (rIdx < readyKeep.length) balanced.push(readyKeep[rIdx++]);
+    if (rIdx < readyKeep.length && balanced.length < maxTotal) balanced.push(readyKeep[rIdx++]);
+    if (uIdx < unreleasedBackfill.length && balanced.length < maxTotal) {
+      balanced.push(unreleasedBackfill[uIdx++]);
+    }
+  }
+
+  return balanced.slice(0, maxTotal);
+}
+
 export function buildRecommendedList(
   watchlistItems: WatchlistItem[] = [],
   _globalMinQuality: '1080p' | '4k' = '1080p',
   maxTotal: number = 6,
   sourceList: RecommendedMovie[] = CURATED_RECOMMENDED_MOVIES
 ): RecommendedMovie[] {
-  const pool = sourceList && sourceList.length > 0 ? sourceList : CURATED_RECOMMENDED_MOVIES;
-  return pool.slice(0, maxTotal).map((curated) => {
+  const rawPool = sourceList && sourceList.length > 0 ? sourceList : CURATED_RECOMMENDED_MOVIES;
+  const pool =
+    rawPool === CURATED_RECOMMENDED_MOVIES
+      ? rawPool.slice(0, maxTotal)
+      : ensureBalancedSourcePool(rawPool, maxTotal);
+
+  return pool.map((curated) => {
     const userItem = (watchlistItems || []).find((w) => w.id === curated.id);
     if (!userItem) {
       return {

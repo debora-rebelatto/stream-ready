@@ -56,6 +56,27 @@ async function syncAddonUrlWithAccount(authKey, baseUrl, userId) {
   }
 }
 
+const ON_DEMAND_BATCH_LIMIT = 5;
+const CRON_CONCURRENCY = 5;
+
+function getLastCheckedMs(item) {
+  if (!item || !item.lastChecked) return 0;
+  const parsed = new Date(item.lastChecked).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function sleep(ms) {
+  let timeout;
+  return new Promise((resolve) => {
+    timeout = setTimeout(resolve, ms);
+    if (timeout && typeof timeout.unref === 'function') {
+      timeout.unref();
+    }
+  }).finally(() => {
+    if (timeout) clearTimeout(timeout);
+  });
+}
+
 function triggerUserOnDemandSync(authKey, userId) {
   if (!authKey || !userId) return;
   const now = Date.now();
@@ -73,20 +94,24 @@ function triggerUserOnDemandSync(authKey, userId) {
       const criteria = db.getUserQualityCriteria(userId);
       const pendingItems = db
         .getItems(userId)
-        .filter((i) => !db.isItemReady(i, criteria) && !i.isWatched);
-      for (const item of pendingItems.slice(0, 5)) {
-        const wasReady = db.isItemReady(item, criteria);
-        const q = await checkMovieQuality(item.id, item.type || 'movie', item.name, item.year);
-        if (q && q.has1080pPlus) {
+        .filter((i) => !db.isItemReady(i, criteria) && !i.isWatched)
+        .sort((a, b) => getLastCheckedMs(a) - getLastCheckedMs(b))
+        .slice(0, ON_DEMAND_BATCH_LIMIT);
+
+      await Promise.all(
+        pendingItems.map(async (item) => {
+          const wasReady = db.isItemReady(item, criteria);
+          const q = await checkMovieQuality(item.id, item.type || 'movie', item.name, item.year);
+          if (!q || q.error) return;
+
           const updated = await db.updateItem(item.id, buildQualityPatch(q), userId);
           if (!wasReady && updated && db.isItemReady(updated, criteria) && !item.notifiedAt) {
             await notificationOperationService
               .notifyMovieReady({ userId, movie: updated })
               .catch((e) => console.warn(`[OnDemandSync:${userId}] Notify error:`, e.message));
           }
-        }
-        await new Promise((r) => setTimeout(r, 600));
-      }
+        })
+      );
     } catch (err) {
       console.warn(`[OnDemandSync:${userId}] Check error:`, err.message);
     }
@@ -108,7 +133,7 @@ async function runBackgroundCheck() {
   };
 
   try {
-    await db.ensureLoaded();
+    await db.ensureLoaded(true);
 
     const users = db
       .getAllUsers()
@@ -143,20 +168,23 @@ async function runBackgroundCheck() {
       for (const entry of allPending) {
         const movieId = entry.item.id;
         if (!movieId) continue;
+        const entryCheckMs = getLastCheckedMs(entry.item);
         if (!groupedByMovieId.has(movieId)) {
           groupedByMovieId.set(movieId, {
             sampleItem: entry.item,
             entries: [],
-            oldestCheckMs: entry.item.lastChecked
-              ? new Date(entry.item.lastChecked).getTime() || 0
-              : 0,
+            oldestCheckMs: entryCheckMs,
           });
         }
-        groupedByMovieId.get(movieId).entries.push(entry);
+        const group = groupedByMovieId.get(movieId);
+        if (entryCheckMs < group.oldestCheckMs) {
+          group.oldestCheckMs = entryCheckMs;
+        }
+        group.entries.push(entry);
       }
 
       // Prioritize movies that were least recently checked (or never checked)
-      const batchLimit = process.env.VERCEL ? 5 : 15;
+      const batchLimit = process.env.VERCEL ? 30 : 50;
       const uniqueMoviesBatch = Array.from(groupedByMovieId.values())
         .sort((a, b) => a.oldestCheckMs - b.oldestCheckMs)
         .slice(0, batchLimit);
@@ -165,44 +193,60 @@ async function runBackgroundCheck() {
         `[AutoChecker] Checking ${uniqueMoviesBatch.length} unique pending movie(s) (across ${allPending.length} total watchlist entries)...`
       );
 
-      for (const group of uniqueMoviesBatch) {
-        const { sampleItem, entries } = group;
-        const quality = await checkMovieQuality(
-          sampleItem.id,
-          sampleItem.type || 'movie',
-          sampleItem.name,
-          sampleItem.year
-        );
-        summary.uniqueCheckedCount++;
+      for (let i = 0; i < uniqueMoviesBatch.length; i += CRON_CONCURRENCY) {
+        const chunk = uniqueMoviesBatch.slice(i, i + CRON_CONCURRENCY);
 
-        if (quality.has1080pPlus) {
-          summary.newlyReadyCount++;
-        }
+        await Promise.all(
+          chunk.map(async (group) => {
+            const { sampleItem, entries } = group;
+            const quality = await checkMovieQuality(
+              sampleItem.id,
+              sampleItem.type || 'movie',
+              sampleItem.name,
+              sampleItem.year
+            );
+            summary.uniqueCheckedCount++;
 
-        for (const { userId, item } of entries) {
-          const criteria = db.getUserQualityCriteria(userId);
-          const wasReady = db.isItemReady(item, criteria);
-          const updated = await db.updateItem(
-            item.id,
-            buildQualityPatch(quality, { includeExtended: true }),
-            userId
-          );
-          if (!wasReady && updated && db.isItemReady(updated, criteria) && !item.notifiedAt) {
-            try {
-              const notifyRes = await notificationOperationService.notifyMovieReady({
-                userId,
-                movie: updated,
-              });
-              if (notifyRes?.sent) {
-                summary.notificationsSentCount++;
-              }
-            } catch (notifyErr) {
-              console.warn(`[AutoChecker:${userId}] Notification error:`, notifyErr.message);
+            if (!quality || quality.error) {
+              console.warn(
+                `[AutoChecker] Skipping update for ${sampleItem.id} (${sampleItem.name}) due to check error:`,
+                quality?.error || 'empty result'
+              );
+              return;
             }
-          }
-        }
 
-        await new Promise((r) => setTimeout(r, 150));
+            if (quality.has1080pPlus) {
+              summary.newlyReadyCount++;
+            }
+
+            for (const { userId, item } of entries) {
+              const criteria = db.getUserQualityCriteria(userId);
+              const wasReady = db.isItemReady(item, criteria);
+              const updated = await db.updateItem(
+                item.id,
+                buildQualityPatch(quality, { includeExtended: true }),
+                userId
+              );
+              if (!wasReady && updated && db.isItemReady(updated, criteria) && !item.notifiedAt) {
+                try {
+                  const notifyRes = await notificationOperationService.notifyMovieReady({
+                    userId,
+                    movie: updated,
+                  });
+                  if (notifyRes?.sent) {
+                    summary.notificationsSentCount++;
+                  }
+                } catch (notifyErr) {
+                  console.warn(`[AutoChecker:${userId}] Notification error:`, notifyErr.message);
+                }
+              }
+            }
+          })
+        );
+
+        if (i + CRON_CONCURRENCY < uniqueMoviesBatch.length) {
+          await sleep(100);
+        }
       }
     }
 

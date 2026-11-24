@@ -38,11 +38,134 @@ const TMDB_GENRES: Record<number, string> = {
   37: 'Western',
 };
 
-let cachedTrending: { data: TrendingMovie[]; timestamp: number } | null = null;
-const CACHE_TTL_MS = 3 * 60 * 60 * 1000; // 3 hours
+let cachedTrending: { data: TrendingMovie[]; timestamp: number; ttlMs: number } | null = null;
+const CACHE_TTL_MS = 3 * 60 * 60 * 1000; // 3 hours for TMDB
+const FALLBACK_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes for Cinemeta fallback
+
+/**
+ * Curated upcoming unreleased movies used as a last-resort backfill when
+ * upstream catalogs (e.g. Cinemeta top) return only already-released titles.
+ */
+const CURATED_UPCOMING_FALLBACK: TrendingMovie[] = [
+  {
+    id: 'tt21357150',
+    name: 'Avengers: Doomsday',
+    year: '2026',
+    releaseDate: '2026-12-18',
+    poster: 'https://images.metahub.space/poster/medium/tt21357150/img.jpg',
+    banner: 'https://images.metahub.space/background/medium/tt21357150/img.jpg',
+    genres: ['Action', 'Adventure', 'Sci-Fi'],
+    imdbRating: 'Upcoming',
+    qualityBadge: 'Coming Soon • Dec 2026',
+    isReady: false,
+    category: 'upcoming',
+    description:
+      'Earth’s Mightiest Heroes reunite to face Doctor Doom in a multiversal threat that will reshape the Marvel Cinematic Universe.',
+  },
+  {
+    id: 'tt31378509',
+    name: 'Dune: Part Three',
+    year: '2026',
+    releaseDate: '2026-12-18',
+    poster: 'https://images.metahub.space/poster/medium/tt31378509/img.jpg',
+    banner: 'https://images.metahub.space/background/medium/tt31378509/img.jpg',
+    genres: ['Sci-Fi', 'Adventure', 'Drama'],
+    imdbRating: 'Upcoming',
+    qualityBadge: 'Coming Soon • Dec 2026',
+    isReady: false,
+    category: 'upcoming',
+    description:
+      'Paul Atreides confronts the devastating consequences of his jihad across the known universe in Denis Villeneuve’s conclusion to the Dune trilogy.',
+  },
+  {
+    id: 'tt34384661',
+    name: 'Godzilla Minus Zero',
+    year: '2026',
+    releaseDate: '2026-12-31',
+    poster: 'https://images.metahub.space/poster/medium/tt34384661/img.jpg',
+    banner: 'https://images.metahub.space/background/medium/tt34384661/img.jpg',
+    genres: ['Action', 'Adventure', 'Drama'],
+    imdbRating: 'Upcoming',
+    qualityBadge: 'Coming Soon • Unreleased',
+    isReady: false,
+    category: 'upcoming',
+    description:
+      "Direct continuation of Takashi Yamazaki's Godzilla saga, following postwar Japan as a cataclysmic atomic menace reemerges from the ocean depths.",
+  },
+];
 
 export function clearTrendingCache(): void {
   cachedTrending = null;
+}
+
+function formatUpcomingBadge(releaseDate?: string): string {
+  if (!releaseDate) return 'Coming Soon • Unreleased';
+  const parsed = new Date(`${releaseDate}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return 'Coming Soon • Unreleased';
+  const month = parsed.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+  const year = parsed.getUTCFullYear();
+  return `Coming Soon • ${month} ${year}`;
+}
+
+function getActiveUpcomingFallback(nowMs: number = Date.now()): TrendingMovie[] {
+  const todayStr = new Date(nowMs).toISOString().slice(0, 10);
+  return CURATED_UPCOMING_FALLBACK.filter(
+    (movie) => !movie.releaseDate || movie.releaseDate >= todayStr
+  );
+}
+
+/**
+ * Interleaves ready, in-theaters, and upcoming movies into a balanced mix
+ * without duplicate IDs, prioritizing underrepresented buckets during backfill.
+ */
+export function balanceMovieBuckets(
+  readyMovies: TrendingMovie[],
+  inTheatersMovies: TrendingMovie[],
+  upcomingMovies: TrendingMovie[],
+  limit: number
+): TrendingMovie[] {
+  const targetPerBucket = Math.max(1, Math.floor(limit / 3));
+  const mixed: TrendingMovie[] = [];
+  const addedIds = new Set<string>();
+
+  const pushUnique = (movie?: TrendingMovie): boolean => {
+    if (!movie || !movie.id || addedIds.has(movie.id) || mixed.length >= limit) {
+      return false;
+    }
+    mixed.push(movie);
+    addedIds.add(movie.id);
+    return true;
+  };
+
+  const uniqueReady = readyMovies.filter((m, idx, arr) => arr.findIndex((x) => x.id === m.id) === idx);
+  const uniqueInTheaters = inTheatersMovies.filter(
+    (m, idx, arr) => arr.findIndex((x) => x.id === m.id) === idx
+  );
+  const uniqueUpcoming = upcomingMovies.filter(
+    (m, idx, arr) => arr.findIndex((x) => x.id === m.id) === idx
+  );
+
+  for (let i = 0; i < targetPerBucket; i++) {
+    pushUnique(uniqueReady[i]);
+    pushUnique(uniqueInTheaters[i]);
+    pushUnique(uniqueUpcoming[i]);
+  }
+
+  // Backfill any remaining slots while preferring upcoming & in-theaters first
+  // so unreleased options are never crowded out when one bucket was short.
+  if (mixed.length < limit) {
+    const remainingPool = [
+      ...uniqueUpcoming.slice(targetPerBucket),
+      ...uniqueInTheaters.slice(targetPerBucket),
+      ...uniqueReady.slice(targetPerBucket),
+    ];
+    for (const candidate of remainingPool) {
+      if (mixed.length >= limit) break;
+      pushUnique(candidate);
+    }
+  }
+
+  return mixed.slice(0, limit);
 }
 
 /**
@@ -53,7 +176,7 @@ export function clearTrendingCache(): void {
  */
 export async function getTrendingMovies(limit = 9): Promise<TrendingMovie[]> {
   const now = Date.now();
-  if (cachedTrending && now - cachedTrending.timestamp < CACHE_TTL_MS) {
+  if (cachedTrending && now - cachedTrending.timestamp < cachedTrending.ttlMs) {
     return cachedTrending.data.slice(0, limit);
   }
 
@@ -63,7 +186,7 @@ export async function getTrendingMovies(limit = 9): Promise<TrendingMovie[]> {
     try {
       const mixed = await fetchMixedFromTmdb(apiKey, limit);
       if (mixed && mixed.length > 0) {
-        cachedTrending = { data: mixed, timestamp: now };
+        cachedTrending = { data: mixed, timestamp: now, ttlMs: CACHE_TTL_MS };
         return mixed.slice(0, limit);
       }
     } catch (err: any) {
@@ -71,11 +194,12 @@ export async function getTrendingMovies(limit = 9): Promise<TrendingMovie[]> {
     }
   }
 
-  // Fallback to Cinemeta Top Movies Catalog
+  // Fallback to Cinemeta Catalogs (Current Year + Top Popular)
   try {
     const fallback = await fetchFromCinemeta(limit);
     if (fallback && fallback.length > 0) {
-      return fallback;
+      cachedTrending = { data: fallback, timestamp: now, ttlMs: FALLBACK_CACHE_TTL_MS };
+      return fallback.slice(0, limit);
     }
   } catch (err: any) {
     console.warn('[TMDB] Fallback to Cinemeta failed:', err.message);
@@ -100,10 +224,11 @@ async function fetchMixedFromTmdb(apiKey: string, limit: number): Promise<Trendi
 
     const now = Date.now();
     const todayStr = new Date(now).toISOString().slice(0, 10);
+    const tomorrowStr = new Date(now + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const threeMonthsAgoStr = new Date(now - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-    // 1. Fetch upcoming unreleased movies (release date >= today)
-    const upcomingUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${encodeURIComponent(apiKey)}&primary_release_date.gte=${todayStr}&sort_by=popularity.desc&language=en-US`;
+    // 1. Fetch upcoming unreleased movies (release date >= tomorrow to avoid overlap with today)
+    const upcomingUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${encodeURIComponent(apiKey)}&primary_release_date.gte=${tomorrowStr}&sort_by=popularity.desc&language=en-US`;
 
     // 2. Fetch recently released movies (between 3 months ago and today)
     const recentUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${encodeURIComponent(apiKey)}&primary_release_date.gte=${threeMonthsAgoStr}&primary_release_date.lte=${todayStr}&sort_by=popularity.desc&language=en-US`;
@@ -117,8 +242,11 @@ async function fetchMixedFromTmdb(apiKey: string, limit: number): Promise<Trendi
         .catch(() => ({ results: [] })),
     ]);
 
-    const rawUpcoming = (upcomingRes.results || []).slice(0, 10);
-    const rawRecent = (recentRes.results || []).slice(0, 16);
+    const preferWithBackdrop = (items: any[]) =>
+      [...items].sort((a, b) => Number(Boolean(b.backdrop_path)) - Number(Boolean(a.backdrop_path)));
+
+    const rawUpcoming = preferWithBackdrop(upcomingRes.results || []).slice(0, 8);
+    const rawRecent = preferWithBackdrop(recentRes.results || []).slice(0, 12);
 
     // Resolve IMDb IDs for raw candidates
     const resolveMovie = async (m: any): Promise<TrendingMovie | null> => {
@@ -214,72 +342,105 @@ async function fetchMixedFromTmdb(apiKey: string, limit: number): Promise<Trendi
 
     const readyMovies = checkedRecent.filter((m) => m.category === 'ready');
     const inTheatersMovies = checkedRecent.filter((m) => m.category === 'in_theaters');
-    const upcomingMovies = resolvedUpcoming.map((m) => ({
+    const upcomingMovies: TrendingMovie[] = resolvedUpcoming.map((m) => ({
       ...m,
       isReady: false,
-      qualityBadge: 'Coming Soon • In Theaters',
+      qualityBadge: formatUpcomingBadge(m.releaseDate),
       category: 'upcoming' as const,
     }));
 
-    // Assemble balanced mix (aim for 2 ready, 2 in-theaters, 2 upcoming)
-    const targetPerBucket = Math.max(1, Math.floor(limit / 3));
-    const mixed: TrendingMovie[] = [];
-
-    const readySlice = readyMovies.slice(0, targetPerBucket);
-    const inTheatersSlice = inTheatersMovies.slice(0, targetPerBucket);
-    const upcomingSlice = upcomingMovies.slice(0, targetPerBucket);
-
-    for (let i = 0; i < targetPerBucket; i++) {
-      if (readySlice[i]) mixed.push(readySlice[i]);
-      if (inTheatersSlice[i]) mixed.push(inTheatersSlice[i]);
-      if (upcomingSlice[i]) mixed.push(upcomingSlice[i]);
+    // If TMDB returned zero movies (e.g. network error or invalid key), let caller fall back
+    if (readyMovies.length === 0 && inTheatersMovies.length === 0 && upcomingMovies.length === 0) {
+      return [];
     }
 
-    // If total is less than limit, backfill with remaining candidates
-    if (mixed.length < limit) {
-      const addedIds = new Set(mixed.map((m) => m.id));
-      const remainingPool = [
-        ...readyMovies.slice(targetPerBucket),
-        ...inTheatersMovies.slice(targetPerBucket),
-        ...upcomingMovies.slice(targetPerBucket),
-      ];
-
-      for (const candidate of remainingPool) {
-        if (mixed.length >= limit) break;
-        if (!addedIds.has(candidate.id)) {
-          mixed.push(candidate);
-          addedIds.add(candidate.id);
+    // Ensure upcoming bucket is populated when requesting a multi-item carousel (limit >= 3)
+    const targetPerBucket = Math.max(1, Math.floor(limit / 3));
+    if (limit >= 3 && upcomingMovies.length < targetPerBucket) {
+      const existingIds = new Set([
+        ...readyMovies.map((m) => m.id),
+        ...inTheatersMovies.map((m) => m.id),
+        ...upcomingMovies.map((m) => m.id),
+      ]);
+      for (const fallbackMovie of getActiveUpcomingFallback(now)) {
+        if (upcomingMovies.length >= targetPerBucket) break;
+        if (!existingIds.has(fallbackMovie.id)) {
+          upcomingMovies.push(fallbackMovie);
+          existingIds.add(fallbackMovie.id);
         }
       }
     }
 
-    return mixed.slice(0, limit);
+    return balanceMovieBuckets(readyMovies, inTheatersMovies, upcomingMovies, limit);
   } finally {
     if (timeout) clearTimeout(timeout);
   }
 }
 
 /**
- * Fallback to Cinemeta when TMDB is unavailable, categorizing movies into the same 3 buckets.
+ * Fallback to Cinemeta when TMDB is unavailable.
+ * Fetches both the Popular catalog and the current-year New catalog so the hero
+ * stays balanced across Ready (1080p/4K), In Theaters (CAM), and Upcoming (Unreleased).
  */
 async function fetchFromCinemeta(limit: number): Promise<TrendingMovie[]> {
   const controller = new AbortController();
   let timeout: NodeJS.Timeout | null = null;
   try {
-    timeout = setTimeout(() => controller.abort(), 8000);
+    timeout = setTimeout(() => controller.abort(), 10000);
     if (timeout && typeof timeout.unref === 'function') {
       timeout.unref();
     }
-    const res = await fetch('https://v3-cinemeta.strem.io/catalog/movie/top.json', {
-      signal: controller.signal,
-    });
-    if (!res.ok) return [];
 
-    const data: any = await res.json();
-    const metas = (data.metas || []).slice(0, limit + 4);
+    const currentYear = new Date().getUTCFullYear();
+    const topUrl = 'https://v3-cinemeta.strem.io/catalog/movie/top.json';
+    const yearUrl = `https://v3-cinemeta.strem.io/catalog/movie/year/genre=${currentYear}.json`;
+
+    const safeFetchCatalog = async (url: string): Promise<{ metas?: any[] }> => {
+      try {
+        const res = await fetch(url, { signal: controller.signal });
+        if (!res || !res.ok) return { metas: [] };
+        return (await res.json()) as { metas?: any[] };
+      } catch {
+        return { metas: [] };
+      }
+    };
+
+    const [topData, yearData] = await Promise.all([
+      safeFetchCatalog(topUrl),
+      safeFetchCatalog(yearUrl),
+    ]);
+
+    const yearMetas = (yearData?.metas || []).filter((m: any) => {
+      const parsedYear = parseInt(String(m.releaseInfo || m.year || ''), 10);
+      return !Number.isNaN(parsedYear) && parsedYear >= currentYear;
+    });
+    const topMetas = topData?.metas || [];
+
+    // Combine current-year movies (contains unreleased & in-theaters titles) with popular hits
+    const combinedMetas: any[] = [];
+    const seenMetaIds = new Set<string>();
+    const addMetas = (list: any[], maxCount: number) => {
+      let added = 0;
+      for (const m of list) {
+        if (added >= maxCount) break;
+        if (!m?.id || seenMetaIds.has(m.id)) continue;
+        seenMetaIds.add(m.id);
+        combinedMetas.push(m);
+        added++;
+      }
+    };
+
+    const yearQuota = limit >= 3 ? Math.max(8, limit) : limit;
+    const topQuota = limit >= 3 ? Math.max(6, Math.ceil(limit / 2)) : limit;
+    addMetas(yearMetas, yearQuota);
+    addMetas(topMetas, topQuota);
+
+    if (combinedMetas.length === 0) {
+      return [];
+    }
 
     const checked = await Promise.all(
-      metas.map(async (m: any) => {
+      combinedMetas.map(async (m: any) => {
         const movie: TrendingMovie = {
           id: m.id,
           name: m.name,
@@ -310,9 +471,16 @@ async function fetchFromCinemeta(limit: number): Promise<TrendingMovie[]> {
           } else if (quality.isCamOnly) {
             qualityBadge = 'CAM Only • In Theaters';
             category = 'in_theaters';
-          } else if (quality.isUnreleased || quality.streamCount === 0) {
+          } else if (
+            quality.isUnreleased ||
+            quality.bestQuality === 'Unreleased' ||
+            quality.streamCount === 0
+          ) {
             qualityBadge = 'Coming Soon • Unreleased';
             category = 'upcoming';
+          } else {
+            qualityBadge = 'In Theaters • Waiting 1080p';
+            category = 'in_theaters';
           }
 
           return {
@@ -331,14 +499,20 @@ async function fetchFromCinemeta(limit: number): Promise<TrendingMovie[]> {
     const inTheaters = checked.filter((m) => m.category === 'in_theaters');
     const upcoming = checked.filter((m) => m.category === 'upcoming');
 
-    const result: TrendingMovie[] = [];
-    for (let i = 0; i < Math.max(ready.length, inTheaters.length, upcoming.length); i++) {
-      if (ready[i] && result.length < limit) result.push(ready[i]);
-      if (inTheaters[i] && result.length < limit) result.push(inTheaters[i]);
-      if (upcoming[i] && result.length < limit) result.push(upcoming[i]);
+    // Guarantee unreleased upcoming movies in multi-item hero carousels
+    const targetPerBucket = Math.max(1, Math.floor(limit / 3));
+    if (limit >= 3 && upcoming.length < targetPerBucket) {
+      const existingIds = new Set(checked.map((m) => m.id));
+      for (const fallbackMovie of getActiveUpcomingFallback()) {
+        if (upcoming.length >= targetPerBucket) break;
+        if (!existingIds.has(fallbackMovie.id)) {
+          upcoming.push(fallbackMovie);
+          existingIds.add(fallbackMovie.id);
+        }
+      }
     }
 
-    return result.slice(0, limit);
+    return balanceMovieBuckets(ready, inTheaters, upcoming, limit);
   } finally {
     if (timeout) clearTimeout(timeout);
   }

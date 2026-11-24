@@ -2,9 +2,9 @@ name: Automated Quality Check
 
 on:
   schedule:
-    # Runs every 4 hours at minute 17 (00:17, 04:17, 08:17, 12:17, 16:17, 20:17 UTC)
+    # Runs every 2 hours at minute 17 (00:17, 02:17, 04:17, ... UTC)
     # Off-peak minute avoids GitHub Actions top-of-hour (:00) queue congestion and dropped runs
-    - cron: '17 */4 * * *'
+    - cron: '17 */2 * * *'
   workflow_dispatch: # Allows manual trigger from GitHub Actions tab
 
 jobs:

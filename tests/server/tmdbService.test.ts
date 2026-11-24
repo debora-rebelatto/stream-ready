@@ -12,7 +12,11 @@ jest.mock('../../server/services/qualityCheckerService', () => ({
   },
 }));
 
-const { getTrendingMovies, clearTrendingCache } = require('../../server/services/tmdbService');
+const {
+  getTrendingMovies,
+  clearTrendingCache,
+  balanceMovieBuckets,
+} = require('../../server/services/tmdbService');
 const qualityChecker = require('../../server/services/qualityCheckerService');
 
 describe('TMDB & Trending Movies Service', () => {
@@ -138,5 +142,140 @@ describe('TMDB & Trending Movies Service', () => {
     const movies = await getTrendingMovies(5);
     expect(Array.isArray(movies)).toBe(true);
     expect(movies).toHaveLength(0);
+  });
+
+  it('balances Cinemeta fallback using both current-year and top catalogs so upcoming movies are included', async () => {
+    delete process.env.TMDB_API_KEY;
+    delete process.env.VITE_TMDB_API_KEY;
+
+    const currentYear = String(new Date().getUTCFullYear());
+
+    (qualityChecker.checkMovieQuality as jest.Mock).mockImplementation(async (id: string) => {
+      if (id.startsWith('tt100')) {
+        return {
+          has1080pPlus: true,
+          isReady: true,
+          isCamOnly: false,
+          bestQuality: '4K UHD',
+          streamCount: 50,
+        };
+      }
+      if (id.startsWith('tt200')) {
+        return {
+          has1080pPlus: false,
+          isReady: false,
+          isCamOnly: true,
+          bestQuality: 'CAM / Theater Rip',
+          streamCount: 4,
+        };
+      }
+      return {
+        has1080pPlus: false,
+        isReady: false,
+        isCamOnly: false,
+        isUnreleased: true,
+        bestQuality: 'Unreleased',
+        streamCount: 0,
+      };
+    });
+
+    global.fetch = jest.fn().mockImplementation(async (url: string) => {
+      if (url.includes('/catalog/movie/top.json')) {
+        return {
+          ok: true,
+          json: async () => ({
+            metas: [
+              { id: 'tt1001', name: 'Ready Hit 1', releaseInfo: currentYear },
+              { id: 'tt1002', name: 'Ready Hit 2', releaseInfo: currentYear },
+              { id: 'tt1003', name: 'Ready Hit 3', releaseInfo: currentYear },
+            ],
+          }),
+        };
+      }
+      if (url.includes(`/catalog/movie/year/genre=${currentYear}.json`)) {
+        return {
+          ok: true,
+          json: async () => ({
+            metas: [
+              { id: 'tt2001', name: 'In Theaters 1', releaseInfo: currentYear },
+              { id: 'tt2002', name: 'In Theaters 2', releaseInfo: currentYear },
+              { id: 'tt3001', name: 'Upcoming Epic 1', releaseInfo: currentYear },
+              { id: 'tt3002', name: 'Upcoming Epic 2', releaseInfo: currentYear },
+              { id: 'tt9999', name: 'Old Misdated Film', releaseInfo: '1932' },
+            ],
+          }),
+        };
+      }
+      return { ok: false };
+    });
+
+    const movies = await getTrendingMovies(6);
+
+    expect(movies).toHaveLength(6);
+    expect(movies.filter((m: any) => m.category === 'ready')).toHaveLength(2);
+    expect(movies.filter((m: any) => m.category === 'in_theaters')).toHaveLength(2);
+    expect(movies.filter((m: any) => m.category === 'upcoming')).toHaveLength(2);
+    expect(movies.some((m: any) => m.id === 'tt9999')).toBe(false);
+  });
+
+  it('backfills upcoming movies in Cinemeta fallback when upstream only returns already-released titles', async () => {
+    delete process.env.TMDB_API_KEY;
+    delete process.env.VITE_TMDB_API_KEY;
+
+    (qualityChecker.checkMovieQuality as jest.Mock).mockResolvedValue({
+      has1080pPlus: true,
+      isReady: true,
+      isCamOnly: false,
+      bestQuality: '4K UHD',
+      streamCount: 80,
+    });
+
+    global.fetch = jest.fn().mockImplementation(async (url: string) => {
+      if (url.includes('/catalog/movie/top.json')) {
+        return {
+          ok: true,
+          json: async () => ({
+            metas: [
+              { id: 'tt1001', name: 'Released 1', releaseInfo: '2026' },
+              { id: 'tt1002', name: 'Released 2', releaseInfo: '2026' },
+              { id: 'tt1003', name: 'Released 3', releaseInfo: '2026' },
+              { id: 'tt1004', name: 'Released 4', releaseInfo: '2026' },
+              { id: 'tt1005', name: 'Released 5', releaseInfo: '2026' },
+              { id: 'tt1006', name: 'Released 6', releaseInfo: '2026' },
+            ],
+          }),
+        };
+      }
+      return { ok: true, json: async () => ({ metas: [] }) };
+    });
+
+    const movies = await getTrendingMovies(6);
+
+    expect(movies).toHaveLength(6);
+    const upcomingCount = movies.filter((m: any) => m.category === 'upcoming' && !m.isReady).length;
+    expect(upcomingCount).toBeGreaterThanOrEqual(2);
+  });
+
+  it('balanceMovieBuckets interleaves all three categories without duplicates', () => {
+    const mk = (id: string, category: 'ready' | 'in_theaters' | 'upcoming') => ({
+      id,
+      name: id,
+      qualityBadge: category,
+      isReady: category === 'ready',
+      category,
+    });
+
+    const result = balanceMovieBuckets(
+      [mk('tt1', 'ready'), mk('tt2', 'ready'), mk('tt3', 'ready')],
+      [mk('tt4', 'in_theaters'), mk('tt5', 'in_theaters')],
+      [mk('tt6', 'upcoming'), mk('tt7', 'upcoming'), mk('tt1', 'upcoming')],
+      6
+    );
+
+    expect(result).toHaveLength(6);
+    expect(new Set(result.map((m: any) => m.id)).size).toBe(6);
+    expect(result[0].category).toBe('ready');
+    expect(result[1].category).toBe('in_theaters');
+    expect(result[2].category).toBe('upcoming');
   });
 });
