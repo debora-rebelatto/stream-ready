@@ -135,26 +135,8 @@ async function runBackgroundCheck() {
   try {
     await db.ensureLoaded(true);
 
-    const users = db
-      .getAllUsers()
-      .filter((u) => Boolean(u.authKey) && Boolean(u.settings?.autoSyncWatched));
-    if (users.length > 0) {
-      console.log(
-        `[AutoChecker] Syncing watched history from Stremio for ${users.length} user(s) with autoSync enabled...`
-      );
-      for (const u of users) {
-        try {
-          const syncRes = await db.syncWatchedWithStremio(u.authKey, u.id);
-          summary.syncedUsersCount++;
-          if (syncRes.count > 0) {
-            console.log(`[AutoChecker:${u.email}] Synced ${syncRes.count} watched movie(s).`);
-          }
-        } catch (syncErr) {
-          console.warn(`[AutoChecker] Error syncing watched for ${u.email}:`, syncErr.message);
-        }
-      }
-    }
-
+    // 1. Prioritize pending movie quality checks & notifications FIRST so slow watched syncs
+    // can never starve or time out release detection and alert delivery.
     const allPending = db.getAllUsersItems().filter((entry) => {
       if (entry.item.isWatched) return false;
       const criteria = db.getUserQualityCriteria(entry.userId);
@@ -247,6 +229,41 @@ async function runBackgroundCheck() {
         if (i + CRON_CONCURRENCY < uniqueMoviesBatch.length) {
           await sleep(100);
         }
+      }
+    }
+
+    // 2. Sync watched history in bounded parallel chunks after quality checks complete
+    const users = db
+      .getAllUsers()
+      .filter((u) => Boolean(u.authKey) && Boolean(u.settings?.autoSyncWatched));
+    if (users.length > 0) {
+      console.log(
+        `[AutoChecker] Syncing watched history from Stremio for ${users.length} user(s) with autoSync enabled...`
+      );
+      const syncStartMs = Date.now();
+      const MAX_WATCHED_SYNC_BUDGET_MS = 15000;
+
+      for (let i = 0; i < users.length; i += CRON_CONCURRENCY) {
+        if (Date.now() - syncStartMs >= MAX_WATCHED_SYNC_BUDGET_MS) {
+          console.warn(
+            `[AutoChecker] Watched sync budget (${MAX_WATCHED_SYNC_BUDGET_MS}ms) reached; remaining users deferred to next run.`
+          );
+          break;
+        }
+        const chunk = users.slice(i, i + CRON_CONCURRENCY);
+        await Promise.all(
+          chunk.map(async (u) => {
+            try {
+              const syncRes = await db.syncWatchedWithStremio(u.authKey, u.id);
+              summary.syncedUsersCount++;
+              if (syncRes.count > 0) {
+                console.log(`[AutoChecker:${u.email}] Synced ${syncRes.count} watched movie(s).`);
+              }
+            } catch (syncErr) {
+              console.warn(`[AutoChecker] Error syncing watched for ${u.email}:`, syncErr.message);
+            }
+          })
+        );
       }
     }
 

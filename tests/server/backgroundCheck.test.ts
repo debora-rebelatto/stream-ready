@@ -258,6 +258,47 @@ describe('Background quality check rotation & reliability', () => {
     expect(db.updateItem).toHaveBeenCalledTimes(5);
   });
 
+  test('runBackgroundCheck runs quality checks before watched sync so slow watched sync cannot starve checks', async () => {
+    const callOrder: string[] = [];
+
+    db.getAllUsers.mockReturnValue([
+      { id: 'user-1', email: 'test@example.com', authKey: 'key-1', settings: { autoSyncWatched: true } },
+    ]);
+    db.getAllUsersItems.mockReturnValue([
+      {
+        userId: 'user-1',
+        item: {
+          id: 'tt29611136',
+          name: 'Wicker',
+          year: '2026',
+          has1080pPlus: false,
+          isWatched: false,
+          lastChecked: '2026-11-23T06:49:38.390Z',
+        },
+      },
+    ]);
+
+    checkMovieQuality.mockImplementation(async () => {
+      callOrder.push('checkMovieQuality');
+      return {
+        has1080pPlus: true,
+        isReady: true,
+        bestQuality: '4K UHD',
+        streamCount: 16,
+        checkedAt: new Date().toISOString(),
+      };
+    });
+
+    db.syncWatchedWithStremio.mockImplementation(async () => {
+      callOrder.push('syncWatchedWithStremio');
+      return { count: 0 };
+    });
+
+    await runBackgroundCheck();
+
+    expect(callOrder).toEqual(['checkMovieQuality', 'syncWatchedWithStremio']);
+  });
+
   test('isItemUnreleased does not misclassify Check Error as Unreleased', () => {
     expect(
       isItemUnreleased({
